@@ -428,7 +428,7 @@ export function BlogsTab({
                           onToggleStatus(b.id, next);
                         }
                       }}
-                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide uppercase shadow-xs cursor-pointer transition-transform active:scale-95 ${
+                       className={`crm-blog-status-badge px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide uppercase shadow-xs cursor-pointer transition-transform active:scale-95 ${
                         isPublished
                           ? "bg-emerald-500 text-white"
                           : b.status === "draft"
@@ -485,7 +485,7 @@ export function BlogsTab({
                   {/* Card Actions Footer */}
                   <div className="pt-3 border-t border-black/[0.04] flex items-center justify-between crm-blogs-card-footer">
                     <div className="flex items-center gap-1">
-                      <button
+                         <button
                         type="button"
                         onClick={() => handleOpenEdit(b)}
                         className="px-3 py-1.5 rounded-xl bg-[#0071E3]/10 hover:bg-[#0071E3]/20 text-[#0071E3] font-semibold text-xs transition-colors cursor-pointer flex items-center gap-1"
@@ -598,7 +598,7 @@ export function BlogsTab({
                               onToggleStatus(b.id, next);
                             }
                           }}
-                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider cursor-pointer transition-transform active:scale-95 ${
+                           className={`crm-blog-status-badge px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider cursor-pointer transition-transform active:scale-95 ${
                             b.status === "published" || !b.status
                               ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60"
                               : b.status === "draft"

@@ -183,16 +183,25 @@ function RecordsSection({ section, data, onAction }) {
   };
 
   return (
-    <div className="crm-content-hub-records">
+    <div className={`crm-content-hub-records crm-content-hub-records-${section}`}>
       <div className="crm-content-hub-section-heading">
-        <div>
-          <span className="crm-content-hub-kicker">Content library</span>
-          <h3>{config.title}</h3>
-          <p>{config.description}</p>
+        <div className="crm-content-hub-section-heading-copy">
+          <span className="crm-content-hub-section-icon"><config.icon size={18} /></span>
+          <div>
+            <span className="crm-content-hub-kicker">Content library / {section}</span>
+            <h3>{config.title}</h3>
+            <p>{config.description}</p>
+          </div>
         </div>
-        <HubButton onClick={() => setEditing({ type: config.type })}>
-          <Plus size={14} /> {config.addLabel}
-        </HubButton>
+        <div className="crm-content-hub-section-actions">
+          <span className="crm-content-hub-count">
+            <strong>{rows.length}</strong>
+            <span>{rows.length === 1 ? 'record' : 'records'}</span>
+          </span>
+          <HubButton onClick={() => setEditing({ type: config.type })}>
+            <Plus size={14} /> {config.addLabel}
+          </HubButton>
+        </div>
       </div>
 
       {editing && (
@@ -215,6 +224,9 @@ function RecordsSection({ section, data, onAction }) {
           rows.map((row) => (
             <div className="crm-content-hub-record" key={row.id}>
               <div className="crm-content-hub-record-copy">
+                <span className="crm-content-hub-record-type">
+                  {section === 'projects' ? 'Portfolio project' : section === 'reviews' ? 'Client testimonial' : 'Referring domain'}
+                </span>
                 <strong>{config.primary(row)}</strong>
                 <span>{config.secondary(row)}</span>
               </div>
