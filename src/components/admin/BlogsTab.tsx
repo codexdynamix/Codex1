@@ -224,26 +224,26 @@ export function BlogsTab({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 crm-blogs-tab">
       {/* 1. Header & Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <span className="p-2 rounded-xl bg-[#0071E3]/10 text-[#0071E3]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 crm-blogs-header">
+        <div className="crm-blogs-heading">
+          <div className="flex items-center gap-2.5 crm-blogs-title-row">
+            <span className="p-2 rounded-xl bg-[#0071E3]/10 text-[#0071E3] crm-blogs-icon">
               <BookOpen className="size-5" />
             </span>
-            <div>
+            <div className="crm-blogs-title-copy">
               <h2 className="text-base font-semibold text-neutral-900 tracking-tight">
                 Blog & Architectural Teardowns
               </h2>
-              <p className="text-xs text-neutral-500">
+              <p className="text-xs text-neutral-500 crm-blogs-description">
                 Craft, optimize with Rank Math SEO & Power Words, and publish technical insights directly to the Codex Dynamics site.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <div className="flex items-center gap-2 self-start sm:self-auto crm-blogs-actions">
           <button
             type="button"
             onClick={handleOpenCreate}
@@ -256,20 +256,20 @@ export function BlogsTab({
       </div>
 
       {/* 2. Key Metrics Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <div className="rounded-2xl bg-white border border-black/[0.06] p-4 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_4px_16px_rgba(0,0,0,0.02)]">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 crm-blogs-metrics">
+        <div className="rounded-2xl bg-white border border-black/[0.06] p-4 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_4px_16px_rgba(0,0,0,0.02)] crm-blogs-metric">
           <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider block">Total Articles</span>
           <span className="text-2xl font-bold text-neutral-900 font-mono mt-1 block">{stats.total}</span>
         </div>
-        <div className="rounded-2xl bg-white border border-black/[0.06] p-4 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_4px_16px_rgba(0,0,0,0.02)]">
+        <div className="rounded-2xl bg-white border border-black/[0.06] p-4 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_4px_16px_rgba(0,0,0,0.02)] crm-blogs-metric">
           <span className="text-[11px] font-semibold text-emerald-600 uppercase tracking-wider block">Live Published</span>
           <span className="text-2xl font-bold text-emerald-600 font-mono mt-1 block">{stats.published}</span>
         </div>
-        <div className="rounded-2xl bg-white border border-black/[0.06] p-4 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_4px_16px_rgba(0,0,0,0.02)]">
+        <div className="rounded-2xl bg-white border border-black/[0.06] p-4 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_4px_16px_rgba(0,0,0,0.02)] crm-blogs-metric">
           <span className="text-[11px] font-semibold text-amber-600 uppercase tracking-wider block">Drafts / In Progress</span>
           <span className="text-2xl font-bold text-amber-600 font-mono mt-1 block">{stats.drafts}</span>
         </div>
-        <div className="rounded-2xl bg-white border border-black/[0.06] p-4 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_4px_16px_rgba(0,0,0,0.02)]">
+        <div className="rounded-2xl bg-white border border-black/[0.06] p-4 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_4px_16px_rgba(0,0,0,0.02)] crm-blogs-metric">
           <span className="text-[11px] font-semibold text-[#0071E3] uppercase tracking-wider block">Total Words Written</span>
           <span className="text-2xl font-bold text-neutral-900 font-mono mt-1 block">
             {stats.totalWords.toLocaleString()}
@@ -278,9 +278,9 @@ export function BlogsTab({
       </div>
 
       {/* 3. Search, Filters & View Mode Bar */}
-      <div className="rounded-2xl bg-white border border-black/[0.06] p-3.5 sm:p-4 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_4px_16px_rgba(0,0,0,0.02)] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      <div className="rounded-2xl bg-white border border-black/[0.06] p-3.5 sm:p-4 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_4px_16px_rgba(0,0,0,0.02)] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 crm-blogs-filter-bar">
         {/* Search */}
-        <div className="relative flex-1 min-w-[220px]">
+        <div className="relative flex-1 min-w-[220px] crm-blogs-search">
           <Search className="size-3.5 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
@@ -301,7 +301,7 @@ export function BlogsTab({
         </div>
 
         {/* Filter Badges & View Switcher */}
-        <div className="flex items-center flex-wrap gap-2">
+        <div className="flex items-center flex-wrap gap-2 crm-blogs-filter-controls">
           {/* Status Filter */}
           <select
             value={selectedStatusFilter}
@@ -341,7 +341,7 @@ export function BlogsTab({
           </select>
 
           {/* View Toggle */}
-          <div className="flex items-center rounded-xl bg-neutral-100 p-1 border border-black/[0.04]">
+          <div className="flex items-center rounded-xl bg-neutral-100 p-1 border border-black/[0.04] crm-blogs-view-toggle">
             <button
               type="button"
               onClick={() => setViewLayout("grid")}
@@ -368,7 +368,7 @@ export function BlogsTab({
 
       {/* 4. Main Articles Content */}
       {filteredBlogs.length === 0 ? (
-        <div className="rounded-2xl bg-white border border-black/[0.06] p-12 text-center space-y-4 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_4px_16px_rgba(0,0,0,0.02)]">
+        <div className="rounded-2xl bg-white border border-black/[0.06] p-12 text-center space-y-4 shadow-[0_1px_3px_rgba(0,0,0,0.02),0_4px_16px_rgba(0,0,0,0.02)] crm-blogs-empty">
           <div className="size-12 rounded-2xl bg-[#0071E3]/10 text-[#0071E3] flex items-center justify-center mx-auto">
             <FileText className="size-5" />
           </div>
@@ -391,7 +391,7 @@ export function BlogsTab({
         </div>
       ) : viewLayout === "grid" ? (
         /* GRID VIEW */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 crm-blogs-grid">
           {filteredBlogs.map((b) => {
             const readingTime = calculateReadingTime(b.content || "");
             const wordCount = (b.content || "").split(/\s+/).filter(Boolean).length;
@@ -401,10 +401,10 @@ export function BlogsTab({
             return (
               <div
                 key={b.id}
-                className="rounded-2xl bg-white border border-black/[0.06] shadow-[0_1px_3px_rgba(0,0,0,0.02),0_4px_16px_rgba(0,0,0,0.02)] overflow-hidden flex flex-col hover:border-black/[0.12] hover:shadow-[0_2px_8px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)] transition-all group"
+                className="rounded-2xl bg-white border border-black/[0.06] shadow-[0_1px_3px_rgba(0,0,0,0.02),0_4px_16px_rgba(0,0,0,0.02)] overflow-hidden flex flex-col hover:border-black/[0.12] hover:shadow-[0_2px_8px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)] transition-all group crm-blogs-card"
               >
                 {/* Card Cover Image Header */}
-                <div className="relative aspect-[16/9] bg-neutral-100 overflow-hidden border-b border-black/[0.04]">
+                <div className="relative aspect-[16/9] bg-neutral-100 overflow-hidden border-b border-black/[0.04] crm-blogs-card-cover">
                   {b.cover_image ? (
                     <img
                       src={b.cover_image}
@@ -456,9 +456,9 @@ export function BlogsTab({
                 </div>
 
                 {/* Card Body */}
-                <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-[11px] text-neutral-400 font-mono">
+                <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-4 crm-blogs-card-body">
+                  <div className="space-y-2 crm-blogs-card-content">
+                    <div className="flex items-center gap-2 text-[11px] text-neutral-400 font-mono crm-blogs-card-meta">
                       <span>{wordCount} words</span>
                       <span>•</span>
                       <span>{readingTime.text}</span>
@@ -483,7 +483,7 @@ export function BlogsTab({
                   </div>
 
                   {/* Card Actions Footer */}
-                  <div className="pt-3 border-t border-black/[0.04] flex items-center justify-between">
+                  <div className="pt-3 border-t border-black/[0.04] flex items-center justify-between crm-blogs-card-footer">
                     <div className="flex items-center gap-1">
                       <button
                         type="button"
@@ -538,7 +538,7 @@ export function BlogsTab({
         </div>
       ) : (
         /* TABLE VIEW */
-        <div className="rounded-2xl bg-white border border-black/[0.06] shadow-[0_1px_3px_rgba(0,0,0,0.02),0_4px_16px_rgba(0,0,0,0.02)] overflow-hidden">
+        <div className="rounded-2xl bg-white border border-black/[0.06] shadow-[0_1px_3px_rgba(0,0,0,0.02),0_4px_16px_rgba(0,0,0,0.02)] overflow-hidden crm-blogs-table">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
