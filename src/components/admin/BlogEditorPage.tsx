@@ -1153,9 +1153,9 @@ export function BlogEditorPage({
           {/* =================================================================== */}
           {/* 3. RANK MATH SEO & POWER WORDS META BOX (Wordpress Bottom Metapanel)*/}
           {/* =================================================================== */}
-          <section id="rank-math-meta-box" className="border border-[#dcdcde] rounded-xl bg-white shadow-xs overflow-hidden">
+          <section id="rank-math-meta-box" className="crm-rank-math-panel border border-[#dcdcde] rounded-xl bg-white shadow-xs overflow-hidden">
               {/* Meta Box Header (WordPress Rank Math Plugin Style) */}
-              <div className="bg-[#f8f9fa] border-b border-[#dcdcde] px-4 py-3 flex items-center justify-between">
+              <div className="crm-rank-math-header bg-[#f8f9fa] border-b border-[#dcdcde] px-4 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <div className="size-6 rounded bg-[#2271b1] text-white flex items-center justify-center font-bold text-xs">
                     RM
@@ -1179,7 +1179,7 @@ export function BlogEditorPage({
               </div>
 
               {/* Meta Box Sub-tabs */}
-              <div className="border-b border-[#dcdcde] bg-white px-4 flex items-center gap-4 text-xs font-semibold overflow-x-auto">
+              <div className="crm-rank-math-tabs border-b border-[#dcdcde] bg-white px-4 flex items-center gap-4 text-xs font-semibold overflow-x-auto">
                 <button
                   type="button"
                   onClick={() => setMetaBoxTab("general")}
@@ -1231,12 +1231,12 @@ export function BlogEditorPage({
               </div>
 
               {/* Meta Box Content Body */}
-              <div className="p-4 sm:p-6 space-y-6">
+              <div className="crm-rank-math-body p-4 sm:p-6 space-y-6">
                 {/* 3A. GENERAL TAB: FOCUS KEYWORD + SERP SNIPPET + TESTS */}
                 {metaBoxTab === "general" && (
-                  <div className="space-y-6">
+                  <div className="crm-rank-math-general space-y-6">
                     {/* Focus Keyword Input */}
-                    <div className="space-y-1.5">
+                    <div className="crm-seo-keyword-field space-y-1.5">
                       <label className="text-xs font-bold text-neutral-700 flex items-center justify-between">
                         <span>Focus Keyword</span>
                         <span className="text-[11px] text-neutral-500 font-normal">Primary search term to optimize for</span>
@@ -1260,7 +1260,7 @@ export function BlogEditorPage({
                     </div>
 
                     {/* Google SERP Snippet Preview Simulator */}
-                    <div className="p-4 rounded-lg bg-[#f8f9fa] border border-[#dcdcde] space-y-3">
+                    <div className="crm-serp-preview p-4 rounded-lg bg-[#f8f9fa] border border-[#dcdcde] space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-neutral-700">Google SERP Snippet Preview</span>
                         <div className="inline-flex items-center bg-white p-0.5 rounded border border-[#dcdcde] text-xs">
@@ -1334,7 +1334,7 @@ export function BlogEditorPage({
                     </div>
 
                     {/* 10-Point Rank Math Audit Checklist */}
-                    <div className="space-y-2">
+                    <div className="crm-seo-checklist space-y-2">
                       <h4 className="text-xs font-bold text-neutral-700 uppercase tracking-wider">
                         Rank Math SEO Diagnostics Checklist
                       </h4>
@@ -1368,7 +1368,7 @@ export function BlogEditorPage({
 
                 {/* 3B. POWER WORDS & HEADLINE SUITE TAB (FIXED - NO CRASH) */}
                 {metaBoxTab === "power-words" && (
-                  <div className="space-y-6">
+                  <div className="crm-power-words-suite space-y-6">
                     {/* Headline Performance Card */}
                     <div className="p-4 rounded-xl bg-purple-50/60 border border-purple-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div>
@@ -1522,7 +1522,7 @@ export function BlogEditorPage({
 
                 {/* 3C. SOCIAL PREVIEW TAB */}
                 {metaBoxTab === "social" && (
-                  <div className="space-y-6">
+                  <div className="crm-social-preview space-y-6">
                     <div>
                       <h4 className="text-xs font-bold text-neutral-800 uppercase tracking-wider mb-2">
                         OpenGraph / Facebook & LinkedIn Card Preview
@@ -1553,7 +1553,7 @@ export function BlogEditorPage({
 
                 {/* 3D. ADVANCED & SCHEMA TAB */}
                 {metaBoxTab === "advanced" && (
-                  <div className="space-y-4 max-w-lg">
+                  <div className="crm-advanced-seo space-y-4 max-w-lg">
                     <div>
                       <label className="text-xs font-bold text-neutral-700 block mb-1">
                         Robots Meta Tags
@@ -1601,10 +1601,10 @@ export function BlogEditorPage({
         {/* RIGHT COLUMN: WORDPRESS META SIDEBAR (Unified Entity with Canvas)        */}
         {/* ======================================================================= */}
         {isSidebarOpen && !isZenMode && (
-          <aside className="w-full lg:w-[320px] xl:w-[340px] shrink-0 space-y-4 select-none">
-            <div className="bg-white border border-[#dcdcde] rounded-xl shadow-xs overflow-hidden">
+          <aside className="crm-blog-inspector w-full lg:w-[320px] xl:w-[340px] shrink-0 space-y-4 select-none">
+            <div className="crm-blog-inspector-card bg-white border border-[#dcdcde] rounded-xl shadow-xs overflow-hidden">
             {/* Sidebar Top Header with Tabs (Post vs SEO) */}
-            <div className="sticky top-0 z-10 bg-white border-b border-[#dcdcde] flex items-center justify-between px-3">
+            <div className="crm-blog-inspector-tabs sticky top-0 z-10 bg-white border-b border-[#dcdcde] flex items-center justify-between px-3">
               <div className="flex items-center">
                 <button
                   type="button"
@@ -2035,9 +2035,9 @@ export function BlogEditorPage({
 
             {/* Tab 2: RANK MATH SEO SIDEBAR TAB */}
             {sidebarTab === "seo" && (
-              <div className="p-4 space-y-4 text-xs">
+              <div className="crm-blog-seo-sidebar p-4 space-y-4 text-xs">
                 {/* Score Capsule */}
-                <div className="p-4 rounded-lg bg-[#f8f9fa] border border-[#dcdcde] text-center space-y-1">
+                <div className="crm-seo-score-card p-4 rounded-lg bg-[#f8f9fa] border border-[#dcdcde] text-center space-y-1">
                   <div className="text-xs font-semibold text-neutral-500">Rank Math SEO Score</div>
                   <div
                     className={`text-3xl font-bold font-mono ${
@@ -2045,6 +2045,9 @@ export function BlogEditorPage({
                     }`}
                   >
                     {rankMathScore}/100
+                  </div>
+                  <div className="crm-seo-score-track" aria-hidden="true">
+                    <span style={{ width: `${rankMathScore}%` }} />
                   </div>
                   <div className="text-[11px] text-neutral-600">
                     {rankMathScore >= 80
@@ -2065,13 +2068,13 @@ export function BlogEditorPage({
                 </div>
 
                 {/* Top Recommendations */}
-                <div className="space-y-2 pt-2 border-t border-[#dcdcde]">
+                <div className="crm-seo-quick-audit space-y-2 pt-2 border-t border-[#dcdcde]">
                   <div className="font-bold text-neutral-800 uppercase tracking-wider text-[11px]">
                     Quick Audit Checklist
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="crm-seo-sidebar-checks space-y-1.5">
                     {rankMathChecks.slice(0, 6).map((chk) => (
-                      <div key={chk.id} className="flex items-start gap-1.5">
+                      <div key={chk.id} className={`crm-seo-sidebar-check ${chk.passed ? "passed" : "needs-work"} flex items-start gap-1.5`}>
                         {chk.passed ? (
                           <CheckCircle2 className="size-3.5 text-emerald-600 shrink-0 mt-0.5" />
                         ) : (
@@ -2088,11 +2091,11 @@ export function BlogEditorPage({
                 <button
                   type="button"
                   onClick={() => {
-                    const el = document.querySelector("section");
+                    const el = document.getElementById("rank-math-meta-box");
                     el?.scrollIntoView({ behavior: "smooth" });
                     setMetaBoxTab("power-words");
                   }}
-                  className="w-full py-2 rounded bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs flex items-center justify-center gap-1 cursor-pointer transition-colors"
+                  className="crm-seo-suite-cta w-full py-2 rounded bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs flex items-center justify-center gap-1 cursor-pointer transition-colors"
                 >
                   <Zap className="size-3.5" />
                   <span>Open Power Words Suite</span>
