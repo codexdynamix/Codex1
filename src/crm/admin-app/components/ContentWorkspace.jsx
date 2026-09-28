@@ -239,6 +239,31 @@ function RecordsSection({ section, data, onAction }) {
   );
 }
 
+function LibrarySummary({ blogs, projects, reviews, backlinks }) {
+  const publishedBlogs = blogs.filter((blog) => blog.status === 'published' || !blog.status).length;
+  const cards = [
+    ['Articles', blogs.length, `${publishedBlogs} published`, BookOpen],
+    ['Projects', projects.length, 'Portfolio records', BriefcaseBusiness],
+    ['Reviews', reviews.length, 'Testimonials', Star],
+    ['Backlinks', backlinks.length, 'SEO references', Link2],
+  ];
+
+  return (
+    <div className="crm-content-hub-summary" aria-label="Content library summary">
+      {cards.map(([label, value, detail, Icon]) => (
+        <div className="crm-content-hub-summary-card" key={label}>
+          <span className="crm-content-hub-summary-icon"><Icon size={15} /></span>
+          <div>
+            <strong>{value}</strong>
+            <span>{label}</span>
+          </div>
+          <small>{detail}</small>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function ContentWorkspace({
   blogs,
   projects,
@@ -260,6 +285,26 @@ export default function ContentWorkspace({
     return true;
   };
 
+  const toggleBlogStatus = async (id, status) => {
+    await onAction('update_blog', { id, status });
+    return true;
+  };
+
+  const duplicateBlog = async (id) => {
+    const source = blogs.find((blog) => blog.id === id);
+    if (!source) return false;
+    const { id: _id, title, slug, ...rest } = source;
+    const copyTitle = `${title || 'Untitled article'} (Copy)`;
+    await onAction('save_blog', {
+      ...rest,
+      title: copyTitle,
+      slug: `${slug || 'article'}-copy`,
+      status: 'draft',
+    });
+    showNotification('Article duplicated as a draft.');
+    return true;
+  };
+
   return (
     <section className="crm-content-hub">
       <header className="crm-content-hub-header">
@@ -274,8 +319,12 @@ export default function ContentWorkspace({
         </div>
       </header>
 
+      <LibrarySummary blogs={blogs} projects={projects} reviews={reviews} backlinks={backlinks} />
+
       <nav className="crm-content-hub-nav" aria-label="Content sections">
-        {CONTENT_SECTIONS.map(({ id, label, icon: Icon }) => (
+        {CONTENT_SECTIONS.map(({ id, label, icon: Icon }) => {
+          const count = id === 'blog' ? blogs.length : data[id].length;
+          return (
           <button
             key={id}
             type="button"
@@ -284,9 +333,10 @@ export default function ContentWorkspace({
           >
             <Icon size={15} />
             <span>{label}</span>
-            {id === 'blog' && <em>{blogs.length}</em>}
+            <em>{count}</em>
           </button>
-        ))}
+          );
+        })}
       </nav>
 
       {section === 'blog' ? (
@@ -295,6 +345,8 @@ export default function ContentWorkspace({
             blogs={blogs}
             onSaveBlog={saveBlog}
             onDeleteBlog={deleteBlog}
+            onToggleStatus={toggleBlogStatus}
+            onDuplicateBlog={duplicateBlog}
             onEditorStateChange={() => {}}
           />
         </div>

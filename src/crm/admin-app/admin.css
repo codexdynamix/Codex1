@@ -9200,6 +9200,64 @@
   color: #A8AEB8;
 }
 
+.crm-admin-app .crm-content-hub-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.crm-admin-app .crm-content-hub-summary-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 9px;
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid #3C424D;
+  border-radius: 8px;
+  background: #30353E;
+}
+
+.crm-admin-app .crm-content-hub-summary-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 29px;
+  height: 29px;
+  border-radius: 7px;
+  color: #F0B90B;
+  background: rgba(240, 185, 11, 0.12);
+}
+
+.crm-admin-app .crm-content-hub-summary-card strong,
+.crm-admin-app .crm-content-hub-summary-card span,
+.crm-admin-app .crm-content-hub-summary-card small {
+  display: block;
+}
+
+.crm-admin-app .crm-content-hub-summary-card strong {
+  color: #EAECEF;
+  font-size: 18px;
+  line-height: 1.1;
+}
+
+.crm-admin-app .crm-content-hub-summary-card div span {
+  margin-top: 2px;
+  color: #A8AEB8;
+  font-size: 11px;
+}
+
+.crm-admin-app .crm-content-hub-summary-card small {
+  grid-column: 2;
+  margin-top: 4px;
+  overflow: hidden;
+  color: #6F7784;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .crm-admin-app .crm-content-hub-nav {
   display: flex;
   gap: 6px;
@@ -9449,4 +9507,5 @@
   .crm-admin-app .crm-content-hub-section-heading { flex-direction: column; }
   .crm-admin-app .crm-content-hub-header-note { width: 100%; box-sizing: border-box; }
   .crm-admin-app .crm-content-hub-form-grid { grid-template-columns: 1fr; }
+  .crm-admin-app .crm-content-hub-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
