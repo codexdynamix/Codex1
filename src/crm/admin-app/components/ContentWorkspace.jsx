@@ -266,12 +266,16 @@ function LibrarySummary({ blogs, projects, reviews, backlinks }) {
     <div className="crm-content-hub-summary" aria-label="Content library summary">
       {cards.map(([label, value, detail, Icon]) => (
         <div className="crm-content-hub-summary-card" key={label}>
-          <span className="crm-content-hub-summary-icon"><Icon size={15} /></span>
-          <div>
-            <strong>{value}</strong>
-            <span>{label}</span>
+          <span className="crm-content-hub-summary-icon">
+            <Icon size={18} strokeWidth={2.2} />
+          </span>
+          <div className="crm-content-hub-summary-body">
+            <div className="crm-content-hub-summary-val-row">
+              <strong>{value}</strong>
+              <span>{label}</span>
+            </div>
+            <small>{detail}</small>
           </div>
-          <small>{detail}</small>
         </div>
       ))}
     </div>

@@ -3053,8 +3053,6 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
                 <SiteCrmWorkspace
                   defaultTab="enquiries"
                   standalone
-                  pageTitle="Enquiries"
-                  pageSubtitle="Manage incoming enquiries and lead follow-up from the main admin workspace."
                   showNotification={showNotification}
                 />
               </div>
@@ -3064,8 +3062,6 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
                 <SiteCrmWorkspace
                   defaultTab="content"
                   standalone
-                  pageTitle="Content"
-                  pageSubtitle="Manage blog posts, project showcases, reviews, and site content from the main admin workspace."
                   showNotification={showNotification}
                 />
               </div>
@@ -3075,8 +3071,6 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
                 <SiteCrmWorkspace
                   defaultTab="chat"
                   standalone
-                  pageTitle="Chat"
-                  pageSubtitle="Review conversations and visitor chat threads from the main admin workspace."
                   showNotification={showNotification}
                 />
               </div>
