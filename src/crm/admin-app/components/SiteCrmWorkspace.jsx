@@ -23,6 +23,36 @@ const localSiteCrmStore = {
   settings: { webhookUrl: '' },
 };
 
+const SITE_CRM_STORAGE_KEY = 'codex_site_crm_content';
+
+function readSiteCrmStore() {
+  try {
+    const stored = window.localStorage.getItem(SITE_CRM_STORAGE_KEY);
+    if (!stored) return localSiteCrmStore;
+    const parsed = JSON.parse(stored);
+    return {
+      ...localSiteCrmStore,
+      ...parsed,
+      enquiries: Array.isArray(parsed.enquiries) ? parsed.enquiries : [],
+      blogs: Array.isArray(parsed.blogs) ? parsed.blogs : [],
+      reviews: Array.isArray(parsed.reviews) ? parsed.reviews : [],
+      projects: Array.isArray(parsed.projects) ? parsed.projects : [],
+      backlinks: Array.isArray(parsed.backlinks) ? parsed.backlinks : [],
+      settings: { ...localSiteCrmStore.settings, ...(parsed.settings || {}) },
+    };
+  } catch {
+    return localSiteCrmStore;
+  }
+}
+
+function persistSiteCrmStore() {
+  try {
+    window.localStorage.setItem(SITE_CRM_STORAGE_KEY, JSON.stringify(localSiteCrmStore));
+  } catch {
+    // Storage can be unavailable in private browsing; the in-memory store remains usable.
+  }
+}
+
 async function crmAction(action, payload = {}) {
   const id = payload.id || Date.now();
   if (action === 'add_backlink') localSiteCrmStore.backlinks.push({ id, ...payload });
@@ -38,6 +68,22 @@ async function crmAction(action, payload = {}) {
   if (action === 'update_project') localSiteCrmStore.projects = localSiteCrmStore.projects.map((x) => (x.id === id ? { ...x, ...payload } : x));
   if (action === 'delete_project') localSiteCrmStore.projects = localSiteCrmStore.projects.filter((x) => x.id !== id);
   if (action === 'delete_enquiry') localSiteCrmStore.enquiries = localSiteCrmStore.enquiries.filter((x) => x.id !== id);
+  if (action === 'update_enquiry_status') {
+    localSiteCrmStore.enquiries = localSiteCrmStore.enquiries.map((x) => (x.id === id ? { ...x, status: payload.status } : x));
+  }
+  if (action === 'save_webhook') {
+    localSiteCrmStore.settings = { ...localSiteCrmStore.settings, webhookUrl: payload.url || '' };
+  }
+  if (action === 'restore_backup' && payload.backupData) {
+    const restored = payload.backupData;
+    localSiteCrmStore.enquiries = Array.isArray(restored.enquiries) ? restored.enquiries : [];
+    localSiteCrmStore.blogs = Array.isArray(restored.blogs) ? restored.blogs : [];
+    localSiteCrmStore.reviews = Array.isArray(restored.reviews) ? restored.reviews : [];
+    localSiteCrmStore.projects = Array.isArray(restored.projects) ? restored.projects : [];
+    localSiteCrmStore.backlinks = Array.isArray(restored.backlinks) ? restored.backlinks : [];
+    localSiteCrmStore.settings = { ...localSiteCrmStore.settings, ...(restored.settings || {}) };
+  }
+  persistSiteCrmStore();
   return { ok: true, url: payload.data || '' };
 }
 
@@ -100,8 +146,17 @@ export default function SiteCrmWorkspace({
   const load = async () => {
     setLoading(true);
     try {
-      setData({ ...localSiteCrmStore });
-      setWebhook(localSiteCrmStore.settings?.webhookUrl || '');
+      const stored = readSiteCrmStore();
+      Object.assign(localSiteCrmStore, stored);
+      setData({
+        ...stored,
+        enquiries: [...stored.enquiries],
+        blogs: [...stored.blogs],
+        reviews: [...stored.reviews],
+        projects: [...stored.projects],
+        backlinks: [...stored.backlinks],
+      });
+      setWebhook(stored.settings?.webhookUrl || '');
     } finally { setLoading(false); }
   };
   useEffect(() => { load(); }, []);
