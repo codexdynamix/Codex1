@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import ContentWorkspace from './ContentWorkspace.jsx';
+import { RefreshCw } from 'lucide-react';
 
 const TABS = [
   ['overview', 'Overview'],
@@ -210,7 +211,21 @@ export default function SiteCrmWorkspace({
   if (loading || !data) return <div className="crm-site-crm-loading">Loading shared site CRM...</div>;
   const visibleTabs = standalone ? [] : TABS;
   return <section className="crm-site-crm-workspace">
-    <header className="crm-site-crm-header"><div><p className="crm-site-crm-eyebrow">Codex Dynamics</p><h2>{standalone ? pageTitle : 'Site CRM'}</h2><p>{standalone ? pageSubtitle : pageSubtitle}</p></div><Button onClick={load}>Refresh</Button></header>
+    <header className="crm-site-crm-header">
+      <div className="crm-site-crm-header-copy">
+        <div className="crm-site-crm-header-kicker">
+          <span className="crm-site-crm-header-mark">CD</span>
+          <span>Codex Dynamics</span>
+          <span className="crm-site-crm-header-tag">Admin CRM</span>
+        </div>
+        <h2>{standalone ? pageTitle : 'Site CRM'}</h2>
+        <p>{pageSubtitle}</p>
+      </div>
+      <div className="crm-site-crm-header-actions">
+        <span className="crm-site-crm-live-status"><i /> Content library</span>
+        <Button onClick={load}><RefreshCw size={14} /> Refresh</Button>
+      </div>
+    </header>
     {!standalone && <nav className="crm-site-crm-tabs">{visibleTabs.map(([key, label]) => <button key={key} className={tab === key ? 'active' : ''} onClick={() => setTab(key)}>{label}</button>)}</nav>}
 
     {tab === 'overview' && <div className="crm-site-crm-grid">
