@@ -218,8 +218,13 @@ export function BlogEditorPage({
     return analyzePowerWords(title, content);
   }, [title, content]);
 
-  // Track changes
+  // Track changes (skip initial mount to avoid premature unsaved state)
+  const isMountedRef = useRef(false);
   useEffect(() => {
+    if (!isMountedRef.current) {
+      isMountedRef.current = true;
+      return;
+    }
     setHasUnsavedChanges(true);
   }, [title, slug, excerpt, content, selectedCategory, tags, author, status, imageUrl]);
 
@@ -426,59 +431,56 @@ export function BlogEditorPage({
       {/* 1. TOP EDITORIAL BANNER: POLISHED, CRISP, CONSISTENT WITH CODEX CRM       */}
       {/* ========================================================================= */}
       <div className="crm-blogs-section-banner">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          {/* Left: Back button, breadcrumbs, title & subtitle */}
-          <div className="flex items-start sm:items-center gap-3.5 min-w-0">
-            <button
-              type="button"
-              onClick={() => {
-                if (hasUnsavedChanges) {
-                  if (window.confirm("You have unsaved changes. Return to articles list?")) {
-                    onBack();
-                  }
-                } else {
-                  onBack();
-                }
-              }}
-              className="crm-btn-icon shrink-0 mt-0.5 sm:mt-0"
-              title="Return to Articles list"
-            >
-              <ArrowLeft size={16} />
-            </button>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 mb-1 flex-wrap">
-                <span className="text-[11px] font-bold text-[#F0B90B] uppercase tracking-wider">
-                  Leads / Content / Editorial
-                </span>
-                <span className="text-[#848E9C]">·</span>
-                <span className="text-[11px] font-semibold text-[#848E9C]">
-                  {editingId ? "Edit Article" : "New Blog Article"}
-                </span>
-                {hasUnsavedChanges ? (
-                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                    <span className="size-1.5 rounded-full bg-amber-400 animate-pulse" />
-                    Unsaved Draft
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                    <Check size={12} />
-                    Saved
-                  </span>
-                )}
-              </div>
-              <h1 className="text-lg sm:text-xl font-bold text-[#EAECEF] tracking-tight m-0">
-                Blog & Architectural Teardowns
-              </h1>
-              <p className="text-xs text-[#848E9C] mt-1 max-w-2xl leading-relaxed m-0">
-                Craft, optimize with Rank Math SEO & Power Words, and publish technical insights directly to the Codex Dynamics site.
-              </p>
-            </div>
+        {/* Top Header Row: Breadcrumbs on Left, Back to Content on TOP RIGHT */}
+        <div className="flex items-center justify-between gap-4 pb-3.5 mb-4 border-b border-[#444A55]/60 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[11px] font-bold text-[#F0B90B] uppercase tracking-wider">
+              Leads / Content / Editorial
+            </span>
+            <span className="text-[#848E9C]">·</span>
+            <span className="text-[11px] font-semibold text-[#848E9C]">
+              {editingId ? "Edit Article" : "New Blog Article"}
+            </span>
+            {hasUnsavedChanges ? (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                <span className="size-1.5 rounded-full bg-amber-400 animate-pulse" />
+                Unsaved Edits
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                <Check size={12} strokeWidth={2.5} />
+                Saved
+              </span>
+            )}
+          </div>
+
+          {/* Top Right Corner: Unique Color Identified Button */}
+          <button
+            type="button"
+            onClick={() => onBack()}
+            className="crm-blog-back-btn-corner group shrink-0 cursor-pointer"
+            title="Return to Content & Articles list"
+          >
+            <ArrowLeft size={16} strokeWidth={2.5} className="transition-transform group-hover:-translate-x-1" />
+            <span>Back to Content</span>
+          </button>
+        </div>
+
+        {/* Lower Banner Row: Title on Left, Controls on Right */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-bold text-[#EAECEF] tracking-tight m-0">
+              {editingId ? "Edit Architectural Article" : "New Architectural Teardown"}
+            </h1>
+            <p className="text-xs text-[#848E9C] mt-1 max-w-2xl leading-relaxed m-0">
+              Craft, optimize with Rank Math SEO & Power Words, and publish technical insights directly to the Codex Dynamics site.
+            </p>
           </div>
 
           {/* Right: Actions, Rank Math Score Pill, and Save Controls */}
           <div className="flex items-center gap-2.5 self-start lg:self-center shrink-0 flex-wrap">
             {/* View Mode Switcher */}
-            <div className="inline-flex items-center bg-[#22262E] p-1 rounded-lg border border-[#444A55]">
+            <div className="crm-segmented-group inline-flex items-center bg-[#181A20] p-1.5 rounded-xl border border-[#444A55] gap-2 h-[42px] box-border shrink-0">
               <button
                 type="button"
                 onClick={() => setEditorView("visual")}
@@ -550,7 +552,7 @@ export function BlogEditorPage({
               type="button"
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className="crm-btn-icon"
-              title="Toggle Post Inspector Sidebar"
+              title={isSidebarOpen ? "Hide Inspector Sidebar" : "Show Inspector Sidebar"}
             >
               <Sliders size={15} />
             </button>
@@ -1004,13 +1006,13 @@ export function BlogEditorPage({
                   <label className="text-[11px] font-bold uppercase tracking-wider text-[#848E9C] mb-1.5 block">
                     Focus Keyword <span className="text-red-400">*</span>
                   </label>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
                     <input
                       type="text"
                       value={focusKeyword}
                       onChange={(e) => setFocusKeyword(e.target.value)}
                       placeholder="e.g. Architectural Teardown"
-                      className="text-xs"
+                      className="text-xs flex-1"
                     />
                     <button
                       type="button"
@@ -1020,7 +1022,7 @@ export function BlogEditorPage({
                           setFocusKeyword(words);
                         }
                       }}
-                      className="crm-btn-secondary shrink-0"
+                      className="crm-btn-secondary shrink-0 whitespace-nowrap"
                     >
                       Extract from Title
                     </button>
@@ -1033,20 +1035,22 @@ export function BlogEditorPage({
                     <span className="text-[11px] font-bold text-[#848E9C] uppercase tracking-wider">
                       Google SERP Preview
                     </span>
-                    <div className="flex items-center gap-1 bg-[#22262E] p-0.5 rounded-md border border-[#444A55]">
+                    <div className="crm-segmented-group inline-flex items-center gap-2 bg-[#181A20] p-1.5 rounded-xl border border-[#444A55]">
                       <button
                         type="button"
                         onClick={() => setSerpDevice("desktop")}
                         className={`crm-tab-btn ${serpDevice === "desktop" ? "active" : ""}`}
                       >
-                        Desktop
+                        <Laptop size={13} />
+                        <span>Desktop</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => setSerpDevice("mobile")}
                         className={`crm-tab-btn ${serpDevice === "mobile" ? "active" : ""}`}
                       >
-                        Mobile
+                        <Smartphone size={13} />
+                        <span>Mobile</span>
                       </button>
                     </div>
                   </div>
@@ -1169,7 +1173,7 @@ export function BlogEditorPage({
                   <span className="text-[11px] font-bold text-[#848E9C] uppercase tracking-wider">
                     Social Share Card Preview
                   </span>
-                  <div className="flex items-center gap-1 bg-[#22262E] p-0.5 rounded-md border border-[#444A55]">
+                  <div className="crm-segmented-group inline-flex items-center gap-2 bg-[#181A20] p-1.5 rounded-xl border border-[#444A55]">
                     <button
                       type="button"
                       onClick={() => setSocialPlatform("facebook")}
@@ -1258,7 +1262,7 @@ export function BlogEditorPage({
         {isSidebarOpen && (
           <div className="crm-blog-inspector w-full lg:w-80 shrink-0 space-y-4">
             {/* Sidebar Tabs: Post Settings vs SEO Insights */}
-            <div className="flex items-center bg-[#30353E] p-1 rounded-xl border border-[#444A55]">
+            <div className="crm-sidebar-tab-group flex items-center gap-2.5 bg-[#20242C] p-1.5 rounded-xl border border-[#444A55]">
               <button
                 type="button"
                 onClick={() => setSidebarTab("settings")}
@@ -1407,32 +1411,36 @@ export function BlogEditorPage({
                   </button>
 
                   {accordionState.categories && (
-                    <div className="p-4 space-y-3 border-t border-[#444A55]">
-                      <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
-                        {categoriesList.map((cat) => (
-                          <label
-                            key={cat.id}
-                            className={`flex items-center gap-2.5 p-2 rounded-lg cursor-pointer transition-colors text-xs ${
-                              selectedCategory === cat.name
-                                ? "bg-[#0071E3]/20 text-[#EAECEF] font-semibold"
-                                : "text-[#848E9C] hover:bg-[#2A2E36]"
-                            }`}
-                          >
-                            <input
-                              type="radio"
-                              name="article-category"
-                              checked={selectedCategory === cat.name}
-                              onChange={() => setSelectedCategory(cat.name)}
-                              className="accent-[#0071E3]"
-                            />
-                            <span>{cat.name}</span>
-                          </label>
-                        ))}
+                    <div className="p-4 space-y-3.5 border-t border-[#444A55]">
+                      <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                        {categoriesList.map((cat) => {
+                          const isSelected = selectedCategory === cat.name;
+                          return (
+                            <button
+                              key={cat.id}
+                              type="button"
+                              onClick={() => setSelectedCategory(cat.name)}
+                              className={`crm-category-card ${isSelected ? "selected" : ""}`}
+                            >
+                              <div className="flex items-center gap-3.5 min-w-0">
+                                <span className="crm-category-circle">
+                                  {isSelected && <Check size={11} strokeWidth={3} />}
+                                </span>
+                                <span className="text-xs truncate font-medium select-none text-[#EAECEF]">{cat.name}</span>
+                              </div>
+                              {isSelected && (
+                                <span className="text-[10px] uppercase font-bold tracking-wider text-[#0071E3] bg-[#0071E3]/15 px-2 py-0.5 rounded border border-[#0071E3]/30 shrink-0 ml-2">
+                                  Active
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
                       </div>
 
                       {/* Add new category button / form */}
                       {isAddingCategory ? (
-                        <form onSubmit={handleAddNewCategory} className="space-y-2 pt-2 border-t border-[#444A55]">
+                        <form onSubmit={handleAddNewCategory} className="space-y-2.5 pt-3 border-t border-[#444A55]">
                           <input
                             type="text"
                             value={newCatName}
@@ -1443,7 +1451,7 @@ export function BlogEditorPage({
                           />
                           <div className="flex gap-2">
                             <button type="submit" className="crm-btn-primary flex-1 justify-center">
-                              Add
+                              Add Category
                             </button>
                             <button
                               type="button"
@@ -1504,7 +1512,7 @@ export function BlogEditorPage({
                       </div>
 
                       {/* Tag Input */}
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 items-center">
                         <input
                           type="text"
                           value={tagInput}
@@ -1516,7 +1524,7 @@ export function BlogEditorPage({
                             }
                           }}
                           placeholder="Add a tag..."
-                          className="text-xs"
+                          className="text-xs flex-1"
                         />
                         <button
                           type="button"
@@ -1528,11 +1536,11 @@ export function BlogEditorPage({
                       </div>
 
                       {/* Quick Popular Tags */}
-                      <div>
-                        <span className="text-[10px] font-bold text-[#848E9C] uppercase tracking-wider block mb-1">
+                      <div className="pt-1">
+                        <span className="text-[10px] font-bold text-[#848E9C] uppercase tracking-wider block mb-1.5">
                           Popular Suggestions
                         </span>
-                        <div className="flex flex-wrap gap-1">
+                        <div className="flex flex-wrap gap-1.5">
                           {POPULAR_TAGS.slice(0, 8).map((pt) => (
                             <button
                               key={pt}

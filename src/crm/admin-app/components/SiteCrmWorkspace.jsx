@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import ContentWorkspace from './ContentWorkspace.jsx';
-import { RefreshCw } from 'lucide-react';
+import LiveChatWorkspace from './LiveChatWorkspace.jsx';
 
 const TABS = [
   ['overview', 'Overview'],
@@ -129,8 +129,6 @@ export default function SiteCrmWorkspace({
   showNotification = () => {},
   defaultTab = 'overview',
   standalone = false,
-  pageTitle = 'Site CRM',
-  pageSubtitle = 'Manage the public website, content, enquiries, visitors, and communication from Codex Dynamics.'
 }) {
   const [tab, setTab] = useState(defaultTab);
   const [data, setData] = useState(null);
@@ -211,21 +209,6 @@ export default function SiteCrmWorkspace({
   if (loading || !data) return <div className="crm-site-crm-loading">Loading shared site CRM...</div>;
   const visibleTabs = standalone ? [] : TABS;
   return <section className="crm-site-crm-workspace">
-    <header className="crm-site-crm-header">
-      <div className="crm-site-crm-header-copy">
-        <div className="crm-site-crm-header-kicker">
-          <span className="crm-site-crm-header-mark">CD</span>
-          <span>Codex Dynamics</span>
-          <span className="crm-site-crm-header-tag">Admin CRM</span>
-        </div>
-        <h2>{standalone ? pageTitle : 'Site CRM'}</h2>
-        <p>{pageSubtitle}</p>
-      </div>
-      <div className="crm-site-crm-header-actions">
-        <span className="crm-site-crm-live-status"><i /> Content library</span>
-        <Button onClick={load}><RefreshCw size={14} /> Refresh</Button>
-      </div>
-    </header>
     {!standalone && <nav className="crm-site-crm-tabs">{visibleTabs.map(([key, label]) => <button key={key} className={tab === key ? 'active' : ''} onClick={() => setTab(key)}>{label}</button>)}</nav>}
 
     {tab === 'overview' && <div className="crm-site-crm-grid">
@@ -246,7 +229,9 @@ export default function SiteCrmWorkspace({
       />
     )}
 
-    {tab === 'chat' && <div className="crm-site-crm-chat"><div className="crm-site-crm-panel"><h3>Chat threads</h3>{chatThreads.map((thread) => <button className={`crm-site-crm-thread ${selectedThread?.id === thread.id ? 'active' : ''}`} key={thread.id} onClick={() => selectThread(thread)}><strong>{thread.visitor_name || 'Visitor'}</strong><span>{thread.last_message || 'No messages'}</span></button>)}</div><div className="crm-site-crm-panel"><h3>{selectedThread?.visitor_name || 'Select a thread'}</h3>{chatMessages.map((message) => <div className="crm-site-crm-message" key={message.id}><strong>{message.sender_name}</strong><p>{message.message}</p><small>{message.created_at}</small></div>)}{selectedThread && <Button danger onClick={() => run('delete_thread', { threadId: selectedThread.id })}>Delete thread</Button>}</div></div>}
+    {tab === 'chat' && (
+      <LiveChatWorkspace showNotification={showNotification} />
+    )}
 
     {tab === 'tools' && <div className="crm-site-crm-tools"><div className="crm-site-crm-panel"><h3>Webhook</h3><Field label="Webhook URL" value={webhook} onChange={setWebhook} /><Button onClick={() => run('save_webhook', { url: webhook })}>Save webhook</Button><Button secondary onClick={() => run('test_webhook', { url: webhook })}>Send test</Button></div><div className="crm-site-crm-panel"><h3>Backup and restore</h3><p>Download the shared CRM data or restore a previous JSON snapshot.</p><Button onClick={() => { const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `codex-site-crm-${new Date().toISOString().slice(0, 10)}.json`; link.click(); }}>Export backup</Button><label className="crm-site-crm-upload">Restore backup<input type="file" accept="application/json" onChange={async (e) => { const file = e.target.files?.[0]; if (!file) return; await run('restore_backup', { backupData: JSON.parse(await file.text()) }); }} /></label></div><div className="crm-site-crm-panel"><h3>Admin password</h3><form className="crm-site-crm-form" onSubmit={changePassword}><Field label="Current password" value={passwords.currentPassword} onChange={(v) => setPasswords((p) => ({ ...p, currentPassword: v }))} type="password" /><Field label="New password" value={passwords.newPassword} onChange={(v) => setPasswords((p) => ({ ...p, newPassword: v }))} type="password" /><Field label="Confirm new password" value={passwords.confirmPassword} onChange={(v) => setPasswords((p) => ({ ...p, confirmPassword: v }))} type="password" /><Button>Change password</Button></form></div><div className="crm-site-crm-panel"><h3>Media upload</h3><p>Upload an image to the shared site media library. The resulting URL is copied for use in content.</p><label className="crm-site-crm-upload">{uploading ? 'Uploading...' : 'Choose image'}<input type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml" disabled={uploading} onChange={uploadImage} /></label></div></div>}
 
