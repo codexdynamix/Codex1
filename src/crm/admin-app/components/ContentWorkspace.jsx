@@ -287,6 +287,7 @@ export default function ContentWorkspace({
   showNotification,
 }) {
   const [section, setSection] = useState('blog');
+  const [isEditingBlog, setIsEditingBlog] = useState(false);
   const data = { projects, reviews, backlinks };
 
   const saveBlog = async (payload) => {
@@ -321,61 +322,65 @@ export default function ContentWorkspace({
 
   return (
     <section className="crm-content-hub">
-      <header className="crm-content-hub-header">
-        <div className="crm-content-hub-header-copy">
-          <div className="crm-content-hub-title-row">
-            <span className="crm-content-hub-header-mark"><BookOpen size={18} /></span>
-            <div>
-              <span className="crm-content-hub-kicker">Leads / Content</span>
-              <h2>Content Studio</h2>
+      {!isEditingBlog && (
+        <>
+          <header className="crm-content-hub-header">
+            <div className="crm-content-hub-header-copy">
+              <div className="crm-content-hub-title-row">
+                <span className="crm-content-hub-header-mark"><BookOpen size={18} /></span>
+                <div>
+                  <span className="crm-content-hub-kicker">Leads / Content</span>
+                  <h2>Content Studio</h2>
+                </div>
+              </div>
+              <p>Write, optimize, publish, and manage the content that powers the public site.</p>
             </div>
-          </div>
-          <p>Write, optimize, publish, and manage the content that powers the public site.</p>
-        </div>
-        <div className="crm-content-hub-header-workflow">
-          <div className="crm-content-hub-workflow-label">
-            <Sparkles size={13} />
-            <strong>Publishing workflow</strong>
-          </div>
-          <div className="crm-content-hub-workflow-steps">
-            <span>Draft</span>
-            <ArrowRight size={12} />
-            <span>Optimize</span>
-            <ArrowRight size={12} />
-            <span>Publish</span>
-          </div>
-        </div>
-      </header>
+            <div className="crm-content-hub-header-workflow">
+              <div className="crm-content-hub-workflow-label">
+                <Sparkles size={13} />
+                <strong>Publishing workflow</strong>
+              </div>
+              <div className="crm-content-hub-workflow-steps">
+                <span>Draft</span>
+                <ArrowRight size={12} />
+                <span>Optimize</span>
+                <ArrowRight size={12} />
+                <span>Publish</span>
+              </div>
+            </div>
+          </header>
 
-      <LibrarySummary blogs={blogs} projects={projects} reviews={reviews} backlinks={backlinks} />
+          <LibrarySummary blogs={blogs} projects={projects} reviews={reviews} backlinks={backlinks} />
 
-      <nav className="crm-content-hub-nav" aria-label="Content sections">
-        {CONTENT_SECTIONS.map(({ id, label, icon: Icon }) => {
-          const count = id === 'blog' ? blogs.length : data[id].length;
-          return (
-          <button
-            key={id}
-            type="button"
-            className={section === id ? 'active' : ''}
-            onClick={() => setSection(id)}
-          >
-            <Icon size={15} />
-            <span>{label}</span>
-            <em>{count}</em>
-          </button>
-          );
-        })}
-      </nav>
+          <nav className="crm-content-hub-nav" aria-label="Content sections">
+            {CONTENT_SECTIONS.map(({ id, label, icon: Icon }) => {
+              const count = id === 'blog' ? blogs.length : data[id].length;
+              return (
+              <button
+                key={id}
+                type="button"
+                className={section === id ? 'active' : ''}
+                onClick={() => setSection(id)}
+              >
+                <Icon size={15} />
+                <span>{label}</span>
+                <em>{count}</em>
+              </button>
+              );
+            })}
+          </nav>
+        </>
+      )}
 
       {section === 'blog' ? (
-        <div className="crm-content-hub-blog">
+        <div className={`crm-content-hub-blog ${isEditingBlog ? 'editor-active' : ''}`}>
           <BlogsTab
             blogs={blogs}
             onSaveBlog={saveBlog}
             onDeleteBlog={deleteBlog}
             onToggleStatus={toggleBlogStatus}
             onDuplicateBlog={duplicateBlog}
-            onEditorStateChange={() => {}}
+            onEditorStateChange={setIsEditingBlog}
           />
         </div>
       ) : (

@@ -4,14 +4,11 @@ import {
   Plus,
   Undo2,
   Redo2,
-  Info,
   Settings,
   TrendingUp,
-  MoreVertical,
   Eye,
   Code,
   Laptop,
-  Tablet,
   Smartphone,
   ExternalLink,
   Check,
@@ -21,6 +18,7 @@ import {
   Italic,
   Strikethrough,
   Heading2,
+  Heading3,
   Quote,
   List,
   ListOrdered,
@@ -34,6 +32,22 @@ import {
   X,
   Search,
   FileText,
+  BookOpen,
+  Sparkles,
+  Save,
+  Send,
+  Sliders,
+  Copy,
+  Share2,
+  Globe,
+  Tag,
+  FolderTree,
+  Calendar,
+  User,
+  MessageSquare,
+  HelpCircle,
+  Shield,
+  Layers,
 } from "lucide-react";
 import { toast } from "sonner";
 import { calculateReadingTime } from "@/lib/reading-time";
@@ -114,335 +128,288 @@ export function BlogEditorPage({
   const [imageCaption, setImageCaption] = useState(
     initialBlog?.image_caption || "Codex Dynamics systems architecture"
   );
-  const [focusKeyword, setFocusKeyword] = useState(
-    initialBlog?.focus_keyword || "Enterprise Architecture"
+
+  // 2. SEO & Rank Math States
+  const [focusKeyword, setFocusKeyword] = useState("Architectural");
+  const [secondaryKeywords, setSecondaryKeywords] = useState<string[]>([
+    "zero-latency",
+    "edge computing",
+  ]);
+  const [secKeywordInput, setSecKeywordInput] = useState("");
+  const [seoTitle, setSeoTitle] = useState(
+    initialBlog?.title || "Architectural Teardown: High-Performance Systems"
   );
-  const [metaTitle, setMetaTitle] = useState(
-    initialBlog?.meta_title || initialBlog?.title || ""
+  const [seoDescription, setSeoDescription] = useState(
+    initialBlog?.excerpt ||
+      "Discover core principles for deploying zero-latency, edge-optimized enterprise web applications with Codex Dynamics."
   );
-  const [metaDescription, setMetaDescription] = useState(
-    initialBlog?.meta_description || initialBlog?.excerpt || ""
+  const [canonicalUrl, setCanonicalUrl] = useState(
+    initialBlog?.slug
+      ? `https://codexdynamics.com/blog/${initialBlog.slug}`
+      : ""
   );
-  const [isSticky, setIsSticky] = useState(false);
+  const [schemaType, setSchemaType] = useState<
+    "Article" | "TechArticle" | "NewsArticle" | "HowTo"
+  >("TechArticle");
+  const [robotsMeta, setRobotsMeta] = useState({
+    index: true,
+    follow: true,
+    noarchive: false,
+    nosnippet: false,
+  });
   const [allowComments, setAllowComments] = useState(true);
-  const [allowPingbacks, setAllowPingbacks] = useState(true);
+  const [enableToc, setEnableToc] = useState(true);
 
-  // 2. Categories Management (WordPress Categories)
-  const [allCategories, setAllCategories] = useState<BlogCategory[]>([]);
-  const [categorySearch, setCategorySearch] = useState("");
-  const [isAddingCategory, setIsAddingCategory] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState("");
-  const [newCategoryParent, setNewCategoryParent] = useState("");
-
-  // Load stored categories on mount
-  useEffect(() => {
-    const loaded = getStoredCategories();
-    setAllCategories(loaded);
-  }, []);
-
-  const handleCreateCategory = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!newCategoryName.trim()) {
-      toast.error("Please enter a category name");
-      return;
-    }
-    const created = addCategory(newCategoryName, newCategoryParent || undefined);
-    setAllCategories(getStoredCategories());
-    setSelectedCategory(created.name);
-    setNewCategoryName("");
-    setNewCategoryParent("");
-    setIsAddingCategory(false);
-    toast.success(`Category "${created.name}" created and selected!`);
-  };
-
-  // Filtered categories
-  const filteredCategories = useMemo(() => {
-    if (!categorySearch.trim()) return allCategories;
-    const q = categorySearch.toLowerCase();
-    return allCategories.filter(
-      (c) => c.name.toLowerCase().includes(q) || c.slug.includes(q)
-    );
-  }, [allCategories, categorySearch]);
-
-  // 3. UI and View States (WordPress Gutenberg Layout)
+  // 3. UI Control States
   const [editorView, setEditorView] = useState<"visual" | "code" | "preview">("visual");
-  const [previewDevice, setPreviewDevice] = useState<"desktop" | "tablet" | "mobile">("desktop");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [sidebarTab, setSidebarTab] = useState<"post" | "seo">("post");
-  const [isZenMode, setIsZenMode] = useState(false);
+  const [sidebarTab, setSidebarTab] = useState<"settings" | "seo">("settings");
+  const [rankMathTab, setRankMathTab] = useState<
+    "general" | "advanced" | "schema" | "social" | "powerwords"
+  >("general");
+  const [serpDevice, setSerpDevice] = useState<"desktop" | "mobile">("desktop");
+  const [socialPlatform, setSocialPlatform] = useState<"facebook" | "twitter">("facebook");
   const [isImagePickerOpen, setIsImagePickerOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [isDocumentOutlineOpen, setIsDocumentOutlineOpen] = useState(false);
-  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
-  const [isBlockInserterOpen, setIsBlockInserterOpen] = useState(false);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [linkUrlInput, setLinkUrlInput] = useState("");
   const [linkTextInput, setLinkTextInput] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  // Accordion states in WordPress Sidebar
-  const [accordionSummary, setAccordionSummary] = useState(true);
-  const [accordionCategories, setAccordionCategories] = useState(true);
-  const [accordionTags, setAccordionTags] = useState(true);
-  const [accordionFeaturedImage, setAccordionFeaturedImage] = useState(true);
-  const [accordionExcerpt, setAccordionExcerpt] = useState(true);
-  const [accordionDiscussion, setAccordionDiscussion] = useState(false);
+  // 4. Sidebar Accordion Collapsibles
+  const [accordionState, setAccordionState] = useState({
+    status: true,
+    image: true,
+    categories: true,
+    tags: true,
+    discussion: false,
+  });
 
-  // Rank Math Meta Box Tab
-  const [metaBoxTab, setMetaBoxTab] = useState<"general" | "power-words" | "social" | "advanced">("general");
-  const [serpPreviewDevice, setSerpPreviewDevice] = useState<"desktop" | "mobile">("desktop");
-  const [selectedPowerCategory, setSelectedPowerCategory] = useState<string>("all");
-  const [powerWordSearch, setPowerWordSearch] = useState("");
-
-  const editorTextareaRef = useRef<HTMLTextAreaElement>(null);
-
-  // Track changes for unsaved indicator
-  useEffect(() => {
-    setHasUnsavedChanges(true);
-  }, [
-    title,
-    slug,
-    content,
-    excerpt,
-    selectedCategory,
-    tags,
-    author,
-    status,
-    imageUrl,
-    focusKeyword,
-    metaTitle,
-    metaDescription,
-  ]);
-
-  // Auto-generate slug from title if empty
-  const handleTitleChange = (val: string) => {
-    setTitle(val);
-    if (!slug || slug === title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")) {
-      const autoSlug = val
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
-      setSlug(autoSlug);
-    }
+  const toggleAccordion = (key: keyof typeof accordionState) => {
+    setAccordionState((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  // Reading Time and Word Count Analytics
-  const readingStats = useMemo(() => calculateReadingTime(content), [content]);
+  // 5. Categories Management
+  const [categoriesList, setCategoriesList] = useState<BlogCategory[]>([]);
+  const [newCatName, setNewCatName] = useState("");
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
 
-  const documentStats = useMemo(() => {
-    const raw = content || "";
-    const words = raw.split(/\s+/).filter(Boolean).length;
-    const characters = raw.length;
-    const paragraphs = raw.split(/\n\s*\n/).filter(Boolean).length;
-    const headings = (raw.match(/^#{1,6}\s+.+$/gm) || []).length;
-    const blocks = paragraphs + headings;
-    const outline = (raw.match(/^(#{1,4})\s+(.+)$/gm) || []).map((line) => {
-      const match = line.match(/^(#{1,4})\s+(.+)$/);
-      if (!match) return { level: 2, text: line };
-      return { level: match[1].length, text: match[2] };
-    });
-    return { words, characters, paragraphs, headings, blocks, outline };
+  useEffect(() => {
+    setCategoriesList(getStoredCategories());
+  }, []);
+
+  const handleAddNewCategory = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCatName.trim()) return;
+    const cat = addCategory(newCatName.trim());
+    setCategoriesList(getStoredCategories());
+    setSelectedCategory(cat.name);
+    setNewCatName("");
+    setIsAddingCategory(false);
+    toast.success(`Category "${cat.name}" added`);
+  };
+
+  // 6. Content Stats & Power Words
+  const contentStats = useMemo(() => {
+    return calculateReadingTime(content);
   }, [content]);
 
-  // Copywriting Power Words Analysis
   const powerWordsAnalysis = useMemo(() => {
     return analyzePowerWords(title, content);
   }, [title, content]);
 
-  // Rank Math SEO Audit Calculation
-  const rankMathScore = useMemo(() => {
-    let score = 30; // base score
-    const kw = focusKeyword.trim().toLowerCase();
-    const t = title.toLowerCase();
-    const c = content.toLowerCase();
-    const s = slug.toLowerCase();
-    const m = (metaDescription || excerpt).toLowerCase();
+  // Track changes
+  useEffect(() => {
+    setHasUnsavedChanges(true);
+  }, [title, slug, excerpt, content, selectedCategory, tags, author, status, imageUrl]);
 
-    const hasKwInTitle = kw && t.includes(kw);
-    const hasKwInSlug = kw && s.includes(kw.replace(/\s+/g, "-"));
-    const hasKwInContent = kw && c.includes(kw);
-    const hasKwInMeta = kw && m.includes(kw);
-    const hasGoodLength = documentStats.words >= 400;
-    const hasPowerWord = powerWordsAnalysis.headlineHasPowerWord;
-    const hasNumber = powerWordsAnalysis.headlineHasNumber;
-    const hasFeaturedImg = Boolean(imageUrl);
+  // Auto-generate slug if empty
+  const handleAutoSlug = () => {
+    if (!title) return;
+    const generated = title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+    setSlug(generated);
+    if (!canonicalUrl) {
+      setCanonicalUrl(`https://codexdynamics.com/blog/${generated}`);
+    }
+  };
 
-    if (hasKwInTitle) score += 15;
-    if (hasKwInSlug) score += 10;
-    if (hasKwInContent) score += 10;
-    if (hasKwInMeta) score += 10;
-    if (hasGoodLength) score += 10;
-    if (hasPowerWord) score += 10;
-    if (hasNumber) score += 5;
-    if (hasFeaturedImg) score += 5;
-
-    return Math.min(100, Math.max(10, score));
-  }, [focusKeyword, title, content, slug, metaDescription, excerpt, documentStats.words, powerWordsAnalysis, imageUrl]);
-
-  // 10-Point Rank Math Checklist
+  // 7. Rank Math SEO Score Calculation
   const rankMathChecks = useMemo(() => {
     const kw = focusKeyword.trim().toLowerCase();
-    const t = title.toLowerCase();
-    const c = content.toLowerCase();
-    const s = slug.toLowerCase();
-    const m = (metaDescription || excerpt).toLowerCase();
+    const hasKw = Boolean(kw);
+    const inTitle = hasKw && title.toLowerCase().includes(kw);
+    const inDesc = hasKw && (seoDescription || excerpt).toLowerCase().includes(kw);
+    const inContent = hasKw && content.toLowerCase().includes(kw);
+    const inSlug = hasKw && slug.toLowerCase().includes(kw.replace(/\s+/g, "-"));
+    const titleLengthOk = title.length >= 40 && title.length <= 65;
+    const descLengthOk = (seoDescription || excerpt).length >= 120 && (seoDescription || excerpt).length <= 160;
+    const hasHeadings = /^#{2,4}\s/m.test(content);
+    const hasPowerWord = powerWordsAnalysis.headlineHasPowerWord;
+    const hasNumber = /\d+/.test(title);
+    const wordCountOk = contentStats.words >= 300;
 
-    return [
+    const list = [
       {
         id: "kw-title",
-        label: "Focus Keyword used in the SEO title",
-        passed: Boolean(kw && t.includes(kw)),
-        tip: "Add your primary keyword near the beginning of the title.",
+        label: "Focus Keyword appears in SEO title",
+        passed: inTitle,
+        weight: 15,
+        tip: "Add your main keyword near the beginning of the title.",
       },
       {
-        id: "kw-slug",
-        label: "Focus Keyword used in the URL slug",
-        passed: Boolean(kw && s.includes(kw.replace(/\s+/g, "-"))),
-        tip: "Keep URL slug clean and focused on the target keyword.",
+        id: "kw-desc",
+        label: "Focus Keyword appears in meta description",
+        passed: inDesc,
+        weight: 12,
+        tip: "Include your primary keyword naturally in the snippet description.",
+      },
+      {
+        id: "kw-url",
+        label: "Focus Keyword appears in the URL slug",
+        passed: inSlug,
+        weight: 10,
+        tip: "Keep the URL slug short and keyword-rich.",
       },
       {
         id: "kw-content",
-        label: "Focus Keyword found in the content body",
-        passed: Boolean(kw && c.includes(kw)),
-        tip: "Naturally mention your focus keyword in the introductory paragraphs.",
+        label: "Focus Keyword used in article body",
+        passed: inContent,
+        weight: 15,
+        tip: "Mention the focus keyword in the introductory paragraphs.",
       },
       {
-        id: "kw-meta",
-        label: "Focus Keyword used in Meta Description",
-        passed: Boolean(kw && m.includes(kw)),
-        tip: "Include target keywords to drive organic search click-through rate.",
+        id: "title-len",
+        label: "Title is within optimal length (40–65 characters)",
+        passed: titleLengthOk,
+        weight: 10,
+        tip: `Current title length is ${title.length} characters.`,
       },
       {
-        id: "length",
-        label: "Article length is comprehensive (400+ words)",
-        passed: documentStats.words >= 400,
-        tip: `Current length is ${documentStats.words} words. Aim for 600+ words for deep authority.`,
+        id: "desc-len",
+        label: "Meta description length is optimal (120–160 characters)",
+        passed: descLengthOk,
+        weight: 8,
+        tip: `Current description is ${(seoDescription || excerpt).length} characters.`,
       },
       {
         id: "power-word",
-        label: "Headline contains a psychological Power Word",
-        passed: powerWordsAnalysis.headlineHasPowerWord,
-        tip: "Power words (e.g. 'Blueprint', 'Proven', 'Zero-Latency') boost CTR by 38%.",
+        label: "Headline includes high-converting Power Word",
+        passed: hasPowerWord,
+        weight: 10,
+        tip: "Incorporate emotional or authoritative words (e.g. Blueprint, Definitive, Zero-latency).",
       },
       {
-        id: "headline-num",
-        label: "Headline contains a specific metric or number",
-        passed: powerWordsAnalysis.headlineHasNumber,
-        tip: "Numbers in headlines (e.g. 'Sub-50ms', '42%') increase credibility.",
+        id: "number-title",
+        label: "Title contains a specific number or metric",
+        passed: hasNumber,
+        weight: 6,
+        tip: "Numbers in headlines boost click-through rates by up to 36%.",
       },
       {
-        id: "featured-img",
-        label: "Featured image specified with accessible Alt text",
-        passed: Boolean(imageUrl && imageAlt),
-        tip: "Featured images improve social cards and reader retention.",
+        id: "headings",
+        label: "Content organized with H2 / H3 subheadings",
+        passed: hasHeadings,
+        weight: 8,
+        tip: "Structure content with clear modular headers for readability.",
       },
       {
-        id: "subheadings",
-        label: "Content structured with H2 and H3 subheadings",
-        passed: documentStats.headings >= 2,
-        tip: "Break up long copy with descriptive section headings.",
-      },
-      {
-        id: "title-length",
-        label: "SEO Title length is optimal (35-65 chars)",
-        passed: title.length >= 35 && title.length <= 65,
-        tip: `Current title length is ${title.length} characters (ideal: 40-60).`,
+        id: "word-count",
+        label: "Article meets minimum depth (300+ words)",
+        passed: wordCountOk,
+        weight: 6,
+        tip: `Current length is ${contentStats.words} words. Aim for comprehensive teardowns.`,
       },
     ];
-  }, [focusKeyword, title, content, slug, metaDescription, excerpt, documentStats, powerWordsAnalysis, imageUrl, imageAlt]);
 
-  // Insert formatting into Markdown editor
-  const handleInsertFormatting = (prefix: string, suffix: string = "", placeholder: string = "") => {
-    const textarea = editorTextareaRef.current;
-    if (!textarea) return;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = content.substring(start, end) || placeholder;
-    const replacement = `${prefix}${selectedText}${suffix}`;
-    const newContent = content.substring(0, start) + replacement + content.substring(end);
-    setContent(newContent);
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(start + prefix.length, start + prefix.length + selectedText.length);
-    }, 50);
-  };
+    const score = list.reduce((acc, curr) => (curr.passed ? acc + curr.weight : acc), 0);
 
-  // Insert Power Word handler
-  const handleInsertPowerWord = (word: string, target: "title" | "content") => {
-    if (target === "title") {
-      const newTitle = title ? `${word.charAt(0).toUpperCase() + word.slice(1)}: ${title}` : word;
-      setTitle(newTitle);
-      toast.success(`Added "${word}" to Headline!`);
-    } else {
-      handleInsertFormatting(`**${word}** `, "", "");
-      toast.success(`Inserted "${word}" into article!`);
-    }
-  };
+    return { list, score: Math.min(100, score) };
+  }, [focusKeyword, title, seoDescription, excerpt, content, slug, powerWordsAnalysis, contentStats]);
 
-  // Add Tag
-  const handleAddTag = (tagText: string) => {
-    const trimmed = tagText.trim().replace(/^#/, "");
-    if (!trimmed) return;
-    if (!tags.includes(trimmed)) {
-      setTags([...tags, trimmed]);
-      setTagInput("");
-    }
+  const rankMathScore = rankMathChecks.score;
+
+  // 8. Tags Management
+  const handleAddTag = (tagToAdd: string) => {
+    const trimmed = tagToAdd.trim().replace(/^#/, "");
+    if (!trimmed || tags.includes(trimmed)) return;
+    setTags((prev) => [...prev, trimmed]);
+    setTagInput("");
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter((t) => t !== tagToRemove));
+    setTags((prev) => prev.filter((t) => t !== tagToRemove));
+  };
+
+  // 9. Markdown Formatting Helper
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const handleInsertFormatting = (prefix: string, suffix: string = "", placeholder: string = "") => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = content.substring(start, end);
+    const replacement = selectedText
+      ? `${prefix}${selectedText}${suffix}`
+      : `${prefix}${placeholder}${suffix}`;
+
+    const newContent = content.substring(0, start) + replacement + content.substring(end);
+    setContent(newContent);
+
+    setTimeout(() => {
+      textarea.focus();
+      const cursorTarget = start + prefix.length + (selectedText ? selectedText.length : placeholder.length);
+      textarea.setSelectionRange(cursorTarget, cursorTarget);
+    }, 0);
   };
 
   // Save handler
-  const handleSavePost = async (publishStatus: "published" | "draft" | "archived" = status) => {
+  const handleSavePost = async (targetStatus: "published" | "draft" | "archived" = status) => {
     if (!title.trim()) {
-      toast.error("Please provide a post title before saving.");
+      toast.error("Please provide an article title before saving.");
       return;
     }
+
     setIsSaving(true);
     try {
-      const payload: any = {
+      const payload: Partial<BlogPost> = {
         id: editingId || undefined,
         title: title.trim(),
-        slug:
-          slug.trim() ||
-          title
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/(^-|-$)/g, ""),
+        slug: slug.trim() || title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+        excerpt: excerpt.trim(),
         content,
-        excerpt: excerpt.trim() || content.slice(0, 160).replace(/[#*`_]/g, ""),
         category: selectedCategory,
         tags,
-        author,
-        status: publishStatus,
-        image_url: imageUrl,
+        author: author.trim(),
+        status: targetStatus,
         cover_image: imageUrl,
+        image_url: imageUrl,
         image_alt: imageAlt,
         image_caption: imageCaption,
-        focus_keyword: focusKeyword,
-        meta_title: metaTitle || title,
-        meta_description: metaDescription || excerpt,
       };
 
-      const ok = await onSave(payload, publishStatus);
-      if (ok) {
-        setStatus(publishStatus);
+      const success = await onSave(payload, targetStatus);
+      if (success) {
         setHasUnsavedChanges(false);
+        setStatus(targetStatus);
         toast.success(
-          publishStatus === "published"
-            ? "Article published live to blog!"
-            : "Draft saved successfully!"
+          targetStatus === "published"
+            ? "Article published successfully to Codex Dynamics!"
+            : "Draft saved successfully."
         );
       }
-    } catch {
-      toast.error("Failed to save post. Please try again.");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save article");
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Insert link modal confirm
+  // Confirm link modal insertion
   const handleConfirmLink = (e: React.FormEvent) => {
     e.preventDefault();
     if (!linkUrlInput) return;
@@ -454,1237 +421,906 @@ export function BlogEditorPage({
   };
 
   return (
-    <div
-      className={`w-full bg-[#f0f0f1] text-[#1e1e1e] font-sans selection:bg-[#2271b1]/20 min-h-screen pb-16 crm-blog-editor ${
-        isZenMode ? "bg-white" : ""
-      }`}
-    >
+    <div className="crm-blog-editor w-full text-[#EAECEF] min-h-screen pb-16">
       {/* ========================================================================= */}
-      {/* 1. WORDPRESS TOP ACTION BAR                                               */}
+      {/* 1. TOP EDITORIAL BANNER: POLISHED, CRISP, CONSISTENT WITH CODEX CRM       */}
       {/* ========================================================================= */}
-      <header className="sticky top-0 z-30 bg-white border border-[#dcdcde] rounded-xl px-3 sm:px-4 py-2.5 flex items-center justify-between shadow-xs select-none mb-6">
-        {/* Left: Navigation, Inserter, Undo/Redo, Details */}
-        <div className="flex items-center gap-1 sm:gap-2">
-          {/* Back to All Articles */}
-          <button
-            type="button"
-            onClick={() => {
-              if (hasUnsavedChanges) {
-                if (window.confirm("You have unsaved changes. Return to posts list?")) {
+      <div className="crm-blogs-section-banner">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          {/* Left: Back button, breadcrumbs, title & subtitle */}
+          <div className="flex items-start sm:items-center gap-3.5 min-w-0">
+            <button
+              type="button"
+              onClick={() => {
+                if (hasUnsavedChanges) {
+                  if (window.confirm("You have unsaved changes. Return to articles list?")) {
+                    onBack();
+                  }
+                } else {
                   onBack();
                 }
-              } else {
-                onBack();
-              }
-            }}
-            className="flex items-center gap-1.5 px-2 py-1.5 rounded hover:bg-[#f0f0f1] text-[#1e1e1e] transition-colors cursor-pointer"
-            title="View Posts"
-          >
-            <ArrowLeft className="size-4" />
-            <span className="text-xs font-semibold hidden md:inline">Posts</span>
-          </button>
-
-          <div className="h-5 w-px bg-[#dcdcde] mx-1 hidden sm:block" />
-
-          {/* WordPress Block Inserter Button (+) */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setIsBlockInserterOpen(!isBlockInserterOpen)}
-              className={`p-1.5 rounded text-white transition-all cursor-pointer ${
-                isBlockInserterOpen ? "bg-[#1e1e1e]" : "bg-[#2271b1] hover:bg-[#135e96]"
-              }`}
-              title="Add Block"
+              }}
+              className="crm-btn-icon shrink-0 mt-0.5 sm:mt-0"
+              title="Return to Articles list"
             >
-              <Plus className="size-4" />
+              <ArrowLeft size={16} />
             </button>
-
-            {/* Block Inserter Dropdown Menu */}
-            {isBlockInserterOpen && (
-              <div className="absolute left-0 top-10 w-64 bg-white rounded-lg shadow-xl border border-[#dcdcde] p-2 z-50 space-y-1 animate-in fade-in zoom-in-95">
-                <div className="text-[11px] font-bold text-neutral-400 px-2 py-1 uppercase tracking-wider">
-                  Quick Blocks
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleInsertFormatting("\n\n### New Section Heading\n\n", "", "");
-                    setIsBlockInserterOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-xs text-neutral-700 hover:bg-[#f0f0f1] rounded cursor-pointer text-left"
-                >
-                  <Heading2 className="size-4 text-neutral-500" />
-                  <span>Heading 2</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleInsertFormatting("\n\n> Blockquote text here...\n\n", "", "");
-                    setIsBlockInserterOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-xs text-neutral-700 hover:bg-[#f0f0f1] rounded cursor-pointer text-left"
-                >
-                  <Quote className="size-4 text-neutral-500" />
-                  <span>Quote</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsImagePickerOpen(true);
-                    setIsBlockInserterOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-xs text-neutral-700 hover:bg-[#f0f0f1] rounded cursor-pointer text-left"
-                >
-                  <ImageIcon className="size-4 text-neutral-500" />
-                  <span>Image / Stock Photo</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleInsertFormatting(
-                      "\n\n| Specification | Baseline | Optimized |\n| :--- | :--- | :--- |\n| TTFB | 400ms | 40ms |\n| LCP | 2.4s | 0.8s |\n\n",
-                      "",
-                      ""
-                    );
-                    setIsBlockInserterOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-xs text-neutral-700 hover:bg-[#f0f0f1] rounded cursor-pointer text-left"
-                >
-                  <TableIcon className="size-4 text-neutral-500" />
-                  <span>Benchmark Table</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleInsertFormatting("\n\n```typescript\n// Architecture Code\n\n```\n\n", "", "");
-                    setIsBlockInserterOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-xs text-neutral-700 hover:bg-[#f0f0f1] rounded cursor-pointer text-left"
-                >
-                  <Code2 className="size-4 text-neutral-500" />
-                  <span>Code Syntax Block</span>
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Undo / Redo */}
-          <button
-            type="button"
-            onClick={() => document.execCommand("undo")}
-            className="p-1.5 rounded hover:bg-[#f0f0f1] text-[#2c3338] transition-colors cursor-pointer hidden sm:inline-flex"
-            title="Undo (Ctrl+Z)"
-          >
-            <Undo2 className="size-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => document.execCommand("redo")}
-            className="p-1.5 rounded hover:bg-[#f0f0f1] text-[#2c3338] transition-colors cursor-pointer hidden sm:inline-flex"
-            title="Redo (Ctrl+Y)"
-          >
-            <Redo2 className="size-4" />
-          </button>
-
-          {/* Document Details / Outline Popover */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setIsDocumentOutlineOpen(!isDocumentOutlineOpen)}
-              className="p-1.5 rounded hover:bg-[#f0f0f1] text-[#2c3338] transition-colors cursor-pointer flex items-center gap-1"
-              title="Details & Document Outline"
-            >
-              <Info className="size-4" />
-              <span className="text-xs font-mono hidden md:inline text-neutral-500">
-                {documentStats.words}w
-              </span>
-            </button>
-
-            {isDocumentOutlineOpen && (
-              <div className="absolute left-0 top-10 w-72 bg-white rounded-lg shadow-xl border border-[#dcdcde] p-4 z-50 animate-in fade-in zoom-in-95 space-y-3">
-                <div className="flex items-center justify-between border-b border-[#dcdcde] pb-2">
-                  <span className="text-xs font-bold text-[#1e1e1e]">Document Statistics</span>
-                  <span className="text-[11px] font-mono text-neutral-500">{readingStats.text}</span>
-                </div>
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="p-2 bg-[#f0f0f1] rounded">
-                    <div className="text-sm font-bold font-mono text-[#1e1e1e]">{documentStats.words}</div>
-                    <div className="text-[10px] text-neutral-500">Words</div>
-                  </div>
-                  <div className="p-2 bg-[#f0f0f1] rounded">
-                    <div className="text-sm font-bold font-mono text-[#1e1e1e]">{documentStats.characters}</div>
-                    <div className="text-[10px] text-neutral-500">Characters</div>
-                  </div>
-                  <div className="p-2 bg-[#f0f0f1] rounded">
-                    <div className="text-sm font-bold font-mono text-[#1e1e1e]">{documentStats.headings}</div>
-                    <div className="text-[10px] text-neutral-500">Headings</div>
-                  </div>
-                </div>
-
-                {documentStats.outline.length > 0 && (
-                  <div className="space-y-1 pt-1">
-                    <div className="text-[11px] font-bold text-neutral-500 uppercase tracking-wider">
-                      Headings Outline
-                    </div>
-                    <div className="max-h-40 overflow-y-auto space-y-1 pr-1">
-                      {documentStats.outline.map((h, i) => (
-                        <div
-                          key={i}
-                          style={{ paddingLeft: `${(h.level - 1) * 12}px` }}
-                          className="text-xs text-neutral-700 truncate hover:text-[#2271b1] cursor-pointer"
-                        >
-                          {h.text}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Center: Status & View Switcher (Visual vs Code vs Preview) */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Status Indicator */}
-          <div className="hidden lg:flex items-center gap-1.5 text-xs text-neutral-500 font-mono">
-            {hasUnsavedChanges ? (
-              <span className="inline-flex items-center gap-1 text-amber-600 font-medium">
-                <span className="size-2 rounded-full bg-amber-500 animate-pulse" />
-                Draft
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 text-emerald-600 font-medium">
-                <Check className="size-3 text-emerald-600" />
-                Saved
-              </span>
-            )}
-          </div>
-
-          {/* WordPress Mode Switcher */}
-          <div className="inline-flex items-center bg-[#f0f0f1] p-0.5 rounded-md border border-[#dcdcde]">
-            <button
-              type="button"
-              onClick={() => setEditorView("visual")}
-              className={`px-2.5 py-1 text-xs font-medium rounded transition-all cursor-pointer flex items-center gap-1 ${
-                editorView === "visual"
-                  ? "bg-white text-[#1e1e1e] shadow-xs font-semibold"
-                  : "text-neutral-600 hover:text-[#1e1e1e]"
-              }`}
-            >
-              <Eye className="size-3.5" />
-              <span className="hidden sm:inline">Visual</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setEditorView("code")}
-              className={`px-2.5 py-1 text-xs font-medium rounded transition-all cursor-pointer flex items-center gap-1 ${
-                editorView === "code"
-                  ? "bg-white text-[#1e1e1e] shadow-xs font-semibold"
-                  : "text-neutral-600 hover:text-[#1e1e1e]"
-              }`}
-            >
-              <Code className="size-3.5" />
-              <span className="hidden sm:inline">Code / MD</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setEditorView("preview")}
-              className={`px-2.5 py-1 text-xs font-medium rounded transition-all cursor-pointer flex items-center gap-1 ${
-                editorView === "preview"
-                  ? "bg-white text-[#1e1e1e] shadow-xs font-semibold"
-                  : "text-neutral-600 hover:text-[#1e1e1e]"
-              }`}
-            >
-              <FileText className="size-3.5" />
-              <span className="hidden sm:inline">Reader</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Right: Save Draft, Preview Devices, Publish, Settings Gear, Rank Math Score */}
-        <div className="flex items-center gap-1 sm:gap-2">
-          {/* Save Draft Button */}
-          <button
-            type="button"
-            onClick={() => handleSavePost("draft")}
-            disabled={isSaving}
-            className="px-2.5 py-1.5 rounded text-xs font-medium text-[#2271b1] hover:bg-[#f0f0f1] transition-colors cursor-pointer hidden md:inline-flex"
-          >
-            Save draft
-          </button>
-
-          {/* Preview Device Dropdown */}
-          <div className="hidden sm:flex items-center bg-[#f0f0f1] p-0.5 rounded border border-[#dcdcde]">
-            <button
-              type="button"
-              onClick={() => setPreviewDevice("desktop")}
-              className={`p-1 rounded cursor-pointer ${
-                previewDevice === "desktop" ? "bg-white text-[#1e1e1e] shadow-xs" : "text-neutral-500"
-              }`}
-              title="Desktop View"
-            >
-              <Laptop className="size-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setPreviewDevice("tablet")}
-              className={`p-1 rounded cursor-pointer ${
-                previewDevice === "tablet" ? "bg-white text-[#1e1e1e] shadow-xs" : "text-neutral-500"
-              }`}
-              title="Tablet View (768px)"
-            >
-              <Tablet className="size-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setPreviewDevice("mobile")}
-              className={`p-1 rounded cursor-pointer ${
-                previewDevice === "mobile" ? "bg-white text-[#1e1e1e] shadow-xs" : "text-neutral-500"
-              }`}
-              title="Mobile View (375px)"
-            >
-              <Smartphone className="size-3.5" />
-            </button>
-          </div>
-
-          {/* WordPress Signature Publish / Update Button */}
-          <button
-            type="button"
-            onClick={() => handleSavePost("published")}
-            disabled={isSaving}
-            className="px-3 sm:px-4 py-1.5 rounded bg-[#2271b1] hover:bg-[#135e96] active:bg-[#0a4b78] text-white text-xs sm:text-sm font-semibold shadow-xs transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
-          >
-            {isSaving ? (
-              <span>Saving...</span>
-            ) : status === "published" ? (
-              <span>Update</span>
-            ) : (
-              <span>Publish...</span>
-            )}
-          </button>
-
-          {/* Rank Math Quick Score Pill */}
-          <button
-            type="button"
-            onClick={() => {
-              setIsSidebarOpen(true);
-              setSidebarTab("seo");
-            }}
-            className={`px-2 py-1 rounded text-xs font-bold font-mono flex items-center gap-1 cursor-pointer transition-all border ${
-              rankMathScore >= 80
-                ? "bg-emerald-50 text-emerald-700 border-emerald-300"
-                : rankMathScore >= 60
-                ? "bg-amber-50 text-amber-700 border-amber-300"
-                : "bg-red-50 text-red-700 border-red-300"
-            }`}
-            title="Rank Math SEO Score"
-          >
-            <TrendingUp className="size-3.5" />
-            <span>{rankMathScore}/100</span>
-          </button>
-
-          {/* WordPress Settings Gear Icon (Toggles Right Inspector Sidebar) */}
-          <button
-            type="button"
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className={`p-1.5 rounded transition-colors cursor-pointer ${
-              isSidebarOpen ? "bg-[#1e1e1e] text-white" : "hover:bg-[#f0f0f1] text-[#2c3338]"
-            }`}
-            title="Settings (Ctrl+Shift+,)"
-          >
-            <Settings className="size-4" />
-          </button>
-
-          {/* More Options (...) */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
-              className="p-1.5 rounded hover:bg-[#f0f0f1] text-[#2c3338] transition-colors cursor-pointer"
-              title="Options"
-            >
-              <MoreVertical className="size-4" />
-            </button>
-
-            {isMoreMenuOpen && (
-              <div className="absolute right-0 top-10 w-56 bg-white rounded-lg shadow-xl border border-[#dcdcde] p-2 z-50 text-xs space-y-1 animate-in fade-in">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsZenMode(!isZenMode);
-                    setIsMoreMenuOpen(false);
-                  }}
-                  className="w-full flex items-center justify-between px-2 py-1.5 text-neutral-700 hover:bg-[#f0f0f1] rounded cursor-pointer"
-                >
-                  <span>Distraction-free mode</span>
-                  {isZenMode ? <Check className="size-3.5" /> : null}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(content);
-                    toast.success("All markdown content copied to clipboard!");
-                    setIsMoreMenuOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2 px-2 py-1.5 text-neutral-700 hover:bg-[#f0f0f1] rounded cursor-pointer"
-                >
-                  <span>Copy all content</span>
-                </button>
-                <div className="border-t border-[#dcdcde] my-1" />
-                <a
-                  href={`/blog?slug=${slug}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-full flex items-center justify-between px-2 py-1.5 text-neutral-700 hover:bg-[#f0f0f1] rounded cursor-pointer"
-                >
-                  <span>View Public Post</span>
-                  <ExternalLink className="size-3.5" />
-                </a>
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* ========================================================================= */}
-      {/* 2. MAIN LAYOUT: UNIFIED ENTITY (Left: Canvas + SEO | Right: Meta Sidebar) */}
-      {/* ========================================================================= */}
-      <div className="w-full flex flex-col lg:flex-row gap-6 items-start">
-        {/* ======================================================================= */}
-        {/* LEFT / CENTER WRITING CANVAS & RANK MATH SEO (Takes flex-1 min-w-0)     */}
-        {/* ======================================================================= */}
-        <main className="flex-1 min-w-0 w-full space-y-6">
-          <div className="w-full bg-white border border-[#dcdcde] rounded-xl p-5 sm:p-7 shadow-xs space-y-4">
-            {/* PROMINENT TOP FORMATTING TOOLBAR — DIRECTLY VISIBLE AT THE TOP */}
-            {editorView !== "preview" && (
-              <div className="sticky top-16 z-20 bg-white/95 backdrop-blur-sm border border-[#dcdcde] rounded-lg shadow-xs p-1.5 flex items-center justify-between flex-wrap gap-1.5">
-                <div className="flex items-center gap-1 flex-wrap">
-                  <select
-                    onChange={(e) => {
-                      if (e.target.value === "h2") handleInsertFormatting("\n\n## ", "", "Section Heading");
-                      if (e.target.value === "h3") handleInsertFormatting("\n\n### ", "", "Subheading");
-                      if (e.target.value === "h4") handleInsertFormatting("\n\n#### ", "", "Minor Heading");
-                      if (e.target.value === "p") handleInsertFormatting("\n\n", "", "Paragraph text");
-                      e.target.value = "style";
-                    }}
-                    defaultValue="style"
-                    className="px-2 py-1 text-xs border border-[#dcdcde] rounded bg-[#f0f0f1] text-[#2c3338] font-medium outline-none cursor-pointer hover:bg-[#e0e0e1]"
-                    title="Select Heading Style"
-                  >
-                    <option value="style" disabled>Style</option>
-                    <option value="p">Paragraph</option>
-                    <option value="h2">Heading 2 (H2)</option>
-                    <option value="h3">Heading 3 (H3)</option>
-                    <option value="h4">Heading 4 (H4)</option>
-                  </select>
-
-                  <div className="h-4 w-px bg-[#dcdcde] mx-0.5" />
-
-                  <button
-                    type="button"
-                    onClick={() => handleInsertFormatting("**", "**", "bold text")}
-                    className="p-1.5 rounded hover:bg-[#f0f0f1] text-[#2c3338] transition-colors cursor-pointer"
-                    title="Bold (Ctrl+B)"
-                  >
-                    <Bold className="size-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleInsertFormatting("*", "*", "italic text")}
-                    className="p-1.5 rounded hover:bg-[#f0f0f1] text-[#2c3338] transition-colors cursor-pointer"
-                    title="Italic (Ctrl+I)"
-                  >
-                    <Italic className="size-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleInsertFormatting("~~", "~~", "strikethrough")}
-                    className="p-1.5 rounded hover:bg-[#f0f0f1] text-[#2c3338] transition-colors cursor-pointer"
-                    title="Strikethrough"
-                  >
-                    <Strikethrough className="size-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleInsertFormatting("`", "`", "inline code")}
-                    className="p-1.5 rounded hover:bg-[#f0f0f1] text-[#2c3338] transition-colors cursor-pointer"
-                    title="Inline Code"
-                  >
-                    <Code className="size-4" />
-                  </button>
-
-                  <div className="h-4 w-px bg-[#dcdcde] mx-0.5" />
-
-                  <button
-                    type="button"
-                    onClick={() => handleInsertFormatting("\n\n- ", "", "List item")}
-                    className="p-1.5 rounded hover:bg-[#f0f0f1] text-[#2c3338] transition-colors cursor-pointer"
-                    title="Bullet List"
-                  >
-                    <List className="size-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleInsertFormatting("\n\n1. ", "", "List item")}
-                    className="p-1.5 rounded hover:bg-[#f0f0f1] text-[#2c3338] transition-colors cursor-pointer"
-                    title="Numbered List"
-                  >
-                    <ListOrdered className="size-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleInsertFormatting("\n\n> ", "", "Quote text")}
-                    className="p-1.5 rounded hover:bg-[#f0f0f1] text-[#2c3338] transition-colors cursor-pointer"
-                    title="Blockquote"
-                  >
-                    <Quote className="size-4" />
-                  </button>
-
-                  <div className="h-4 w-px bg-[#dcdcde] mx-0.5" />
-
-                  <button
-                    type="button"
-                    onClick={() => setIsLinkModalOpen(true)}
-                    className="p-1.5 rounded hover:bg-[#f0f0f1] text-[#2c3338] transition-colors cursor-pointer"
-                    title="Insert Link"
-                  >
-                    <LinkIcon className="size-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsImagePickerOpen(true)}
-                    className="p-1.5 rounded hover:bg-[#f0f0f1] text-[#2271b1] transition-colors cursor-pointer flex items-center gap-1 text-xs font-semibold"
-                    title="Add Media / Photos"
-                  >
-                    <ImageIcon className="size-4 text-[#2271b1]" />
-                    <span className="hidden sm:inline">Add Media</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleInsertFormatting(
-                        "\n\n| Technical Benchmark | Baseline | Optimized Status |\n| :--- | :--- | :--- |\n| TTFB | 42ms | Verified Zero Latency |\n| Bundle Size | 38KB | Minified & Compressed |\n\n",
-                        "",
-                        ""
-                      )
-                    }
-                    className="p-1.5 rounded hover:bg-[#f0f0f1] text-[#2c3338] transition-colors cursor-pointer"
-                    title="Insert Benchmark Table"
-                  >
-                    <TableIcon className="size-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleInsertFormatting("\n\n```typescript\n// Technical implementation\n\n```\n\n", "", "")}
-                    className="p-1.5 rounded hover:bg-[#f0f0f1] text-[#2c3338] transition-colors cursor-pointer"
-                    title="Insert Code Syntax Block"
-                  >
-                    <Code2 className="size-4" />
-                  </button>
-
-                  <div className="h-4 w-px bg-[#dcdcde] mx-0.5" />
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const sampleWords = ["proven", "architect", "blueprint", "zero-latency", "breakthrough", "scalable"];
-                      const pick = sampleWords[Math.floor(Math.random() * sampleWords.length)];
-                      handleInsertPowerWord(pick, "content");
-                    }}
-                    className="px-2 py-1 rounded bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
-                    title="Quick Insert Power Word"
-                  >
-                    <Zap className="size-3 text-purple-600" />
-                    <span>+ Power Word</span>
-                  </button>
-                </div>
-
-                {/* Right: Visual / Text (Code) / Reader tabs */}
-                <div className="flex items-center gap-0.5 bg-[#f0f0f1] p-0.5 rounded border border-[#dcdcde]">
-                  <button
-                    type="button"
-                    onClick={() => setEditorView("visual")}
-                    className={`px-2.5 py-1 text-xs font-medium rounded transition-all cursor-pointer ${
-                      editorView === "visual"
-                        ? "bg-white text-[#1e1e1e] font-semibold shadow-xs"
-                        : "text-neutral-600 hover:text-neutral-900"
-                    }`}
-                  >
-                    Visual
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditorView("code")}
-                    className={`px-2.5 py-1 text-xs font-medium rounded transition-all cursor-pointer ${
-                      editorView === "code"
-                        ? "bg-white text-[#1e1e1e] font-semibold shadow-xs"
-                        : "text-neutral-600 hover:text-neutral-900"
-                    }`}
-                  >
-                    Text / Markdown
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditorView("preview")}
-                    className={`px-2.5 py-1 text-xs font-medium rounded transition-all cursor-pointer ${
-                      (editorView as string) === "preview"
-                        ? "bg-white text-[#1e1e1e] font-semibold shadow-xs"
-                        : "text-neutral-600 hover:text-neutral-900"
-                    }`}
-                  >
-                    Reader View
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Title Block (WordPress Enter title here) */}
-            <div>
-              <textarea
-                value={title}
-                onChange={(e) => handleTitleChange(e.target.value)}
-                placeholder="Enter title here..."
-                rows={1}
-                className="w-full resize-none border-none outline-none font-display font-extrabold text-2xl sm:text-3xl lg:text-4xl text-[#1e1e1e] placeholder:text-neutral-300 leading-tight tracking-tight bg-transparent"
-                onInput={(e) => {
-                  const target = e.target as HTMLTextAreaElement;
-                  target.style.height = "auto";
-                  target.style.height = `${target.scrollHeight}px`;
-                }}
-              />
-            </div>
-
-            {/* Permalink bar (WordPress Classic URL) */}
-            <div className="flex items-center gap-2 text-xs text-neutral-500 font-mono flex-wrap pb-2 border-b border-[#f0f0f1]">
-              <span className="text-neutral-400">Permalink:</span>
-              <span className="text-neutral-600">codexdynamics.com/blog?slug=</span>
-              <input
-                type="text"
-                value={slug}
-                onChange={(e) => setSlug(e.target.value)}
-                className="px-2 py-0.5 rounded border border-[#dcdcde] hover:border-[#2271b1] focus:border-[#2271b1] focus:bg-white bg-[#f0f0f1]/60 text-[#1e1e1e] font-mono text-xs transition-colors"
-              />
-              <a
-                href={`/blog?slug=${slug}`}
-                target="_blank"
-                rel="noreferrer"
-                className="text-[#2271b1] hover:underline flex items-center gap-0.5 font-sans text-xs font-semibold ml-1"
-              >
-                <span>View Public Post</span>
-                <ExternalLink className="size-3" />
-              </a>
-            </div>
-
-            {/* Content Area Rendering: Visual Mode vs Code/Markdown vs Live Reader */}
-            {editorView === "code" ? (
-              <div className="relative">
-                <textarea
-                  ref={editorTextareaRef}
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder="Start writing in Markdown, or paste your draft..."
-                  rows={20}
-                  className="w-full font-mono text-sm leading-relaxed p-4 border border-[#dcdcde] rounded-lg outline-none focus:border-[#2271b1] focus:ring-1 focus:ring-[#2271b1] bg-[#fdfdfd] text-[#1e1e1e] resize-y min-h-[450px]"
-                />
-              </div>
-            ) : editorView === "visual" ? (
-              <div className="space-y-4">
-                {/* Visual Editor Canvas with Textarea + Live Styled View */}
-                <div className="relative border border-[#dcdcde] rounded-lg bg-white overflow-hidden shadow-xs focus-within:border-[#2271b1] focus-within:ring-1 focus-within:ring-[#2271b1]">
-                  <textarea
-                    ref={editorTextareaRef}
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    placeholder="Type '/' to choose a block, or begin typing your article content..."
-                    rows={18}
-                    className="w-full font-sans text-base leading-relaxed p-6 border-none outline-none resize-y min-h-[420px] text-[#2c3338] placeholder:text-neutral-400"
-                  />
-                  <div className="bg-[#f8f9fa] border-t border-[#dcdcde] px-4 py-2 flex items-center justify-between text-xs text-neutral-500 font-mono">
-                    <span>Markdown Enabled</span>
-                    <span>{documentStats.words} words • {readingStats.text}</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              /* Live Reader View */
-              <div className="border border-[#dcdcde] rounded-xl p-6 sm:p-8 bg-white shadow-sm space-y-6">
-                {imageUrl && (
-                  <div className="relative rounded-xl overflow-hidden aspect-video max-h-[380px] bg-neutral-100">
-                    <img
-                      src={imageUrl}
-                      alt={imageAlt || title}
-                      className="w-full h-full object-cover"
-                    />
-                    {imageCaption && (
-                      <div className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-xs p-2 text-center">
-                        {imageCaption}
-                      </div>
-                    )}
-                  </div>
-                )}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded text-xs font-semibold bg-neutral-100 text-neutral-800">
-                      {selectedCategory}
-                    </span>
-                    <span className="text-xs text-neutral-500 font-mono">• {readingStats.text}</span>
-                  </div>
-                  <h1 className="text-3xl sm:text-4xl font-extrabold text-neutral-900 tracking-tight font-display">
-                    {title || "Untitled Article"}
-                  </h1>
-                  <p className="text-sm text-neutral-500">
-                    By <span className="font-semibold text-neutral-800">{author}</span> • Published{" "}
-                    {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
-                  </p>
-                </div>
-                {excerpt && (
-                  <p className="text-base text-neutral-600 italic border-l-2 border-neutral-300 pl-4">
-                    {excerpt}
-                  </p>
-                )}
-                <div className="prose prose-neutral max-w-none text-neutral-800 leading-relaxed space-y-4 whitespace-pre-wrap font-sans">
-                  {content}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* =================================================================== */}
-          {/* 3. RANK MATH SEO & POWER WORDS META BOX (Wordpress Bottom Metapanel)*/}
-          {/* =================================================================== */}
-          <section id="rank-math-meta-box" className="crm-rank-math-panel border border-[#dcdcde] rounded-xl bg-white shadow-xs overflow-hidden">
-              {/* Meta Box Header (WordPress Rank Math Plugin Style) */}
-              <div className="crm-rank-math-header bg-[#f8f9fa] border-b border-[#dcdcde] px-4 py-3 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="size-6 rounded bg-[#2271b1] text-white flex items-center justify-center font-bold text-xs">
-                    RM
-                  </div>
-                  <span className="font-bold text-sm text-[#1e1e1e]">Rank Math SEO Suite</span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <div
-                    className={`px-2.5 py-1 rounded text-xs font-bold font-mono border ${
-                      rankMathScore >= 80
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-300"
-                        : rankMathScore >= 60
-                        ? "bg-amber-50 text-amber-700 border-amber-300"
-                        : "bg-red-50 text-red-700 border-red-300"
-                    }`}
-                  >
-                    SEO Score: {rankMathScore}/100
-                  </div>
-                </div>
-              </div>
-
-              {/* Meta Box Sub-tabs */}
-              <div className="crm-rank-math-tabs border-b border-[#dcdcde] bg-white px-4 flex items-center gap-4 text-xs font-semibold overflow-x-auto">
-                <button
-                  type="button"
-                  onClick={() => setMetaBoxTab("general")}
-                  className={`py-2.5 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
-                    metaBoxTab === "general"
-                      ? "border-[#2271b1] text-[#2271b1]"
-                      : "border-transparent text-neutral-600 hover:text-[#1e1e1e]"
-                  }`}
-                >
-                  <Search className="size-3.5" />
-                  <span>General (SERP & Focus Keyword)</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMetaBoxTab("power-words")}
-                  className={`py-2.5 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
-                    metaBoxTab === "power-words"
-                      ? "border-purple-600 text-purple-600 font-bold"
-                      : "border-transparent text-neutral-600 hover:text-purple-600"
-                  }`}
-                >
-                  <Zap className="size-3.5" />
-                  <span>Power Words & Headline Suite ({powerWordsAnalysis.totalPowerWordsFound} Found)</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMetaBoxTab("social")}
-                  className={`py-2.5 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
-                    metaBoxTab === "social"
-                      ? "border-[#2271b1] text-[#2271b1]"
-                      : "border-transparent text-neutral-600 hover:text-[#1e1e1e]"
-                  }`}
-                >
-                  <ExternalLink className="size-3.5" />
-                  <span>Social Share Preview</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMetaBoxTab("advanced")}
-                  className={`py-2.5 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
-                    metaBoxTab === "advanced"
-                      ? "border-[#2271b1] text-[#2271b1]"
-                      : "border-transparent text-neutral-600 hover:text-[#1e1e1e]"
-                  }`}
-                >
-                  <Settings className="size-3.5" />
-                  <span>Advanced & Schema</span>
-                </button>
-              </div>
-
-              {/* Meta Box Content Body */}
-              <div className="crm-rank-math-body p-4 sm:p-6 space-y-6">
-                {/* 3A. GENERAL TAB: FOCUS KEYWORD + SERP SNIPPET + TESTS */}
-                {metaBoxTab === "general" && (
-                  <div className="crm-rank-math-general space-y-6">
-                    {/* Focus Keyword Input */}
-                    <div className="crm-seo-keyword-field space-y-1.5">
-                      <label className="text-xs font-bold text-neutral-700 flex items-center justify-between">
-                        <span>Focus Keyword</span>
-                        <span className="text-[11px] text-neutral-500 font-normal">Primary search term to optimize for</span>
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          value={focusKeyword}
-                          onChange={(e) => setFocusKeyword(e.target.value)}
-                          placeholder="e.g. Enterprise Architecture"
-                          className="flex-1 px-3 py-2 text-xs rounded border border-[#dcdcde] focus:border-[#2271b1] outline-none bg-white font-medium"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => toast.success(`Focus keyword "${focusKeyword}" verified!`)}
-                          className="px-3 py-2 rounded bg-[#f0f0f1] hover:bg-[#e0e0e0] text-xs font-semibold text-neutral-700 cursor-pointer"
-                        >
-                          Audit Keyword
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Google SERP Snippet Preview Simulator */}
-                    <div className="crm-serp-preview p-4 rounded-lg bg-[#f8f9fa] border border-[#dcdcde] space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-neutral-700">Google SERP Snippet Preview</span>
-                        <div className="inline-flex items-center bg-white p-0.5 rounded border border-[#dcdcde] text-xs">
-                          <button
-                            type="button"
-                            onClick={() => setSerpPreviewDevice("desktop")}
-                            className={`px-2 py-0.5 rounded cursor-pointer ${
-                              serpPreviewDevice === "desktop" ? "bg-[#2271b1] text-white font-bold" : "text-neutral-600"
-                            }`}
-                          >
-                            Desktop
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setSerpPreviewDevice("mobile")}
-                            className={`px-2 py-0.5 rounded cursor-pointer ${
-                              serpPreviewDevice === "mobile" ? "bg-[#2271b1] text-white font-bold" : "text-neutral-600"
-                            }`}
-                          >
-                            Mobile
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* SERP Card */}
-                      <div className="p-4 bg-white rounded border border-[#dcdcde] max-w-xl space-y-1 font-sans">
-                        <div className="flex items-center gap-1.5 text-xs text-neutral-600">
-                          <span className="font-semibold text-neutral-800">Codex Dynamics</span>
-                          <span className="text-neutral-400">› blog › {slug || "enterprise-architecture"}</span>
-                        </div>
-                        <h4 className="text-[#1a0dab] hover:underline text-base sm:text-lg font-medium cursor-pointer leading-snug line-clamp-1">
-                          {metaTitle || title || "Untitled Article | Codex Dynamics Blog"}
-                        </h4>
-                        <p className="text-xs text-[#4d5156] leading-relaxed line-clamp-2">
-                          {metaDescription ||
-                            excerpt ||
-                            content.slice(0, 155).replace(/[#*`_]/g, "") ||
-                            "Explore in-depth engineering architectures, performance benchmarks, and design systems from the Codex Dynamics technical team."}
-                        </p>
-                      </div>
-
-                      {/* Edit Snippet Inputs */}
-                      <div className="pt-2 space-y-3">
-                        <div>
-                          <div className="flex items-center justify-between text-xs text-neutral-600 mb-1">
-                            <span>SEO Title</span>
-                            <span className="font-mono text-[10px]">{metaTitle.length}/60 chars</span>
-                          </div>
-                          <input
-                            type="text"
-                            value={metaTitle}
-                            onChange={(e) => setMetaTitle(e.target.value)}
-                            placeholder={title || "SEO Title..."}
-                            className="w-full px-3 py-1.5 text-xs rounded border border-[#dcdcde] focus:border-[#2271b1] outline-none"
-                          />
-                        </div>
-                        <div>
-                          <div className="flex items-center justify-between text-xs text-neutral-600 mb-1">
-                            <span>Meta Description</span>
-                            <span className="font-mono text-[10px]">{metaDescription.length}/160 chars</span>
-                          </div>
-                          <textarea
-                            value={metaDescription}
-                            onChange={(e) => setMetaDescription(e.target.value)}
-                            placeholder={excerpt || "Meta description for Google search results..."}
-                            rows={2}
-                            className="w-full px-3 py-1.5 text-xs rounded border border-[#dcdcde] focus:border-[#2271b1] outline-none"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* 10-Point Rank Math Audit Checklist */}
-                    <div className="crm-seo-checklist space-y-2">
-                      <h4 className="text-xs font-bold text-neutral-700 uppercase tracking-wider">
-                        Rank Math SEO Diagnostics Checklist
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {rankMathChecks.map((chk) => (
-                          <div
-                            key={chk.id}
-                            className={`p-2.5 rounded border text-xs flex items-start gap-2.5 ${
-                              chk.passed
-                                ? "bg-emerald-50/50 border-emerald-200 text-neutral-800"
-                                : "bg-amber-50/40 border-amber-200 text-neutral-800"
-                            }`}
-                          >
-                            {chk.passed ? (
-                              <CheckCircle2 className="size-4 text-emerald-600 shrink-0 mt-0.5" />
-                            ) : (
-                              <AlertCircle className="size-4 text-amber-500 shrink-0 mt-0.5" />
-                            )}
-                            <div>
-                              <div className="font-medium">{chk.label}</div>
-                              {!chk.passed && (
-                                <div className="text-[11px] text-neutral-500 mt-0.5">{chk.tip}</div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* 3B. POWER WORDS & HEADLINE SUITE TAB (FIXED - NO CRASH) */}
-                {metaBoxTab === "power-words" && (
-                  <div className="crm-power-words-suite space-y-6">
-                    {/* Headline Performance Card */}
-                    <div className="p-4 rounded-xl bg-purple-50/60 border border-purple-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div>
-                        <div className="text-xs font-bold text-purple-900 flex items-center gap-1.5">
-                          <Zap className="size-4 text-purple-600" />
-                          <span>Headline Copywriting Score</span>
-                        </div>
-                        <p className="text-xs text-purple-700 mt-1">
-                          Evaluates psychological curiosity, authority triggers, and character count for maximum CTR.
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold font-mono text-purple-900">
-                            {powerWordsAnalysis.headlineScore}/100
-                          </div>
-                          <div className="text-[10px] text-purple-700 font-semibold uppercase">
-                            {powerWordsAnalysis.headlineScore >= 80
-                              ? "High Impact"
-                              : powerWordsAnalysis.headlineScore >= 60
-                              ? "Average"
-                              : "Needs Power Word"}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Headline Metrics Badges */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      <div className="p-3 bg-[#f8f9fa] border border-[#dcdcde] rounded text-center">
-                        <div className="text-xs font-semibold text-neutral-500">Power Words in Title</div>
-                        <div className="text-lg font-bold font-mono text-neutral-900 mt-0.5">
-                          {powerWordsAnalysis.headlineMatches.length}
-                        </div>
-                      </div>
-                      <div className="p-3 bg-[#f8f9fa] border border-[#dcdcde] rounded text-center">
-                        <div className="text-xs font-semibold text-neutral-500">Power Words in Body</div>
-                        <div className="text-lg font-bold font-mono text-neutral-900 mt-0.5">
-                          {powerWordsAnalysis.contentMatches.length}
-                        </div>
-                      </div>
-                      <div className="p-3 bg-[#f8f9fa] border border-[#dcdcde] rounded text-center">
-                        <div className="text-xs font-semibold text-neutral-500">Contains Number</div>
-                        <div className="text-lg font-bold text-neutral-900 mt-0.5">
-                          {powerWordsAnalysis.headlineHasNumber ? "Yes" : "No"}
-                        </div>
-                      </div>
-                      <div className="p-3 bg-[#f8f9fa] border border-[#dcdcde] rounded text-center">
-                        <div className="text-xs font-semibold text-neutral-500">Headline Length</div>
-                        <div className="text-lg font-bold font-mono text-neutral-900 mt-0.5">
-                          {title.length} chars
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Power Words Category Filter & Search */}
-                    <div className="space-y-3">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <h4 className="text-xs font-bold text-neutral-800 uppercase tracking-wider flex items-center gap-1.5">
-                          <span>Psychological Power Words Lexicon</span>
-                          <span className="text-neutral-400 font-normal">
-                            (Click to insert into Headline or Body)
-                          </span>
-                        </h4>
-
-                        <div className="relative w-full sm:w-56">
-                          <Search className="size-3.5 absolute left-2.5 top-2.5 text-neutral-400" />
-                          <input
-                            type="text"
-                            value={powerWordSearch}
-                            onChange={(e) => setPowerWordSearch(e.target.value)}
-                            placeholder="Filter power words..."
-                            className="w-full pl-8 pr-3 py-1.5 text-xs rounded border border-[#dcdcde] bg-white outline-none focus:border-purple-600"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Category Pills (Using Object.entries to prevent crash!) */}
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedPowerCategory("all")}
-                          className={`px-2.5 py-1 rounded text-xs cursor-pointer transition-colors ${
-                            selectedPowerCategory === "all"
-                              ? "bg-purple-600 text-white font-bold"
-                              : "bg-[#f0f0f1] text-neutral-700 hover:bg-[#e4e4e6]"
-                          }`}
-                        >
-                          All Categories
-                        </button>
-                        {Object.entries(POWER_WORDS_DICTIONARY).map(([key, cat]) => (
-                          <button
-                            key={key}
-                            type="button"
-                            onClick={() => setSelectedPowerCategory(key)}
-                            className={`px-2.5 py-1 rounded text-xs cursor-pointer transition-colors ${
-                              selectedPowerCategory === key
-                                ? "bg-purple-600 text-white font-bold"
-                                : "bg-[#f0f0f1] text-neutral-700 hover:bg-[#e4e4e6]"
-                            }`}
-                          >
-                            {cat.name}
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Power Word Cards Grid */}
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 pt-1 max-h-72 overflow-y-auto pr-1">
-                        {Object.entries(POWER_WORDS_DICTIONARY)
-                          .filter(([key]) => selectedPowerCategory === "all" || selectedPowerCategory === key)
-                          .flatMap(([_key, cat]) =>
-                            cat.words
-                              .filter((w) =>
-                                powerWordSearch
-                                  ? w.toLowerCase().includes(powerWordSearch.toLowerCase())
-                                  : true
-                              )
-                              .map((word) => (
-                                <div
-                                  key={word}
-                                  className="p-2 rounded-lg bg-white border border-[#dcdcde] hover:border-purple-400 hover:shadow-xs flex items-center justify-between gap-1 group transition-all"
-                                >
-                                  <span className="text-xs font-semibold text-neutral-800 capitalize truncate">
-                                    {word}
-                                  </span>
-                                  <div className="flex items-center gap-1 shrink-0">
-                                    <button
-                                      type="button"
-                                      onClick={() => handleInsertPowerWord(word, "title")}
-                                      className="px-1.5 py-0.5 rounded bg-purple-100 hover:bg-purple-200 text-purple-800 text-[10px] font-bold cursor-pointer"
-                                      title="Add to Headline Title"
-                                    >
-                                      +Title
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleInsertPowerWord(word, "content")}
-                                      className="px-1.5 py-0.5 rounded bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-[10px] font-medium cursor-pointer"
-                                      title="Insert in Body"
-                                    >
-                                      +Body
-                                    </button>
-                                  </div>
-                                </div>
-                              ))
-                          )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* 3C. SOCIAL PREVIEW TAB */}
-                {metaBoxTab === "social" && (
-                  <div className="crm-social-preview space-y-6">
-                    <div>
-                      <h4 className="text-xs font-bold text-neutral-800 uppercase tracking-wider mb-2">
-                        OpenGraph / Facebook & LinkedIn Card Preview
-                      </h4>
-                      <div className="max-w-md border border-[#dcdcde] rounded-lg overflow-hidden bg-white shadow-xs">
-                        <div className="aspect-video bg-neutral-100 overflow-hidden">
-                          <img
-                            src={imageUrl}
-                            alt={imageAlt || title}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="p-3 space-y-1 bg-[#f0f2f5]">
-                          <div className="text-[10px] font-mono text-neutral-500 uppercase">
-                            codexdynamics.com
-                          </div>
-                          <div className="text-sm font-bold text-neutral-900 line-clamp-1">
-                            {metaTitle || title || "Untitled Article"}
-                          </div>
-                          <div className="text-xs text-neutral-600 line-clamp-2">
-                            {metaDescription || excerpt || "Explore engineering insights at Codex Dynamics."}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* 3D. ADVANCED & SCHEMA TAB */}
-                {metaBoxTab === "advanced" && (
-                  <div className="crm-advanced-seo space-y-4 max-w-lg">
-                    <div>
-                      <label className="text-xs font-bold text-neutral-700 block mb-1">
-                        Robots Meta Tags
-                      </label>
-                      <div className="space-y-1 text-xs">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input type="checkbox" defaultChecked className="rounded text-[#2271b1]" />
-                          <span>Index (Allow search engines to index this page)</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input type="checkbox" defaultChecked className="rounded text-[#2271b1]" />
-                          <span>Follow (Follow links on this page)</span>
-                        </label>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="text-xs font-bold text-neutral-700 block mb-1">
-                        Canonical URL
-                      </label>
-                      <input
-                        type="text"
-                        placeholder={`https://codexdynamics.com/blog?slug=${slug}`}
-                        className="w-full px-3 py-1.5 text-xs rounded border border-[#dcdcde] bg-white"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-xs font-bold text-neutral-700 block mb-1">
-                        Structured Data Schema Type
-                      </label>
-                      <select className="w-full px-3 py-1.5 text-xs rounded border border-[#dcdcde] bg-white">
-                        <option>TechArticle</option>
-                        <option>Article</option>
-                        <option>BlogPosting</option>
-                      </select>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </section>
-        </main>
-
-        {/* ======================================================================= */}
-        {/* RIGHT COLUMN: WORDPRESS META SIDEBAR (Unified Entity with Canvas)        */}
-        {/* ======================================================================= */}
-        {isSidebarOpen && !isZenMode && (
-          <aside className="crm-blog-inspector w-full lg:w-[320px] xl:w-[340px] shrink-0 space-y-4 select-none">
-            <div className="crm-blog-inspector-card bg-white border border-[#dcdcde] rounded-xl shadow-xs overflow-hidden">
-            {/* Sidebar Top Header with Tabs (Post vs SEO) */}
-            <div className="crm-blog-inspector-tabs sticky top-0 z-10 bg-white border-b border-[#dcdcde] flex items-center justify-between px-3">
-              <div className="flex items-center">
-                <button
-                  type="button"
-                  onClick={() => setSidebarTab("post")}
-                  className={`py-3 px-3 text-xs font-semibold border-b-2 transition-all cursor-pointer ${
-                    sidebarTab === "post"
-                      ? "border-[#2271b1] text-[#2271b1]"
-                      : "border-transparent text-neutral-600 hover:text-[#1e1e1e]"
-                  }`}
-                >
-                  Post
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSidebarTab("seo")}
-                  className={`py-3 px-3 text-xs font-semibold border-b-2 transition-all cursor-pointer flex items-center gap-1 ${
-                    sidebarTab === "seo"
-                      ? "border-[#2271b1] text-[#2271b1]"
-                      : "border-transparent text-neutral-600 hover:text-[#1e1e1e]"
-                  }`}
-                >
-                  <span>Rank Math</span>
-                  <span className="px-1 rounded bg-[#2271b1]/10 text-[#2271b1] font-mono text-[10px]">
-                    {rankMathScore}
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <span className="text-[11px] font-bold text-[#F0B90B] uppercase tracking-wider">
+                  Leads / Content / Editorial
+                </span>
+                <span className="text-[#848E9C]">·</span>
+                <span className="text-[11px] font-semibold text-[#848E9C]">
+                  {editingId ? "Edit Article" : "New Blog Article"}
+                </span>
+                {hasUnsavedChanges ? (
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                    <span className="size-1.5 rounded-full bg-amber-400 animate-pulse" />
+                    Unsaved Draft
                   </span>
-                </button>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                    <Check size={12} />
+                    Saved
+                  </span>
+                )}
               </div>
+              <h1 className="text-lg sm:text-xl font-bold text-[#EAECEF] tracking-tight m-0">
+                Blog & Architectural Teardowns
+              </h1>
+              <p className="text-xs text-[#848E9C] mt-1 max-w-2xl leading-relaxed m-0">
+                Craft, optimize with Rank Math SEO & Power Words, and publish technical insights directly to the Codex Dynamics site.
+              </p>
+            </div>
+          </div>
 
+          {/* Right: Actions, Rank Math Score Pill, and Save Controls */}
+          <div className="flex items-center gap-2.5 self-start lg:self-center shrink-0 flex-wrap">
+            {/* View Mode Switcher */}
+            <div className="inline-flex items-center bg-[#22262E] p-1 rounded-lg border border-[#444A55]">
               <button
                 type="button"
-                onClick={() => setIsSidebarOpen(false)}
-                className="p-1 rounded hover:bg-[#f0f0f1] text-neutral-500 cursor-pointer"
-                title="Close settings"
+                onClick={() => setEditorView("visual")}
+                className={`crm-tab-btn ${editorView === "visual" ? "active" : ""}`}
               >
-                <X className="size-4" />
+                <Eye size={13} />
+                <span>Visual</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditorView("code")}
+                className={`crm-tab-btn ${editorView === "code" ? "active" : ""}`}
+              >
+                <Code size={13} />
+                <span>Markdown</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditorView("preview")}
+                className={`crm-tab-btn ${editorView === "preview" ? "active" : ""}`}
+              >
+                <FileText size={13} />
+                <span>Reader</span>
               </button>
             </div>
 
-            {/* Tab 1: POST SETTINGS (WordPress Standard Accordions) */}
-            {sidebarTab === "post" && (
-              <div className="divide-y divide-[#dcdcde] text-xs">
-                {/* 1. Summary / Status & Visibility Accordion */}
+            {/* Save Draft Button */}
+            <button
+              type="button"
+              onClick={() => handleSavePost("draft")}
+              disabled={isSaving}
+              className="crm-btn-secondary"
+            >
+              <Save size={14} className="text-[#848E9C]" />
+              <span>Save Draft</span>
+            </button>
+
+            {/* Publish Article Button */}
+            <button
+              type="button"
+              onClick={() => handleSavePost("published")}
+              disabled={isSaving}
+              className="crm-btn-accent"
+            >
+              <Send size={14} />
+              <span>{isSaving ? "Saving..." : status === "published" ? "Update Article" : "Publish Article"}</span>
+            </button>
+
+            {/* Rank Math SEO Score Capsule */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsSidebarOpen(true);
+                setSidebarTab("seo");
+                const el = document.getElementById("rank-math-meta-box");
+                el?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className={`crm-seo-score-btn ${
+                rankMathScore >= 80 ? "score-high" : rankMathScore >= 60 ? "score-med" : "score-low"
+              }`}
+              title="Rank Math SEO Score"
+            >
+              <TrendingUp size={13} />
+              <span>SEO {rankMathScore}/100</span>
+            </button>
+
+            {/* Settings Sidebar Toggle */}
+            <button
+              type="button"
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="crm-btn-icon"
+              title="Toggle Post Inspector Sidebar"
+            >
+              <Sliders size={15} />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 2. MAIN 2-COLUMN LAYOUT (Left: Studio + Rank Math | Right: Inspector)       */}
+      {/* ========================================================================= */}
+      <div className="w-full flex flex-col lg:flex-row gap-6 items-start">
+        {/* ======================================================================= */}
+        {/* LEFT COLUMN: WRITING STUDIO & RANK MATH SEO SUITE                       */}
+        {/* ======================================================================= */}
+        <div className="flex-1 min-w-0 w-full space-y-6">
+          {/* CARD 1: ARTICLE METADATA (Title, Slug, Excerpt) */}
+          <div className="crm-card-panel space-y-6">
+            {/* Title Input */}
+            <div>
+              <label className="text-xs font-bold uppercase tracking-wider text-[#A8AEB8] mb-2 block">
+                Article Title <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onBlur={() => {
+                  if (!slug && title) handleAutoSlug();
+                }}
+                placeholder="e.g. Architectural Teardown: Edge Computing & Zero-Latency Runtimes"
+                className="crm-blog-title-input w-full text-lg sm:text-xl font-bold"
+              />
+              <div className="flex items-center justify-between text-xs text-[#848E9C] mt-2 px-0.5">
+                <span>Aim for 40–65 characters for optimal SERP CTR.</span>
+                <span className={title.length >= 40 && title.length <= 65 ? "text-emerald-400 font-mono font-semibold" : "text-[#848E9C] font-mono"}>
+                  {title.length} chars
+                </span>
+              </div>
+            </div>
+
+            {/* Permalink / Slug with Preview */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-[#A8AEB8] block">
+                  Permalink Slug
+                </label>
+                <button
+                  type="button"
+                  onClick={handleAutoSlug}
+                  className="crm-link-btn"
+                >
+                  Auto-generate from title
+                </button>
+              </div>
+              <div className="flex items-center bg-[#2A2E36] border border-[#444A55] rounded-xl px-4 py-2.5 focus-within:border-[#F0B90B] focus-within:ring-2 focus-within:ring-[#F0B90B]/20">
+                <span className="text-xs text-[#848E9C] font-mono select-none pr-1 shrink-0">
+                  codexdynamics.com/blog/
+                </span>
+                <input
+                  type="text"
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))}
+                  placeholder="post-slug-url"
+                  className="border-none! bg-transparent! p-0! text-xs font-mono text-[#EAECEF] focus:ring-0! focus:border-none! w-full"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`https://codexdynamics.com/blog/${slug}`);
+                    toast.success("Article link copied to clipboard");
+                  }}
+                  className="crm-toolbar-btn shrink-0 ml-2"
+                  title="Copy full public link"
+                >
+                  <Copy size={14} />
+                </button>
+              </div>
+            </div>
+
+            {/* Summary / Excerpt */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-[#A8AEB8] block">
+                  Executive Excerpt
+                </label>
+                <span className={excerpt.length >= 120 && excerpt.length <= 160 ? "text-emerald-400 font-mono text-xs font-semibold" : "text-[#848E9C] font-mono text-xs"}>
+                  {excerpt.length} / 160 chars
+                </span>
+              </div>
+              <textarea
+                value={excerpt}
+                onChange={(e) => setExcerpt(e.target.value)}
+                placeholder="A compelling, succinct 2-sentence synopsis displayed on article cards, search snippets, and social previews."
+                rows={3}
+                className="crm-blog-excerpt-textarea w-full leading-relaxed"
+              />
+            </div>
+          </div>
+
+          {/* CARD 2: WRITING CANVAS & RICH FORMATTING TOOLBAR */}
+          <div className="crm-card-panel space-y-4">
+            {/* Formatting Toolbar */}
+            <div className="flex items-center justify-between gap-2 flex-wrap pb-3 border-b border-[#444A55]">
+              {/* Left Button Clusters */}
+              <div className="flex items-center gap-1 flex-wrap">
+                {/* Cluster: Headings */}
+                <button
+                  type="button"
+                  onClick={() => handleInsertFormatting("## ", "", "Heading 2")}
+                  className="crm-toolbar-btn"
+                  title="Heading 2 (##)"
+                >
+                  <Heading2 size={15} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleInsertFormatting("### ", "", "Heading 3")}
+                  className="crm-toolbar-btn"
+                  title="Heading 3 (###)"
+                >
+                  <Heading3 size={15} />
+                </button>
+
+                <div className="w-[1px] h-4 bg-[#444A55] mx-1" />
+
+                {/* Cluster: Inline Styles */}
+                <button
+                  type="button"
+                  onClick={() => handleInsertFormatting("**", "**", "bold text")}
+                  className="crm-toolbar-btn"
+                  title="Bold (Ctrl+B)"
+                >
+                  <Bold size={15} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleInsertFormatting("*", "*", "italic text")}
+                  className="crm-toolbar-btn"
+                  title="Italic (Ctrl+I)"
+                >
+                  <Italic size={15} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleInsertFormatting("~~", "~~", "strikethrough text")}
+                  className="crm-toolbar-btn"
+                  title="Strikethrough (~~)"
+                >
+                  <Strikethrough size={15} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleInsertFormatting("`", "`", "inline_code()")}
+                  className="crm-toolbar-btn"
+                  title="Inline Code (`)"
+                >
+                  <Code2 size={15} />
+                </button>
+
+                <div className="w-[1px] h-4 bg-[#444A55] mx-1" />
+
+                {/* Cluster: Lists & Quotes */}
+                <button
+                  type="button"
+                  onClick={() => handleInsertFormatting("- ", "", "List item")}
+                  className="crm-toolbar-btn"
+                  title="Bulleted List"
+                >
+                  <List size={15} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleInsertFormatting("1. ", "", "Ordered list item")}
+                  className="crm-toolbar-btn"
+                  title="Numbered List"
+                >
+                  <ListOrdered size={15} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleInsertFormatting("> ", "", "Notable quote or architectural excerpt")}
+                  className="crm-toolbar-btn"
+                  title="Blockquote"
+                >
+                  <Quote size={15} />
+                </button>
+
+                <div className="w-[1px] h-4 bg-[#444A55] mx-1" />
+
+                {/* Cluster: Inserts (Link, Table, Image, Power Words) */}
+                <button
+                  type="button"
+                  onClick={() => setIsLinkModalOpen(true)}
+                  className="crm-toolbar-btn"
+                  title="Insert Hyperlink"
+                >
+                  <LinkIcon size={15} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleInsertFormatting(
+                      "\n| Architecture Component | Latency Benchmark | Target SLA |\n| :--- | :--- | :--- |\n| Global Edge Routing | 24ms | < 50ms |\n| Distributed Cache | 4ms | < 10ms |\n\n"
+                    )
+                  }
+                  className="crm-toolbar-btn"
+                  title="Insert Comparison Table"
+                >
+                  <TableIcon size={15} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsImagePickerOpen(true)}
+                  className="crm-toolbar-btn"
+                  title="Select / Upload Media Image"
+                >
+                  <ImageIcon size={15} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const el = document.getElementById("rank-math-meta-box");
+                    el?.scrollIntoView({ behavior: "smooth" });
+                    setRankMathTab("powerwords");
+                  }}
+                  className="crm-toolbar-btn text-[#F0B90B]!"
+                  title="Power Words Audit"
+                >
+                  <Sparkles size={15} />
+                </button>
+              </div>
+
+              {/* Right Stats & Word Metrics */}
+              <div className="flex items-center gap-3 text-xs text-[#848E9C]">
+                <span className="font-mono">{contentStats.words} words</span>
+                <span>·</span>
+                <span className="font-mono">{contentStats.text}</span>
+              </div>
+            </div>
+
+            {/* Writing Surface: Visual (Split Editor + Preview) vs Code (Full Canvas) vs Reader */}
+            <div className="relative min-h-[520px]">
+              {editorView === "code" && (
+                <textarea
+                  ref={textareaRef}
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Draft your deep-dive in Markdown here..."
+                  className="crm-blog-content-textarea w-full min-h-[520px] font-mono text-sm leading-relaxed resize-y"
+                  style={{ minHeight: "520px" }}
+                />
+              )}
+
+              {editorView === "visual" && (
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 min-h-[520px]">
+                  {/* Left: Interactive Markdown Editor */}
+                  <div className="flex flex-col">
+                    <div className="text-xs font-bold text-[#A8AEB8] uppercase tracking-wider mb-2 flex items-center justify-between">
+                      <span>Editor Workspace</span>
+                      <span className="text-[11px] text-[#848E9C] font-mono">{contentStats.words} words</span>
+                    </div>
+                    <textarea
+                      ref={textareaRef}
+                      value={content}
+                      onChange={(e) => setContent(e.target.value)}
+                      placeholder="Draft your deep-dive in Markdown here..."
+                      className="crm-blog-content-textarea w-full flex-1 min-h-[480px] font-mono text-sm leading-relaxed resize-y"
+                    />
+                  </div>
+
+                  {/* Right: Live Formatted Preview */}
+                  <div className="flex flex-col">
+                    <div className="text-xs font-bold text-[#F0B90B] uppercase tracking-wider mb-2 flex items-center justify-between">
+                      <span>Live Formatted Preview</span>
+                      <span className="text-[11px] text-emerald-400 font-mono">Syncing</span>
+                    </div>
+                    <div className="w-full flex-1 min-h-[480px] bg-[#2A2E36] border border-[#444A55] rounded-xl p-6 overflow-y-auto space-y-4">
+                      <div className="prose prose-invert max-w-none text-sm leading-relaxed space-y-3">
+                        {content.split("\n\n").map((block, idx) => {
+                          if (block.startsWith("## ")) {
+                            return (
+                              <h2 key={idx} className="text-xl font-bold text-[#EAECEF] border-b border-[#444A55] pb-2 mt-4">
+                                {block.replace("## ", "")}
+                              </h2>
+                            );
+                          }
+                          if (block.startsWith("### ")) {
+                            return (
+                              <h3 key={idx} className="text-base font-bold text-[#F0B90B] mt-3">
+                                {block.replace("### ", "")}
+                              </h3>
+                            );
+                          }
+                          if (block.startsWith("> ")) {
+                            return (
+                              <blockquote key={idx} className="border-l-4 border-[#F0B90B] pl-4 italic text-[#A8AEB8] my-3">
+                                {block.replace("> ", "")}
+                              </blockquote>
+                            );
+                          }
+                          if (block.startsWith("|")) {
+                            return (
+                              <div key={idx} className="overflow-x-auto my-3 border border-[#444A55] rounded-lg">
+                                <table className="w-full text-xs text-left">
+                                  <tbody>
+                                    {block
+                                      .split("\n")
+                                      .filter((row) => !row.includes(":---"))
+                                      .map((row, rIdx) => (
+                                        <tr key={rIdx} className={rIdx === 0 ? "bg-[#30353E] font-bold text-[#EAECEF]" : "border-t border-[#444A55]"}>
+                                          {row
+                                            .split("|")
+                                            .filter((c) => c.trim().length > 0)
+                                            .map((col, cIdx) => (
+                                              <td key={cIdx} className="p-2.5">
+                                                {col.trim()}
+                                              </td>
+                                            ))}
+                                        </tr>
+                                      ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            );
+                          }
+                          return (
+                            <p key={idx} className="text-sm text-[#EAECEF] leading-relaxed">
+                              {block}
+                            </p>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {editorView === "preview" && (
+                <div className="w-full min-h-[460px] bg-[#22262E] border border-[#444A55] rounded-lg p-6 sm:p-8">
+                  {/* Article Hero Simulation */}
+                  <div className="max-w-2xl mx-auto space-y-4">
+                    <span className="inline-block px-2.5 py-1 rounded-md bg-[#0071E3]/20 text-[#0071E3] text-[11px] font-bold uppercase tracking-wider">
+                      {selectedCategory}
+                    </span>
+                    <h1 className="text-2xl sm:text-3xl font-extrabold text-[#EAECEF] tracking-tight">
+                      {title || "Untitled Article"}
+                    </h1>
+                    <div className="flex items-center gap-3 text-xs text-[#848E9C]">
+                      <span>{author}</span>
+                      <span>·</span>
+                      <span>{contentStats.text}</span>
+                      <span>·</span>
+                      <span>Published on Codex Dynamics</span>
+                    </div>
+
+                    {imageUrl && (
+                      <div className="rounded-xl overflow-hidden border border-[#444A55] my-4 max-h-[300px]">
+                        <img src={imageUrl} alt={imageAlt} className="w-full h-full object-cover" />
+                      </div>
+                    )}
+
+                    <div className="text-xs text-[#A8AEB8] italic border-l-2 border-[#F0B90B] pl-3 py-1">
+                      {excerpt}
+                    </div>
+
+                    <div className="prose prose-invert text-xs leading-relaxed text-[#EAECEF] space-y-3 pt-4 border-t border-[#444A55]">
+                      {content.split("\n\n").slice(0, 4).map((p, idx) => (
+                        <p key={idx}>{p.replace(/^[#>-]\s+/, "")}</p>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* CARD 3: RANK MATH SEO & POWER WORDS SUITE */}
+          <div id="rank-math-meta-box" className="crm-card-panel space-y-5">
+            {/* Header with Live Rank Math Score Badge */}
+            <div className="flex items-center justify-between pb-3 border-b border-[#444A55] flex-wrap gap-3">
+              <div className="flex items-center gap-3">
+                <span className="p-2 rounded-lg bg-[#0071E3]/15 text-[#0071E3] border border-[#0071E3]/30">
+                  <TrendingUp size={18} />
+                </span>
                 <div>
+                  <h3 className="text-sm font-bold text-[#EAECEF] m-0">Rank Math SEO Suite</h3>
+                  <p className="text-[11px] text-[#848E9C] m-0">
+                    Search engine snippet, power words, and technical indexing optimization.
+                  </p>
+                </div>
+              </div>
+
+              {/* Score Indicator */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-[#848E9C]">Score:</span>
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-mono font-bold border ${
+                    rankMathScore >= 80
+                      ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                      : rankMathScore >= 60
+                      ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
+                      : "bg-red-500/15 text-red-400 border-red-500/30"
+                  }`}
+                >
+                  {rankMathScore} / 100
+                </span>
+              </div>
+            </div>
+
+            {/* Rank Math Sub-tabs */}
+            <div className="flex items-center gap-1.5 border-b border-[#444A55] pb-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setRankMathTab("general")}
+                className={`crm-tab-btn ${rankMathTab === "general" ? "active" : ""}`}
+              >
+                <Search size={13} />
+                <span>General (SERP & Keywords)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRankMathTab("social")}
+                className={`crm-tab-btn ${rankMathTab === "social" ? "active" : ""}`}
+              >
+                <Share2 size={13} />
+                <span>Social Cards</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRankMathTab("advanced")}
+                className={`crm-tab-btn ${rankMathTab === "advanced" ? "active" : ""}`}
+              >
+                <Globe size={13} />
+                <span>Advanced (Robots & Canonical)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRankMathTab("powerwords")}
+                className={`crm-tab-btn ${rankMathTab === "powerwords" ? "active" : ""}`}
+              >
+                <Sparkles size={13} />
+                <span>Power Words Analysis</span>
+              </button>
+            </div>
+
+            {/* TAB 1: GENERAL (SERP & Focus Keywords) */}
+            {rankMathTab === "general" && (
+              <div className="space-y-5 pt-2">
+                {/* Focus Keyword Input */}
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-[#848E9C] mb-1.5 block">
+                    Focus Keyword <span className="text-red-400">*</span>
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={focusKeyword}
+                      onChange={(e) => setFocusKeyword(e.target.value)}
+                      placeholder="e.g. Architectural Teardown"
+                      className="text-xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (title) {
+                          const words = title.split(/\s+/).slice(0, 3).join(" ");
+                          setFocusKeyword(words);
+                        }
+                      }}
+                      className="crm-btn-secondary shrink-0"
+                    >
+                      Extract from Title
+                    </button>
+                  </div>
+                </div>
+
+                {/* Google SERP Snippet Preview */}
+                <div className="bg-[#2A2E36] border border-[#444A55] rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#444A55]">
+                    <span className="text-[11px] font-bold text-[#848E9C] uppercase tracking-wider">
+                      Google SERP Preview
+                    </span>
+                    <div className="flex items-center gap-1 bg-[#22262E] p-0.5 rounded-md border border-[#444A55]">
+                      <button
+                        type="button"
+                        onClick={() => setSerpDevice("desktop")}
+                        className={`crm-tab-btn ${serpDevice === "desktop" ? "active" : ""}`}
+                      >
+                        Desktop
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSerpDevice("mobile")}
+                        className={`crm-tab-btn ${serpDevice === "mobile" ? "active" : ""}`}
+                      >
+                        Mobile
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Simulated Google Search Result */}
+                  <div className={`space-y-1.5 ${serpDevice === "mobile" ? "max-w-sm" : "max-w-2xl"}`}>
+                    <div className="flex items-center gap-1.5 text-xs text-[#848E9C]">
+                      <span className="font-semibold text-[#EAECEF]">Codex Dynamics</span>
+                      <span>› blog › {slug || "architectural-teardown"}</span>
+                    </div>
+                    <h4 className="text-base sm:text-lg font-medium text-[#8AB4F8] hover:underline cursor-pointer leading-snug m-0">
+                      {seoTitle || title || "Article Headline on Codex Dynamics"}
+                    </h4>
+                    <p className="text-xs text-[#BDC1C6] leading-relaxed m-0">
+                      {seoDescription || excerpt || "Comprehensive technical teardown exploring edge performance and resilience."}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Audit Checklist */}
+                <div className="space-y-2">
+                  <span className="text-[11px] font-bold text-[#848E9C] uppercase tracking-wider block">
+                    Basic SEO Checklist
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {rankMathChecks.list.map((item) => (
+                      <div
+                        key={item.id}
+                        className={`p-2.5 rounded-lg border flex items-start gap-2.5 text-xs ${
+                          item.passed
+                            ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-300"
+                            : "bg-[#2A2E36] border-[#444A55] text-[#848E9C]"
+                        }`}
+                      >
+                        {item.passed ? (
+                          <CheckCircle2 size={14} className="text-emerald-400 shrink-0 mt-0.5" />
+                        ) : (
+                          <AlertCircle size={14} className="text-amber-400 shrink-0 mt-0.5" />
+                        )}
+                        <div className="min-w-0">
+                          <span className="font-semibold block">{item.label}</span>
+                          <span className="text-[11px] opacity-75">{item.tip}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: ADVANCED (Robots & Canonical) */}
+            {rankMathTab === "advanced" && (
+              <div className="space-y-5 pt-2">
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-[#848E9C] mb-2 block">
+                    Robots Meta Directives
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <label className="flex items-center gap-2 p-3 rounded-lg bg-[#2A2E36] border border-[#444A55] cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={robotsMeta.index}
+                        onChange={(e) => setRobotsMeta((prev) => ({ ...prev, index: e.target.checked }))}
+                        className="rounded accent-[#F0B90B]"
+                      />
+                      <span className="text-xs font-semibold">Index</span>
+                    </label>
+                    <label className="flex items-center gap-2 p-3 rounded-lg bg-[#2A2E36] border border-[#444A55] cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={robotsMeta.follow}
+                        onChange={(e) => setRobotsMeta((prev) => ({ ...prev, follow: e.target.checked }))}
+                        className="rounded accent-[#F0B90B]"
+                      />
+                      <span className="text-xs font-semibold">Follow</span>
+                    </label>
+                    <label className="flex items-center gap-2 p-3 rounded-lg bg-[#2A2E36] border border-[#444A55] cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={robotsMeta.noarchive}
+                        onChange={(e) => setRobotsMeta((prev) => ({ ...prev, noarchive: e.target.checked }))}
+                        className="rounded accent-[#F0B90B]"
+                      />
+                      <span className="text-xs font-semibold">No Archive</span>
+                    </label>
+                    <label className="flex items-center gap-2 p-3 rounded-lg bg-[#2A2E36] border border-[#444A55] cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={robotsMeta.nosnippet}
+                        onChange={(e) => setRobotsMeta((prev) => ({ ...prev, nosnippet: e.target.checked }))}
+                        className="rounded accent-[#F0B90B]"
+                      />
+                      <span className="text-xs font-semibold">No Snippet</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-[#848E9C] mb-1.5 block">
+                    Canonical URL
+                  </label>
+                  <input
+                    type="url"
+                    value={canonicalUrl}
+                    onChange={(e) => setCanonicalUrl(e.target.value)}
+                    placeholder="https://codexdynamics.com/blog/article-slug"
+                    className="text-xs font-mono"
+                  />
+                  <span className="text-[11px] text-[#848E9C] mt-1 block">
+                    Points search spiders to the authoritative version of this teardown.
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: SOCIAL CARDS (OpenGraph & Twitter Card) */}
+            {rankMathTab === "social" && (
+              <div className="space-y-4 pt-2">
+                <div className="flex items-center justify-between pb-2 border-b border-[#444A55]">
+                  <span className="text-[11px] font-bold text-[#848E9C] uppercase tracking-wider">
+                    Social Share Card Preview
+                  </span>
+                  <div className="flex items-center gap-1 bg-[#22262E] p-0.5 rounded-md border border-[#444A55]">
+                    <button
+                      type="button"
+                      onClick={() => setSocialPlatform("facebook")}
+                      className={`crm-tab-btn ${socialPlatform === "facebook" ? "active" : ""}`}
+                    >
+                      OpenGraph (FB/LinkedIn)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSocialPlatform("twitter")}
+                      className={`crm-tab-btn ${socialPlatform === "twitter" ? "active" : ""}`}
+                    >
+                      X / Twitter Card
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-[#2A2E36] border border-[#444A55] rounded-xl overflow-hidden max-w-lg">
+                  {imageUrl ? (
+                    <div className="h-44 w-full overflow-hidden bg-black/40">
+                      <img src={imageUrl} alt={imageAlt} className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="h-44 w-full flex items-center justify-center bg-[#22262E] text-[#848E9C] text-xs">
+                      No cover image selected
+                    </div>
+                  )}
+                  <div className="p-3.5 space-y-1">
+                    <span className="text-[10px] font-bold text-[#848E9C] uppercase tracking-wider block">
+                      codexdynamics.com
+                    </span>
+                    <h5 className="text-sm font-bold text-[#EAECEF] line-clamp-1 m-0">
+                      {title || "Article Headline"}
+                    </h5>
+                    <p className="text-xs text-[#848E9C] line-clamp-2 m-0">
+                      {excerpt || "Executive summary of technical findings."}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 4: POWER WORDS ANALYSIS */}
+            {rankMathTab === "powerwords" && (
+              <div className="space-y-4 pt-2">
+                <div className="p-4 rounded-xl bg-[#2A2E36] border border-[#444A55] space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-[11px] font-bold text-[#F0B90B] uppercase tracking-wider block">
+                        Emotional Power Words Audit
+                      </span>
+                      <p className="text-xs text-[#848E9C] mt-0.5 m-0">
+                        Power words trigger reader curiosity, credibility, and authority.
+                      </p>
+                    </div>
+                    <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-[#F0B90B]/15 text-[#F0B90B] border border-[#F0B90B]/30">
+                      {powerWordsAnalysis.totalPowerWordsFound} Detected
+                    </span>
+                  </div>
+
+                  {powerWordsAnalysis.headlineMatches.length > 0 ? (
+                    <div className="flex items-center gap-2 flex-wrap pt-2">
+                      {powerWordsAnalysis.headlineMatches.map((m, idx) => (
+                        <span
+                          key={idx}
+                          className="px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
+                        >
+                          ★ {m.word} ({m.categoryName})
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-xs text-amber-400 bg-amber-500/10 p-2.5 rounded-lg border border-amber-500/20">
+                      No power words detected in the headline yet. Try adding words like <strong>Definitive</strong>, <strong>Blueprint</strong>, <strong>Zero-Latency</strong>, or <strong>Architect</strong>.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ======================================================================= */}
+        {/* RIGHT COLUMN: INSPECTOR SIDEBAR                                         */}
+        {/* ======================================================================= */}
+        {isSidebarOpen && (
+          <div className="crm-blog-inspector w-full lg:w-80 shrink-0 space-y-4">
+            {/* Sidebar Tabs: Post Settings vs SEO Insights */}
+            <div className="flex items-center bg-[#30353E] p-1 rounded-xl border border-[#444A55]">
+              <button
+                type="button"
+                onClick={() => setSidebarTab("settings")}
+                className={`crm-tab-btn flex-1 justify-center ${sidebarTab === "settings" ? "active" : ""}`}
+              >
+                <Settings size={13} />
+                <span>Post Settings</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSidebarTab("seo")}
+                className={`crm-tab-btn flex-1 justify-center ${sidebarTab === "seo" ? "active" : ""}`}
+              >
+                <TrendingUp size={13} />
+                <span>Rank Math</span>
+              </button>
+            </div>
+
+            {/* TAB CONTENT: POST SETTINGS */}
+            {sidebarTab === "settings" && (
+              <div className="space-y-4">
+                {/* ACCORDION 1: STATUS & VISIBILITY */}
+                <div className="bg-[#30353E] border border-[#444A55] rounded-xl overflow-hidden shadow-xs">
                   <button
                     type="button"
-                    onClick={() => setAccordionSummary(!accordionSummary)}
-                    className="w-full px-4 py-3 flex items-center justify-between font-bold text-neutral-800 hover:bg-[#f8f9fa] cursor-pointer"
+                    onClick={() => toggleAccordion("status")}
+                    className="crm-accordion-trigger"
                   >
-                    <span>Summary</span>
-                    {accordionSummary ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+                    <span className="flex items-center gap-2">
+                      <FolderTree size={14} className="text-[#F0B90B]" />
+                      <span>Status & Visibility</span>
+                    </span>
+                    {accordionState.status ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                   </button>
 
-                  {accordionSummary && (
-                    <div className="px-4 pb-4 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-neutral-500">Visibility</span>
-                        <span className="text-[#2271b1] font-semibold cursor-pointer">Public</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-neutral-500">Publish</span>
-                        <span className="text-[#2271b1] font-semibold cursor-pointer">Immediately</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-neutral-500">Status</span>
+                  {accordionState.status && (
+                    <div className="p-4 space-y-3.5 border-t border-[#444A55]">
+                      {/* Publication Status */}
+                      <div>
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-[#848E9C] mb-1.5 block">
+                          Publish Status
+                        </label>
                         <select
                           value={status}
                           onChange={(e) => setStatus(e.target.value as any)}
-                          className="px-2 py-1 rounded border border-[#dcdcde] bg-white text-neutral-800 font-medium"
+                          className="text-xs"
                         >
-                          <option value="published">Published</option>
-                          <option value="draft">Draft</option>
+                          <option value="published">Live Published</option>
+                          <option value="draft">Internal Draft</option>
                           <option value="archived">Archived</option>
                         </select>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-neutral-500">Author</span>
+
+                      {/* Author */}
+                      <div>
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-[#848E9C] mb-1.5 block">
+                          Author Byline
+                        </label>
                         <select
                           value={author}
                           onChange={(e) => setAuthor(e.target.value)}
-                          className="px-2 py-1 rounded border border-[#dcdcde] bg-white text-neutral-800 max-w-[150px] truncate"
+                          className="text-xs"
                         >
                           {PRESET_AUTHORS.map((a) => (
                             <option key={a} value={a}>
@@ -1693,201 +1329,216 @@ export function BlogEditorPage({
                           ))}
                         </select>
                       </div>
-                      <div className="pt-2 border-t border-[#dcdcde] flex items-center justify-between">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={isSticky}
-                            onChange={(e) => setIsSticky(e.target.checked)}
-                            className="rounded text-[#2271b1]"
-                          />
-                          <span className="text-neutral-700">Stick to top of blog</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* ACCORDION 2: FEATURED COVER IMAGE */}
+                <div className="bg-[#30353E] border border-[#444A55] rounded-xl overflow-hidden shadow-xs">
+                  <button
+                    type="button"
+                    onClick={() => toggleAccordion("image")}
+                    className="crm-accordion-trigger"
+                  >
+                    <span className="flex items-center gap-2">
+                      <ImageIcon size={14} className="text-[#F0B90B]" />
+                      <span>Featured Cover Image</span>
+                    </span>
+                    {accordionState.image ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                  </button>
+
+                  {accordionState.image && (
+                    <div className="p-4 space-y-3 border-t border-[#444A55]">
+                      {imageUrl ? (
+                        <div className="relative rounded-lg overflow-hidden border border-[#444A55] max-h-36 group">
+                          <img src={imageUrl} alt={imageAlt} className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => setImageUrl("")}
+                            className="crm-tag-remove-btn absolute top-2 right-2 bg-black/60! text-white!"
+                            title="Remove Cover Image"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="p-6 border-2 border-dashed border-[#444A55] rounded-lg text-center text-xs text-[#848E9C]">
+                          No image selected
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => setIsImagePickerOpen(true)}
+                        className="crm-btn-secondary w-full justify-center"
+                      >
+                        <ImageIcon size={13} />
+                        <span>Select from Media Library</span>
+                      </button>
+
+                      <div>
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-[#848E9C] mb-1 block">
+                          Alt Description
                         </label>
+                        <input
+                          type="text"
+                          value={imageAlt}
+                          onChange={(e) => setImageAlt(e.target.value)}
+                          placeholder="Descriptive alt text for accessibility"
+                          className="text-xs"
+                        />
                       </div>
                     </div>
                   )}
                 </div>
 
-                {/* 2. CATEGORIES ACCORDION (+ ADD NEW CATEGORY) */}
-                <div>
+                {/* ACCORDION 3: CATEGORIES */}
+                <div className="bg-[#30353E] border border-[#444A55] rounded-xl overflow-hidden shadow-xs">
                   <button
                     type="button"
-                    onClick={() => setAccordionCategories(!accordionCategories)}
-                    className="w-full px-4 py-3 flex items-center justify-between font-bold text-neutral-800 hover:bg-[#f8f9fa] cursor-pointer"
+                    onClick={() => toggleAccordion("categories")}
+                    className="crm-accordion-trigger"
                   >
-                    <span>Categories</span>
-                    {accordionCategories ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+                    <span className="flex items-center gap-2">
+                      <Tag size={14} className="text-[#F0B90B]" />
+                      <span>Categories</span>
+                    </span>
+                    {accordionState.categories ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                   </button>
 
-                  {accordionCategories && (
-                    <div className="px-4 pb-4 space-y-3">
-                      {/* Search categories */}
-                      <input
-                        type="text"
-                        value={categorySearch}
-                        onChange={(e) => setCategorySearch(e.target.value)}
-                        placeholder="Search Categories..."
-                        className="w-full px-2.5 py-1 text-xs rounded border border-[#dcdcde] bg-white outline-none focus:border-[#2271b1]"
-                      />
-
-                      {/* Categories List */}
-                      <div className="max-h-36 overflow-y-auto space-y-1.5 pr-1">
-                        {filteredCategories.map((c) => (
+                  {accordionState.categories && (
+                    <div className="p-4 space-y-3 border-t border-[#444A55]">
+                      <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                        {categoriesList.map((cat) => (
                           <label
-                            key={c.id}
-                            className="flex items-center gap-2 px-1 py-0.5 rounded hover:bg-[#f0f0f1] cursor-pointer"
+                            key={cat.id}
+                            className={`flex items-center gap-2.5 p-2 rounded-lg cursor-pointer transition-colors text-xs ${
+                              selectedCategory === cat.name
+                                ? "bg-[#0071E3]/20 text-[#EAECEF] font-semibold"
+                                : "text-[#848E9C] hover:bg-[#2A2E36]"
+                            }`}
                           >
                             <input
                               type="radio"
-                              name="postCategory"
-                              checked={selectedCategory === c.name}
-                              onChange={() => setSelectedCategory(c.name)}
-                              className="text-[#2271b1]"
+                              name="article-category"
+                              checked={selectedCategory === cat.name}
+                              onChange={() => setSelectedCategory(cat.name)}
+                              className="accent-[#0071E3]"
                             />
-                            <span className={selectedCategory === c.name ? "font-bold text-[#1e1e1e]" : "text-neutral-700"}>
-                              {c.name}
-                            </span>
+                            <span>{cat.name}</span>
                           </label>
                         ))}
                       </div>
 
-                      {/* + Add New Category Trigger & Form */}
-                      {!isAddingCategory ? (
-                        <button
-                          type="button"
-                          onClick={() => setIsAddingCategory(true)}
-                          className="text-[#2271b1] hover:underline font-semibold flex items-center gap-1 cursor-pointer pt-1"
-                        >
-                          <Plus className="size-3" />
-                          <span>Add New Category</span>
-                        </button>
-                      ) : (
-                        <form onSubmit={handleCreateCategory} className="p-2.5 bg-[#f8f9fa] border border-[#dcdcde] rounded-lg space-y-2 pt-2 animate-in fade-in">
-                          <div className="text-[11px] font-bold text-neutral-700">Add New Category</div>
-                          <div>
-                            <label className="text-[10px] text-neutral-500 block mb-0.5">Category Name *</label>
-                            <input
-                              type="text"
-                              value={newCategoryName}
-                              onChange={(e) => setNewCategoryName(e.target.value)}
-                              placeholder="e.g. AI & Cloud"
-                              autoFocus
-                              className="w-full px-2 py-1 text-xs rounded border border-[#dcdcde] bg-white outline-none focus:border-[#2271b1]"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[10px] text-neutral-500 block mb-0.5">Parent Category (Optional)</label>
-                            <select
-                              value={newCategoryParent}
-                              onChange={(e) => setNewCategoryParent(e.target.value)}
-                              className="w-full px-2 py-1 text-xs rounded border border-[#dcdcde] bg-white"
-                            >
-                              <option value="">— None —</option>
-                              {allCategories.map((c) => (
-                                <option key={c.id} value={c.name}>
-                                  {c.name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="flex items-center justify-between pt-1">
-                            <button
-                              type="submit"
-                              className="px-2.5 py-1 rounded bg-[#2271b1] hover:bg-[#135e96] text-white font-semibold text-xs cursor-pointer shadow-xs"
-                            >
-                              Add New Category
+                      {/* Add new category button / form */}
+                      {isAddingCategory ? (
+                        <form onSubmit={handleAddNewCategory} className="space-y-2 pt-2 border-t border-[#444A55]">
+                          <input
+                            type="text"
+                            value={newCatName}
+                            onChange={(e) => setNewCatName(e.target.value)}
+                            placeholder="New category name"
+                            className="text-xs"
+                            autoFocus
+                          />
+                          <div className="flex gap-2">
+                            <button type="submit" className="crm-btn-primary flex-1 justify-center">
+                              Add
                             </button>
                             <button
                               type="button"
-                              onClick={() => {
-                                setIsAddingCategory(false);
-                                setNewCategoryName("");
-                              }}
-                              className="text-neutral-500 hover:text-neutral-800 text-xs cursor-pointer"
+                              onClick={() => setIsAddingCategory(false)}
+                              className="crm-btn-secondary"
                             >
                               Cancel
                             </button>
                           </div>
                         </form>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setIsAddingCategory(true)}
+                          className="crm-link-btn pt-1"
+                        >
+                          <Plus size={13} />
+                          <span>Add New Category</span>
+                        </button>
                       )}
                     </div>
                   )}
                 </div>
 
-                {/* 3. TAGS ACCORDION */}
-                <div>
+                {/* ACCORDION 4: TAGS & TOPICS */}
+                <div className="bg-[#30353E] border border-[#444A55] rounded-xl overflow-hidden shadow-xs">
                   <button
                     type="button"
-                    onClick={() => setAccordionTags(!accordionTags)}
-                    className="w-full px-4 py-3 flex items-center justify-between font-bold text-neutral-800 hover:bg-[#f8f9fa] cursor-pointer"
+                    onClick={() => toggleAccordion("tags")}
+                    className="crm-accordion-trigger"
                   >
-                    <span>Tags</span>
-                    {accordionTags ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+                    <span className="flex items-center gap-2">
+                      <Tag size={14} className="text-[#F0B90B]" />
+                      <span>Tags & Taxonomy</span>
+                    </span>
+                    {accordionState.tags ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                   </button>
 
-                  {accordionTags && (
-                    <div className="px-4 pb-4 space-y-2">
-                      <div className="flex items-center gap-1.5">
+                  {accordionState.tags && (
+                    <div className="p-4 space-y-3 border-t border-[#444A55]">
+                      {/* Active Tag Pills */}
+                      <div className="flex flex-wrap gap-1.5 min-h-6">
+                        {tags.map((t) => (
+                          <span
+                            key={t}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs bg-[#2A2E36] text-[#EAECEF] border border-[#444A55]"
+                          >
+                            <span>#{t}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveTag(t)}
+                              className="crm-tag-remove-btn"
+                            >
+                              <X size={11} />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Tag Input */}
+                      <div className="flex gap-2">
                         <input
                           type="text"
                           value={tagInput}
                           onChange={(e) => setTagInput(e.target.value)}
                           onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === ",") {
+                            if (e.key === "Enter") {
                               e.preventDefault();
                               handleAddTag(tagInput);
                             }
                           }}
-                          placeholder="Add new tag..."
-                          className="flex-1 px-2.5 py-1 text-xs rounded border border-[#dcdcde] bg-white outline-none focus:border-[#2271b1]"
+                          placeholder="Add a tag..."
+                          className="text-xs"
                         />
                         <button
                           type="button"
                           onClick={() => handleAddTag(tagInput)}
-                          className="px-2 py-1 rounded bg-[#f0f0f1] hover:bg-[#e0e0e0] font-semibold text-neutral-700 cursor-pointer text-xs"
+                          className="crm-btn-secondary shrink-0"
                         >
                           Add
                         </button>
                       </div>
 
-                      {/* Tag Chips */}
-                      {tags.length > 0 && (
-                        <div className="flex items-center gap-1 flex-wrap pt-1">
-                          {tags.map((t) => (
-                            <span
-                              key={t}
-                              className="px-2 py-0.5 rounded bg-[#f0f0f1] text-neutral-800 text-xs font-medium flex items-center gap-1"
-                            >
-                              <span>{t}</span>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveTag(t)}
-                                className="text-neutral-400 hover:text-red-600 cursor-pointer"
-                              >
-                                ×
-                              </button>
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Popular Tags Cloud */}
-                      <div className="pt-2">
-                        <div className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1">
-                          Most Used Tags
-                        </div>
-                        <div className="flex items-center gap-1 flex-wrap">
-                          {POPULAR_TAGS.map((pt) => (
+                      {/* Quick Popular Tags */}
+                      <div>
+                        <span className="text-[10px] font-bold text-[#848E9C] uppercase tracking-wider block mb-1">
+                          Popular Suggestions
+                        </span>
+                        <div className="flex flex-wrap gap-1">
+                          {POPULAR_TAGS.slice(0, 8).map((pt) => (
                             <button
                               key={pt}
                               type="button"
                               onClick={() => handleAddTag(pt)}
-                              disabled={tags.includes(pt)}
-                              className={`text-[11px] px-1.5 py-0.5 rounded border transition-colors cursor-pointer ${
-                                tags.includes(pt)
-                                  ? "bg-neutral-100 text-neutral-400 border-transparent cursor-default"
-                                  : "bg-white text-neutral-600 border-[#dcdcde] hover:border-[#2271b1] hover:text-[#2271b1]"
-                              }`}
+                              className="crm-pill-btn"
                             >
                               +{pt}
                             </button>
@@ -1897,291 +1548,114 @@ export function BlogEditorPage({
                     </div>
                   )}
                 </div>
+              </div>
+            )}
 
-                {/* 4. FEATURED IMAGE ACCORDION */}
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => setAccordionFeaturedImage(!accordionFeaturedImage)}
-                    className="w-full px-4 py-3 flex items-center justify-between font-bold text-neutral-800 hover:bg-[#f8f9fa] cursor-pointer"
-                  >
-                    <span>Featured Image</span>
-                    {accordionFeaturedImage ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
-                  </button>
+            {/* TAB CONTENT: SEO QUICK CHECKLIST */}
+            {sidebarTab === "seo" && (
+              <div className="bg-[#30353E] border border-[#444A55] rounded-xl p-4 space-y-4">
+                <div className="flex items-center justify-between pb-2 border-b border-[#444A55]">
+                  <span className="text-xs font-bold text-[#EAECEF]">SEO Health Overview</span>
+                  <span className="font-mono text-xs text-[#F0B90B] font-bold">
+                    {rankMathScore}/100
+                  </span>
+                </div>
 
-                  {accordionFeaturedImage && (
-                    <div className="px-4 pb-4 space-y-3">
-                      {imageUrl ? (
-                        <div className="space-y-2">
-                          <div
-                            onClick={() => setIsImagePickerOpen(true)}
-                            className="relative aspect-video rounded-lg overflow-hidden border border-[#dcdcde] bg-neutral-100 group cursor-pointer"
-                          >
-                            <img
-                              src={imageUrl}
-                              alt={imageAlt || title}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                            />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-semibold text-xs">
-                              Click to Replace
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <button
-                              type="button"
-                              onClick={() => setIsImagePickerOpen(true)}
-                              className="text-[#2271b1] hover:underline font-semibold cursor-pointer"
-                            >
-                              Replace Image
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setImageUrl("")}
-                              className="text-red-600 hover:underline cursor-pointer"
-                            >
-                              Remove featured image
-                            </button>
-                          </div>
-                          <div>
-                            <label className="text-[10px] text-neutral-500 block mb-0.5">Alt Text (Accessibility)</label>
-                            <input
-                              type="text"
-                              value={imageAlt}
-                              onChange={(e) => setImageAlt(e.target.value)}
-                              placeholder="Describe image..."
-                              className="w-full px-2 py-1 text-xs rounded border border-[#dcdcde] bg-white outline-none"
-                            />
-                          </div>
-                        </div>
+                <div className="space-y-2">
+                  {rankMathChecks.list.map((c) => (
+                    <div key={c.id} className="flex items-center justify-between text-xs py-1">
+                      <span className={c.passed ? "text-[#EAECEF]" : "text-[#848E9C]"}>{c.label}</span>
+                      {c.passed ? (
+                        <Check size={14} className="text-emerald-400 shrink-0" />
                       ) : (
-                        <button
-                          type="button"
-                          onClick={() => setIsImagePickerOpen(true)}
-                          className="w-full py-8 border-2 border-dashed border-[#dcdcde] hover:border-[#2271b1] rounded-lg text-center cursor-pointer transition-colors bg-[#f8f9fa]"
-                        >
-                          <ImageIcon className="size-6 mx-auto text-neutral-400 mb-1" />
-                          <span className="text-xs font-semibold text-[#2271b1]">
-                            Set featured image
-                          </span>
-                        </button>
+                        <span className="text-[10px] text-amber-400 font-mono">+{c.weight}pts</span>
                       )}
                     </div>
-                  )}
-                </div>
-
-                {/* 5. EXCERPT ACCORDION */}
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => setAccordionExcerpt(!accordionExcerpt)}
-                    className="w-full px-4 py-3 flex items-center justify-between font-bold text-neutral-800 hover:bg-[#f8f9fa] cursor-pointer"
-                  >
-                    <span>Excerpt</span>
-                    {accordionExcerpt ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
-                  </button>
-
-                  {accordionExcerpt && (
-                    <div className="px-4 pb-4 space-y-2">
-                      <textarea
-                        value={excerpt}
-                        onChange={(e) => setExcerpt(e.target.value)}
-                        placeholder="Write an excerpt (optional)..."
-                        rows={3}
-                        className="w-full px-2.5 py-1.5 text-xs rounded border border-[#dcdcde] bg-white outline-none focus:border-[#2271b1]"
-                      />
-                      <p className="text-[11px] text-neutral-500">
-                        Excerpts are optional hand-crafted summaries of your content that can be used in your theme.
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* 6. DISCUSSION ACCORDION */}
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => setAccordionDiscussion(!accordionDiscussion)}
-                    className="w-full px-4 py-3 flex items-center justify-between font-bold text-neutral-800 hover:bg-[#f8f9fa] cursor-pointer"
-                  >
-                    <span>Discussion</span>
-                    {accordionDiscussion ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
-                  </button>
-
-                  {accordionDiscussion && (
-                    <div className="px-4 pb-4 space-y-2">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={allowComments}
-                          onChange={(e) => setAllowComments(e.target.checked)}
-                          className="rounded text-[#2271b1]"
-                        />
-                        <span className="text-neutral-700">Allow comments</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={allowPingbacks}
-                          onChange={(e) => setAllowPingbacks(e.target.checked)}
-                          className="rounded text-[#2271b1]"
-                        />
-                        <span className="text-neutral-700">Allow pingbacks & trackbacks</span>
-                      </label>
-                    </div>
-                  )}
+                  ))}
                 </div>
               </div>
             )}
-
-            {/* Tab 2: RANK MATH SEO SIDEBAR TAB */}
-            {sidebarTab === "seo" && (
-              <div className="crm-blog-seo-sidebar p-4 space-y-4 text-xs">
-                {/* Score Capsule */}
-                <div className="crm-seo-score-card p-4 rounded-lg bg-[#f8f9fa] border border-[#dcdcde] text-center space-y-1">
-                  <div className="text-xs font-semibold text-neutral-500">Rank Math SEO Score</div>
-                  <div
-                    className={`text-3xl font-bold font-mono ${
-                      rankMathScore >= 80 ? "text-emerald-600" : rankMathScore >= 60 ? "text-amber-600" : "text-red-600"
-                    }`}
-                  >
-                    {rankMathScore}/100
-                  </div>
-                  <div className="crm-seo-score-track" aria-hidden="true">
-                    <span style={{ width: `${rankMathScore}%` }} />
-                  </div>
-                  <div className="text-[11px] text-neutral-600">
-                    {rankMathScore >= 80
-                      ? "Great! Ready for Search Engines"
-                      : "Actionable improvements recommended below"}
-                  </div>
-                </div>
-
-                {/* Focus Keyword quick input */}
-                <div>
-                  <label className="font-bold text-neutral-700 block mb-1">Focus Keyword</label>
-                  <input
-                    type="text"
-                    value={focusKeyword}
-                    onChange={(e) => setFocusKeyword(e.target.value)}
-                    className="w-full px-2.5 py-1.5 rounded border border-[#dcdcde] bg-white font-medium"
-                  />
-                </div>
-
-                {/* Top Recommendations */}
-                <div className="crm-seo-quick-audit space-y-2 pt-2 border-t border-[#dcdcde]">
-                  <div className="font-bold text-neutral-800 uppercase tracking-wider text-[11px]">
-                    Quick Audit Checklist
-                  </div>
-                  <div className="crm-seo-sidebar-checks space-y-1.5">
-                    {rankMathChecks.slice(0, 6).map((chk) => (
-                      <div key={chk.id} className={`crm-seo-sidebar-check ${chk.passed ? "passed" : "needs-work"} flex items-start gap-1.5`}>
-                        {chk.passed ? (
-                          <CheckCircle2 className="size-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                        ) : (
-                          <AlertCircle className="size-3.5 text-amber-500 shrink-0 mt-0.5" />
-                        )}
-                        <span className={chk.passed ? "text-neutral-700" : "text-neutral-500"}>
-                          {chk.label}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    const el = document.getElementById("rank-math-meta-box");
-                    el?.scrollIntoView({ behavior: "smooth" });
-                    setMetaBoxTab("power-words");
-                  }}
-                  className="crm-seo-suite-cta w-full py-2 rounded bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs flex items-center justify-center gap-1 cursor-pointer transition-colors"
-                >
-                  <Zap className="size-3.5" />
-                  <span>Open Power Words Suite</span>
-                </button>
-              </div>
-            )}
-            </div>
-          </aside>
+          </div>
         )}
       </div>
 
       {/* ========================================================================= */}
-      {/* 4. MODALS & AUXILIARY WORKFLOWS                                           */}
+      {/* 3. MODALS (Media Picker & Link Insert)                                     */}
       {/* ========================================================================= */}
-      {/* Media / Stock Photo Modal */}
-      <ImagePickerModal
-        isOpen={isImagePickerOpen}
-        onClose={() => setIsImagePickerOpen(false)}
-        currentValue={imageUrl}
-        onSelect={(url: string, meta?: ImageSelectionMeta) => {
-          setImageUrl(url);
-          if (meta?.alt) setImageAlt(meta.alt);
-          if (meta?.caption) setImageCaption(meta.caption);
-          toast.success("Featured photo updated!");
-        }}
-      />
+      {isImagePickerOpen && (
+        <ImagePickerModal
+          isOpen={isImagePickerOpen}
+          onClose={() => setIsImagePickerOpen(false)}
+          currentValue={imageUrl}
+          onSelect={(url, meta) => {
+            setImageUrl(url);
+            if (meta?.alt) setImageAlt(meta.alt);
+            if (meta?.caption) setImageCaption(meta.caption);
+            setIsImagePickerOpen(false);
+            toast.success("Cover image selected");
+          }}
+          title="Select Cover Image"
+          showMetaOptions={true}
+        />
+      )}
 
-      {/* Insert Link Modal */}
       {isLinkModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <form
-            onSubmit={handleConfirmLink}
-            className="w-full max-w-sm bg-white rounded-lg p-5 shadow-2xl space-y-4 border border-[#dcdcde]"
-          >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 animate-in fade-in">
+          <div className="w-full max-w-md bg-[#30353E] border border-[#444A55] rounded-2xl p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-neutral-800">Insert Link</h3>
+              <h3 className="text-sm font-bold text-[#EAECEF] m-0">Insert Hyperlink</h3>
               <button
                 type="button"
                 onClick={() => setIsLinkModalOpen(false)}
-                className="text-neutral-400 hover:text-neutral-700 cursor-pointer"
+                className="crm-btn-icon"
               >
-                <X className="size-4" />
+                <X size={15} />
               </button>
             </div>
-            <div className="space-y-3 text-xs">
+            <form onSubmit={handleConfirmLink} className="space-y-3">
               <div>
-                <label className="text-neutral-500 block mb-1">Link URL *</label>
-                <input
-                  type="url"
-                  value={linkUrlInput}
-                  onChange={(e) => setLinkUrlInput(e.target.value)}
-                  placeholder="https://example.com"
-                  autoFocus
-                  required
-                  className="w-full px-3 py-1.5 rounded border border-[#dcdcde] outline-none focus:border-[#2271b1]"
-                />
-              </div>
-              <div>
-                <label className="text-neutral-500 block mb-1">Anchor Text (Optional)</label>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-[#848E9C] mb-1 block">
+                  Link Text
+                </label>
                 <input
                   type="text"
                   value={linkTextInput}
                   onChange={(e) => setLinkTextInput(e.target.value)}
-                  placeholder="e.g. Read Case Study"
-                  className="w-full px-3 py-1.5 rounded border border-[#dcdcde] outline-none focus:border-[#2271b1]"
+                  placeholder="e.g. Edge runtime architecture documentation"
+                  className="text-xs"
                 />
               </div>
-            </div>
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setIsLinkModalOpen(false)}
-                className="px-3 py-1.5 text-xs text-neutral-600 hover:bg-[#f0f0f1] rounded cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-1.5 text-xs font-semibold bg-[#2271b1] hover:bg-[#135e96] text-white rounded cursor-pointer"
-              >
-                Insert Link
-              </button>
-            </div>
-          </form>
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-[#848E9C] mb-1 block">
+                  Target URL <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="url"
+                  value={linkUrlInput}
+                  onChange={(e) => setLinkUrlInput(e.target.value)}
+                  placeholder="https://..."
+                  className="text-xs font-mono"
+                  required
+                  autoFocus
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsLinkModalOpen(false)}
+                  className="crm-btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="crm-btn-accent">
+                  Insert Link
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
   );
 }
+export default BlogEditorPage;
