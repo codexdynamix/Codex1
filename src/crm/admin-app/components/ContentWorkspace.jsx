@@ -8,6 +8,8 @@ import {
   Plus,
   Star,
   Trash2,
+  ArrowRight,
+  Sparkles,
 } from 'lucide-react';
 import { BlogsTab } from '../../../components/admin/BlogsTab';
 
@@ -320,14 +322,28 @@ export default function ContentWorkspace({
   return (
     <section className="crm-content-hub">
       <header className="crm-content-hub-header">
-        <div>
-          <span className="crm-content-hub-kicker">Leads / Content</span>
-          <h2>Content Studio</h2>
+        <div className="crm-content-hub-header-copy">
+          <div className="crm-content-hub-title-row">
+            <span className="crm-content-hub-header-mark"><BookOpen size={18} /></span>
+            <div>
+              <span className="crm-content-hub-kicker">Leads / Content</span>
+              <h2>Content Studio</h2>
+            </div>
+          </div>
           <p>Write, optimize, publish, and manage the content that powers the public site.</p>
         </div>
-        <div className="crm-content-hub-header-note">
-          <strong>WordPress-style workflow</strong>
-          <span>Draft → optimize → publish</span>
+        <div className="crm-content-hub-header-workflow">
+          <div className="crm-content-hub-workflow-label">
+            <Sparkles size={13} />
+            <strong>Publishing workflow</strong>
+          </div>
+          <div className="crm-content-hub-workflow-steps">
+            <span>Draft</span>
+            <ArrowRight size={12} />
+            <span>Optimize</span>
+            <ArrowRight size={12} />
+            <span>Publish</span>
+          </div>
         </div>
       </header>
 
