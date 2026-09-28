@@ -455,7 +455,7 @@ export function BlogEditorPage({
 
   return (
     <div
-      className={`w-full bg-[#f0f0f1] text-[#1e1e1e] font-sans selection:bg-[#2271b1]/20 min-h-screen pb-16 ${
+      className={`w-full bg-[#f0f0f1] text-[#1e1e1e] font-sans selection:bg-[#2271b1]/20 min-h-screen pb-16 crm-blog-editor ${
         isZenMode ? "bg-white" : ""
       }`}
     >

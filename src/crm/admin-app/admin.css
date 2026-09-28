@@ -9509,3 +9509,471 @@
   .crm-admin-app .crm-content-hub-form-grid { grid-template-columns: 1fr; }
   .crm-admin-app .crm-content-hub-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* Blog library spacing and layout. The shared blog components also run inside
+   the legacy CRM shell, so these semantic classes keep the page coherent even
+   when the host does not load the utility stylesheet used by the public admin. */
+.crm-admin-app .crm-blogs-tab {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.crm-admin-app .crm-blogs-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 2px 2px 0;
+}
+
+.crm-admin-app .crm-blogs-heading,
+.crm-admin-app .crm-blogs-title-copy {
+  min-width: 0;
+}
+
+.crm-admin-app .crm-blogs-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.crm-admin-app .crm-blogs-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid rgba(240, 185, 11, 0.18);
+  border-radius: 10px;
+  background: rgba(240, 185, 11, 0.12);
+  color: #F0B90B;
+}
+
+.crm-admin-app .crm-blogs-title-copy h2 {
+  margin: 0;
+  color: #EAECEF !important;
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.crm-admin-app .crm-blogs-description {
+  max-width: 720px;
+  margin: 5px 0 0;
+  color: #A8AEB8 !important;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.crm-admin-app .crm-blogs-actions {
+  flex: 0 0 auto;
+}
+
+.crm-admin-app .crm-blogs-actions button,
+.crm-admin-app .crm-blogs-empty button {
+  min-height: 36px;
+  border: 1px solid #F0B90B;
+  border-radius: 7px;
+  background: #F0B90B;
+  color: #2A2E36;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.crm-admin-app .crm-blogs-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.crm-admin-app .crm-blogs-metric {
+  min-width: 0;
+  padding: 14px 15px;
+  border: 1px solid #444A55;
+  border-radius: 9px;
+  background: #30353E !important;
+  box-shadow: none !important;
+}
+
+.crm-admin-app .crm-blogs-metric > span {
+  display: block;
+  color: #848E9C !important;
+  font-size: 10px;
+  line-height: 1.35;
+  letter-spacing: .08em;
+}
+
+.crm-admin-app .crm-blogs-metric > span + span {
+  margin-top: 7px;
+  color: #EAECEF !important;
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.crm-admin-app .crm-blogs-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #444A55;
+  border-radius: 9px;
+  background: #30353E !important;
+  box-shadow: none !important;
+}
+
+.crm-admin-app .crm-blogs-search {
+  min-width: 220px;
+}
+
+.crm-admin-app .crm-blogs-search input,
+.crm-admin-app .crm-blogs-filter-controls select {
+  min-height: 34px;
+  border: 1px solid #4A515C;
+  border-radius: 7px;
+  background: #2A2E36 !important;
+  color: #EAECEF !important;
+  font: inherit;
+  font-size: 12px;
+  outline: none;
+}
+
+.crm-admin-app .crm-blogs-search input {
+  width: 100%;
+  padding: 0 34px 0 32px;
+}
+
+.crm-admin-app .crm-blogs-search input:focus,
+.crm-admin-app .crm-blogs-filter-controls select:focus {
+  border-color: #F0B90B;
+  box-shadow: 0 0 0 2px rgba(240, 185, 11, 0.14);
+}
+
+.crm-admin-app .crm-blogs-filter-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.crm-admin-app .crm-blogs-filter-controls select {
+  max-width: 180px;
+  padding: 0 27px 0 9px;
+}
+
+.crm-admin-app .crm-blogs-view-toggle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid #4A515C;
+  border-radius: 7px;
+  background: #2A2E36 !important;
+}
+
+.crm-admin-app .crm-blogs-view-toggle button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: #848E9C;
+}
+
+.crm-admin-app .crm-blogs-view-toggle button[class*="bg-white"] {
+  background: #444A55 !important;
+  color: #F0B90B !important;
+}
+
+.crm-admin-app .crm-blogs-empty,
+.crm-admin-app .crm-blogs-table,
+.crm-admin-app .crm-blogs-card {
+  border: 1px solid #444A55 !important;
+  border-radius: 10px !important;
+  background: #30353E !important;
+  box-shadow: none !important;
+}
+
+.crm-admin-app .crm-blogs-empty {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 52px 20px;
+  color: #A8AEB8;
+}
+
+.crm-admin-app .crm-blogs-empty h3 {
+  margin: 0;
+  color: #EAECEF !important;
+  font-size: 14px;
+}
+
+.crm-admin-app .crm-blogs-empty p {
+  max-width: 420px;
+  margin: 0;
+  color: #848E9C !important;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.crm-admin-app .crm-blogs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.crm-admin-app .crm-blogs-card {
+  display: flex;
+  min-width: 0;
+  overflow: hidden;
+  flex-direction: column;
+}
+
+.crm-admin-app .crm-blogs-card-cover {
+  min-height: 132px;
+  border-bottom: 1px solid #444A55 !important;
+  background: #2A2E36 !important;
+}
+
+.crm-admin-app .crm-blogs-card-body {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 15px;
+}
+
+.crm-admin-app .crm-blogs-card-content {
+  display: grid;
+  gap: 9px;
+}
+
+.crm-admin-app .crm-blogs-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  color: #707A8A !important;
+  font-size: 10px;
+}
+
+.crm-admin-app .crm-blogs-card h3 {
+  margin: 0;
+  color: #EAECEF !important;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.crm-admin-app .crm-blogs-card p {
+  margin: 0;
+  color: #A8AEB8 !important;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.crm-admin-app .crm-blogs-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid #444A55 !important;
+}
+
+.crm-admin-app .crm-blogs-card-footer button,
+.crm-admin-app .crm-blogs-card-footer a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  border-radius: 6px;
+}
+
+.crm-admin-app .crm-blogs-card-footer button[class*="bg-\\[\\#0071E3\\]"] {
+  background: rgba(41, 121, 240, 0.14) !important;
+  color: #64B5FF !important;
+}
+
+.crm-admin-app .crm-blogs-table {
+  overflow: hidden;
+}
+
+.crm-admin-app .crm-blogs-table table {
+  width: 100%;
+  color: #EAECEF;
+}
+
+.crm-admin-app .crm-blogs-table thead tr {
+  border-bottom: 1px solid #444A55 !important;
+  background: #2A2E36 !important;
+}
+
+.crm-admin-app .crm-blogs-table tbody tr {
+  border-bottom: 1px solid #3C424D !important;
+}
+
+.crm-admin-app .crm-blogs-table tbody tr:last-child {
+  border-bottom: 0 !important;
+}
+
+.crm-admin-app .crm-blogs-table tbody tr:hover {
+  background: #3A404A !important;
+}
+
+@media (max-width: 900px) {
+  .crm-admin-app .crm-blogs-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .crm-admin-app .crm-blogs-filter-bar { align-items: stretch; flex-direction: column; }
+  .crm-admin-app .crm-blogs-filter-controls { justify-content: flex-start; }
+}
+
+@media (max-width: 640px) {
+  .crm-admin-app .crm-blogs-header { flex-direction: column; gap: 14px; }
+  .crm-admin-app .crm-blogs-actions { width: 100%; }
+  .crm-admin-app .crm-blogs-actions button { width: 100%; }
+  .crm-admin-app .crm-blogs-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .crm-admin-app .crm-blogs-grid { grid-template-columns: 1fr; }
+  .crm-admin-app .crm-blogs-filter-controls { align-items: stretch; flex-direction: column; }
+  .crm-admin-app .crm-blogs-filter-controls select { max-width: none; width: 100%; }
+  .crm-admin-app .crm-blogs-view-toggle { align-self: flex-start; }
+}
+
+/* Article editor: keep the writing canvas and SEO sections readable inside the
+   CRM shell, with a real gap between each panel and predictable form controls. */
+.crm-admin-app .crm-blog-editor {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+  padding: 2px 0 28px;
+  background: #2A2E36 !important;
+  color: #EAECEF !important;
+}
+
+.crm-admin-app .crm-blog-editor > header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  min-height: 54px;
+  margin: 0;
+  padding: 9px 12px;
+  border: 1px solid #444A55 !important;
+  border-radius: 9px !important;
+  background: rgba(48, 53, 62, 0.96) !important;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18) !important;
+}
+
+.crm-admin-app .crm-blog-editor > header button {
+  border-radius: 6px;
+}
+
+.crm-admin-app .crm-blog-editor > header button:hover {
+  background: #444A55 !important;
+}
+
+.crm-admin-app .crm-blog-editor > div {
+  min-width: 0;
+}
+
+.crm-admin-app .crm-blog-editor main > div,
+.crm-admin-app .crm-blog-editor section {
+  margin: 0 0 20px;
+  border: 1px solid #444A55 !important;
+  border-radius: 10px !important;
+  background: #30353E !important;
+  box-shadow: none !important;
+}
+
+.crm-admin-app .crm-blog-editor main > div:last-child,
+.crm-admin-app .crm-blog-editor section:last-child {
+  margin-bottom: 0;
+}
+
+.crm-admin-app .crm-blog-editor main > div {
+  padding: 18px !important;
+}
+
+.crm-admin-app .crm-blog-editor section {
+  overflow: hidden;
+}
+
+.crm-admin-app .crm-blog-editor input:not([type="checkbox"]),
+.crm-admin-app .crm-blog-editor textarea,
+.crm-admin-app .crm-blog-editor select {
+  max-width: 100%;
+  border: 1px solid #4A515C !important;
+  border-radius: 7px !important;
+  background: #2A2E36 !important;
+  color: #EAECEF !important;
+  outline: none;
+}
+
+.crm-admin-app .crm-blog-editor input:not([type="checkbox"]):focus,
+.crm-admin-app .crm-blog-editor textarea:focus,
+.crm-admin-app .crm-blog-editor select:focus {
+  border-color: #F0B90B !important;
+  box-shadow: 0 0 0 2px rgba(240, 185, 11, 0.14) !important;
+}
+
+.crm-admin-app .crm-blog-editor textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.crm-admin-app .crm-blog-editor label {
+  color: #A8AEB8;
+}
+
+.crm-admin-app .crm-blog-editor h1,
+.crm-admin-app .crm-blog-editor h2,
+.crm-admin-app .crm-blog-editor h3,
+.crm-admin-app .crm-blog-editor h4,
+.crm-admin-app .crm-blog-editor .text-neutral-900,
+.crm-admin-app .crm-blog-editor .text-neutral-800,
+.crm-admin-app .crm-blog-editor .text-neutral-700 {
+  color: #EAECEF !important;
+}
+
+.crm-admin-app .crm-blog-editor .text-neutral-500,
+.crm-admin-app .crm-blog-editor .text-neutral-600 {
+  color: #A8AEB8 !important;
+}
+
+.crm-admin-app .crm-blog-editor .bg-white,
+.crm-admin-app .crm-blog-editor .bg-\[\#f8f9fa\],
+.crm-admin-app .crm-blog-editor .bg-\[\#f0f0f1\] {
+  background: #2A2E36 !important;
+}
+
+.crm-admin-app .crm-blog-editor .border-\[\#dcdcde\] {
+  border-color: #444A55 !important;
+}
+
+.crm-admin-app .crm-blog-editor .border-t,
+.crm-admin-app .crm-blog-editor .border-b {
+  border-color: #444A55 !important;
+}
+
+@media (max-width: 900px) {
+  .crm-admin-app .crm-blog-editor > div {
+    display: block;
+  }
+  .crm-admin-app .crm-blog-editor main {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .crm-admin-app .crm-blog-editor {
+    gap: 14px;
+    padding-bottom: 18px;
+  }
+  .crm-admin-app .crm-blog-editor main > div {
+    padding: 14px !important;
+  }
+}
