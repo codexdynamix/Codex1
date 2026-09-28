@@ -10832,3 +10832,169 @@
     width: 100%;
   }
 }
+
+/* Content Studio page composition. Keep the hero, library summary, section
+   navigation, and active workspace visually connected as one page. */
+.crm-admin-app .crm-content-hub {
+  display: grid;
+  gap: 14px;
+}
+
+.crm-admin-app .crm-content-hub-header {
+  align-items: center;
+  min-height: 112px;
+  margin-bottom: 0;
+  padding: 20px 22px;
+  border: 1px solid #444A55;
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(240, 185, 11, 0.12), transparent 38%),
+    linear-gradient(135deg, #363B44 0%, #30353E 100%);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
+}
+
+.crm-admin-app .crm-content-hub-header-copy {
+  min-width: 0;
+}
+
+.crm-admin-app .crm-content-hub-title-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.crm-admin-app .crm-content-hub-header-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(240, 185, 11, 0.22);
+  border-radius: 10px;
+  background: rgba(240, 185, 11, 0.14);
+  color: #F0B90B;
+}
+
+.crm-admin-app .crm-content-hub-header .crm-content-hub-kicker {
+  margin-bottom: 4px;
+  color: #F0B90B;
+}
+
+.crm-admin-app .crm-content-hub-header h2 {
+  font-size: 24px;
+  line-height: 1.05;
+}
+
+.crm-admin-app .crm-content-hub-header p {
+  max-width: 620px;
+  margin: 9px 0 0 49px;
+  color: #A8AEB8;
+  line-height: 1.5;
+}
+
+.crm-admin-app .crm-content-hub-header-workflow {
+  display: grid;
+  gap: 9px;
+  flex: 0 0 auto;
+  min-width: 190px;
+  padding: 12px 14px;
+  border: 1px solid rgba(240, 185, 11, 0.24);
+  border-radius: 9px;
+  background: rgba(240, 185, 11, 0.08);
+}
+
+.crm-admin-app .crm-content-hub-workflow-label,
+.crm-admin-app .crm-content-hub-workflow-steps {
+  display: flex;
+  align-items: center;
+}
+
+.crm-admin-app .crm-content-hub-workflow-label {
+  gap: 6px;
+  color: #F0B90B;
+  font-size: 10px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.crm-admin-app .crm-content-hub-workflow-steps {
+  gap: 6px;
+  color: #A8AEB8;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.crm-admin-app .crm-content-hub-workflow-steps svg {
+  color: #707A8A;
+}
+
+.crm-admin-app .crm-content-hub-summary {
+  margin-bottom: 0;
+  gap: 10px;
+}
+
+.crm-admin-app .crm-content-hub-summary-card {
+  min-height: 72px;
+  padding: 13px 14px;
+  border-color: #444A55;
+  border-radius: 9px;
+  background: #30353E;
+  transition: border-color .15s ease, transform .15s ease;
+}
+
+.crm-admin-app .crm-content-hub-summary-card:hover {
+  border-color: #5A626F;
+  transform: translateY(-1px);
+}
+
+.crm-admin-app .crm-content-hub-nav {
+  margin-bottom: 0;
+  padding: 5px;
+  border-color: #444A55;
+  border-radius: 10px;
+  background: #30353E;
+}
+
+.crm-admin-app .crm-content-hub-blog {
+  padding: 20px;
+  border-color: #444A55;
+  border-radius: 12px;
+  background: #30353E;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
+}
+
+@media (max-width: 720px) {
+  .crm-admin-app .crm-content-hub-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .crm-admin-app .crm-content-hub-header-workflow {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 440px) {
+  .crm-admin-app .crm-content-hub-header {
+    padding: 17px;
+  }
+
+  .crm-admin-app .crm-content-hub-header p {
+    margin-left: 0;
+  }
+
+  .crm-admin-app .crm-content-hub-title-row {
+    align-items: flex-start;
+  }
+
+  .crm-admin-app .crm-content-hub-header h2 {
+    font-size: 21px;
+  }
+
+  .crm-admin-app .crm-content-hub-blog {
+    padding: 14px;
+  }
+}
