@@ -1,13 +1,29 @@
 import React, { useEffect, useState } from 'react';
 import Notifications from './Notifications/Notifications.jsx';
 import SecurityRequests from './SecurityRequests/SecurityRequests.jsx';
+import SiteCrmWorkspace from './SiteCrmWorkspace.jsx';
 import { DataContext, NotificationContext } from '../shared';
 import { getStaffCapabilities } from '../adminApi';
+
+const ContentTool = (props) => <SiteCrmWorkspace {...props} defaultTab="content" standalone />;
+const EnquiriesTool = (props) => <SiteCrmWorkspace {...props} defaultTab="enquiries" standalone />;
+const ChatTool = (props) => <SiteCrmWorkspace {...props} defaultTab="chat" standalone />;
 
 const TOOLS = [
   ['notifications', 'Notifications', Notifications],
   ['security', 'Security', SecurityRequests],
+  ['content', 'Content', ContentTool],
+  ['enquiries', 'Enquiries', EnquiriesTool],
+  ['chat', 'Chat', ChatTool],
 ];
+
+const DEFAULT_CAPABILITIES = {
+  notifications: true,
+  security: true,
+  content: true,
+  enquiries: true,
+  chat: true,
+};
 
 export default function ReactCapabilityWorkspace({
   data,
@@ -26,23 +42,43 @@ export default function ReactCapabilityWorkspace({
 
   useEffect(() => {
     let cancelled = false;
-    setCapabilitiesLoaded(false);
-    Promise.resolve(getStaffCapabilities(currentUser?.id))
-      .then((payload) => {
-        if (cancelled) return;
-        const next = payload?.capabilities || {
-          notifications: true,
-          security: true,
-        };
-        setCapabilities(next);
-        const first = TOOLS.find(([key]) => next[key]);
-        setInternalActive(first?.[0] || '');
-        setCapabilitiesLoaded(true);
-      })
-      .catch(() => {
-        if (!cancelled) setCapabilitiesLoaded(true);
-      });
-    return () => { cancelled = true; };
+    const refreshCapabilities = () => {
+      setCapabilitiesLoaded(false);
+      Promise.resolve(getStaffCapabilities(currentUser?.id))
+        .then((payload) => {
+          if (cancelled) return;
+          const next = {
+            ...DEFAULT_CAPABILITIES,
+            ...(payload?.capabilities || {}),
+          };
+          setCapabilities(next);
+          const first = TOOLS.find(([key]) => next[key]);
+          setInternalActive((prev) => (prev && next[prev] ? prev : (first?.[0] || '')));
+          setCapabilitiesLoaded(true);
+        })
+        .catch(() => {
+          if (!cancelled) setCapabilitiesLoaded(true);
+        });
+    };
+
+    refreshCapabilities();
+
+    const handleUpdated = (event) => {
+      const detail = event?.detail;
+      if (!detail || !currentUser?.id || detail.staffId === currentUser.id) {
+        refreshCapabilities();
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('codex-capabilities-updated', handleUpdated);
+    }
+    return () => {
+      cancelled = true;
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('codex-capabilities-updated', handleUpdated);
+      }
+    };
   }, [currentUser?.id]);
 
   const visibleTools = TOOLS.filter(([key]) => capabilities[key] && !excludeTools.includes(key));
@@ -58,9 +94,11 @@ export default function ReactCapabilityWorkspace({
 
   if (!visibleTools.length) return null;
   const Component = current?.[2];
-  const props = current?.[0] === 'security' ? { showNotification } : {};
+  const scopedClients = data?.leads || [];
+  const props = ['security', 'content', 'enquiries', 'chat'].includes(current?.[0])
+    ? { showNotification, leads: scopedClients }
+    : {};
 
-  const scopedClients = data.leads || [];
   const contextValue = {
     currentUser,
     clientUsers: scopedClients,

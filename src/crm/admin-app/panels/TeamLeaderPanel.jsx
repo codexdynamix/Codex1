@@ -5,6 +5,7 @@ import { SearchAutocomplete } from '../components/UserChrome.jsx';
 import { searchAdminLeads } from '../adminApi';
 import { bulkAssignLeadsApi } from '../adminApi';
 import ReactCapabilityWorkspace from '../components/ReactCapabilityWorkspace.jsx';
+import StaffProfileModal from '../components/StaffProfileModal.jsx';
 
 function AssignTab({ teamLeads, teamAgents, agentStats, showNotification, onBulkReassign, data }) {
   const [fromAgent, setFromAgent] = useState('');
@@ -138,8 +139,9 @@ function AssignTab({ teamLeads, teamAgents, agentStats, showNotification, onBulk
   );
 }
 
-function TeamLeaderPanel({ data, setData, currentUser, createAgent, canCreateAgent, setLeadAssignment, updateLead, createLead, setUserLoginState, showNotification }) {
+function TeamLeaderPanel({ data, setData, currentUser, createAgent, canCreateAgent, toggleStaffBlocked, setLeadAssignment, updateLead, createLead, setUserLoginState, showNotification }) {
   const navigate = useNavigate();
+  const [activeProfileStaff, setActiveProfileStaff] = useState(null);
   const [agentId, setAgentId] = useState('');
   const [leadId, setLeadId] = useState('');
   const [bulkAgentId, setBulkAgentId] = useState('');
@@ -821,8 +823,15 @@ function TeamLeaderPanel({ data, setData, currentUser, createAgent, canCreateAge
                   <tr><th>#</th><th>Agent</th><th style={{ textAlign: 'center' }}>Leads</th><th style={{ textAlign: 'center' }}>Deposits</th><th style={{ textAlign: 'center' }}>Conv.</th><th style={{ textAlign: 'center' }}>Comments</th><th style={{ textAlign: 'center' }}>Status</th></tr>
                 </thead>
                 <tbody>
-                  {agentStats.sort((a, b) => parseFloat(b.conversionRate) - parseFloat(a.conversionRate)).map((agent, idx) => (
-                    <tr key={agent.id}>
+                  {agentStats.sort((a, b) => parseFloat(b.conversionRate) - parseFloat(a.conversionRate)).map((agent, idx) => {
+                    const fullAgent = data.users.find(u => u.id === agent.id);
+                    return (
+                    <tr
+                      key={agent.id}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => fullAgent && setActiveProfileStaff(fullAgent)}
+                      title={`Click to open ${agent.name}'s staff summary`}
+                    >
                       <td style={{ color: ['#ffd700', '#c0c0c0', '#cd7f32'][idx] || '#848E9C', fontWeight: 700, width: 32 }}>{idx + 1}</td>
                       <td>
                         <div style={{ fontWeight: 600 }}>{agent.name}</div>
@@ -834,7 +843,8 @@ function TeamLeaderPanel({ data, setData, currentUser, createAgent, canCreateAge
                       <td style={{ textAlign: 'center' }}>{agent.totalComments}</td>
                       <td style={{ textAlign: 'center' }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: agent.isLoggedIn ? '#45d2a0' : '#A8AEB8', display: 'inline-block' }}></span></td>
                     </tr>
-                  ))}
+                    );
+                  })}
                   {agentStats.length === 0 && <tr><td colSpan={7} style={{ textAlign: 'center', color: '#848E9C', padding: 20 }}>No agents in this team.</td></tr>}
                 </tbody>
               </table>
@@ -845,16 +855,24 @@ function TeamLeaderPanel({ data, setData, currentUser, createAgent, canCreateAge
 
       {activeTab === 'agents' && (
         <div className="crm-super-admin-card">
+          <div style={{ fontSize: 12, color: '#848E9C', marginBottom: 8 }}>
+            Click any agent on a row to open their staff profile modal and manage their account.
+          </div>
           <div className="crm-super-admin-table-wrapper">
             <table className="crm-super-admin-table">
               <thead>
-                <tr><th>Agent</th><th style={{ textAlign: 'center' }}>Status</th><th>Last Login</th><th style={{ textAlign: 'center' }}>Leads</th><th style={{ textAlign: 'center' }}>Deposits</th><th style={{ textAlign: 'center' }}>Conv.</th><th style={{ textAlign: 'center' }}>Today</th><th>Actions</th></tr>
+                <tr><th>Agent</th><th style={{ textAlign: 'center' }}>Status</th><th>Last Login</th><th style={{ textAlign: 'center' }}>Leads</th><th style={{ textAlign: 'center' }}>Deposits</th><th style={{ textAlign: 'center' }}>Conv.</th><th style={{ textAlign: 'center' }}>Today</th></tr>
               </thead>
               <tbody>
                 {agentStats.map(agent => {
                   const fullAgent = data.users.find(u => u.id === agent.id);
                   return (
-                  <tr key={agent.id}>
+                  <tr
+                    key={agent.id}
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => fullAgent && setActiveProfileStaff(fullAgent)}
+                    title={`Click to open ${agent.name}'s staff profile`}
+                  >
                     <td>
                       <div style={{ fontWeight: 600 }}>{agent.name}</div>
                       <div style={{ fontSize: 11, color: '#848E9C' }}>{agent.email || agent.id}</div>
@@ -867,22 +885,10 @@ function TeamLeaderPanel({ data, setData, currentUser, createAgent, canCreateAge
                     <td style={{ textAlign: 'center', color: '#45d2a0', fontWeight: 600 }}>{agent.successfulDeposits}</td>
                     <td style={{ textAlign: 'center', color: '#F0B90B', fontWeight: 700 }}>{agent.conversionRate}%</td>
                     <td style={{ textAlign: 'center', color: '#0A84FF' }}>{agent.todaysComments}</td>
-                    <td>
-                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                        <button className="crm-staff-action-btn" title="View as Agent" onClick={() => viewAgentAsTeamLeader(agent.id)}>View Panel</button>
-                        <button
-                          className="crm-staff-action-btn"
-                          title={`See all ${agent.totalLeads} leads for ${agent.name}`}
-                          style={{ background: 'rgba(10,132,255,0.12)', color: '#0A84FF', border: '1px solid #0A84FF40' }}
-                          onClick={() => { setActiveTab('leads'); setFilterAgent(agent.id); setPage(1); }}
-                        >[list] Leads ({agent.totalLeads})</button>
-                        <button className="crm-staff-action-btn" title="Toggle Login" onClick={() => { setUserLoginState(agent.id, !agent.isLoggedIn); showNotification(agent.isLoggedIn ? agent.name + ' logged out.' : agent.name + ' logged in.'); }}>{agent.isLoggedIn ? '🔓 Logout' : '🔒 Login'}</button>
-                      </div>
-                    </td>
                   </tr>
                   );
                 })}
-                {agentStats.length === 0 && <tr><td colSpan={8} style={{ textAlign: 'center', color: '#848E9C', padding: 20 }}>No agents in this team.</td></tr>}
+                {agentStats.length === 0 && <tr><td colSpan={7} style={{ textAlign: 'center', color: '#848E9C', padding: 20 }}>No agents in this team.</td></tr>}
               </tbody>
             </table>
           </div>
@@ -1090,6 +1096,19 @@ function TeamLeaderPanel({ data, setData, currentUser, createAgent, canCreateAge
             if (created) showNotification('Agent created.');
             return created;
           }}
+        />
+      )}
+
+      {activeProfileStaff && (
+        <StaffProfileModal
+          staff={activeProfileStaff}
+          onClose={() => setActiveProfileStaff(null)}
+          data={data}
+          currentUser={currentUser}
+          setData={setData}
+          toggleStaffBlocked={toggleStaffBlocked}
+          setUserLoginState={setUserLoginState}
+          showNotification={showNotification}
         />
       )}
     </div>

@@ -253,7 +253,7 @@ function RecordsSection({ section, data, onAction }) {
   );
 }
 
-function LibrarySummary({ blogs, projects, reviews, backlinks }) {
+function LibrarySummary({ blogs = [], projects = [], reviews = [], backlinks = [] }) {
   const publishedBlogs = blogs.filter((blog) => blog.status === 'published' || !blog.status).length;
   const cards = [
     ['Articles', blogs.length, `${publishedBlogs} published`, BookOpen],
@@ -283,12 +283,12 @@ function LibrarySummary({ blogs, projects, reviews, backlinks }) {
 }
 
 export default function ContentWorkspace({
-  blogs,
-  projects,
-  reviews,
-  backlinks,
-  onAction,
-  showNotification,
+  blogs = [],
+  projects = [],
+  reviews = [],
+  backlinks = [],
+  onAction = async () => ({}),
+  showNotification = () => {},
 }) {
   const [section, setSection] = useState('blog');
   const [isEditingBlog, setIsEditingBlog] = useState(false);

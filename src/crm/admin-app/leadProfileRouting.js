@@ -19,6 +19,38 @@ export function getLeadProfilePath(role, userId, leadId) {
   return `${base}/lead/${leadId}`;
 }
 
+export function getStaffProfilePath(role, userId, staffId) {
+  const base = getRoleWorkspacePath(role, userId);
+  return `${base}/staff/${staffId}`;
+}
+
+export function getRoleScopedStaff(data, role, currentUser) {
+  const allStaff = (data?.users || []).filter(
+    (u) =>
+      (u.role === 'Office Manager' || u.role === 'Team Leader' || u.role === 'Agent') &&
+      u.status !== 'Disabled'
+  );
+  if (!currentUser) return allStaff;
+
+  const roleName = role || currentUser.role;
+
+  if (roleName === 'Super Admin' || roleName === 'super-admin') {
+    return allStaff;
+  }
+  if (roleName === 'Office Manager' || roleName === 'office-manager') {
+    return currentUser.officeId
+      ? allStaff.filter((u) => u.officeId === currentUser.officeId)
+      : allStaff;
+  }
+  if (roleName === 'Team Leader' || roleName === 'team-leader') {
+    return currentUser.teamId
+      ? allStaff.filter((u) => u.teamId === currentUser.teamId && u.role === 'Agent')
+      : allStaff;
+  }
+
+  return allStaff;
+}
+
 export function getRoleScopedLeads(data, role, currentUser) {
   const allLeads = data?.leads || [];
   if (!currentUser) return allLeads;

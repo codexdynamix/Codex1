@@ -141,6 +141,9 @@ export async function adminLogin(email, password, requestedRole) {
       registrations: true,
       notifications: true,
       security: true,
+      content: true,
+      enquiries: true,
+      chat: true,
     },
   };
 
@@ -180,6 +183,9 @@ export async function fetchAdminMe() {
       registrations: true,
       notifications: true,
       security: true,
+      content: true,
+      enquiries: true,
+      chat: true,
     },
   };
   setStoredAdminProfile(admin);
@@ -198,6 +204,51 @@ export async function fetchAdminMe() {
  * Throws Error with .status (HTTP code) and .code (server `error` slug) so
  * callers can distinguish 401 vs 409 vs network failure.
  */
+export const DEFAULT_CAPABILITY_CATALOG = {
+  lead_upload: 'Lead Upload',
+  create_agent: 'Create Agent',
+  notifications: 'Notifications',
+  security: 'Security',
+  content: 'Content',
+  enquiries: 'Enquiries',
+  chat: 'Chat',
+};
+
+export const DEFAULT_STAFF_CAPABILITIES = {
+  lead_upload: true,
+  create_agent: true,
+  registrations: true,
+  notifications: true,
+  security: true,
+  content: true,
+  enquiries: true,
+  chat: true,
+};
+
+const STAFF_CAPABILITIES_STORAGE_KEY = 'codex_staff_capabilities_v1';
+
+function readStoredCapabilitiesMap() {
+  try {
+    const raw = typeof window !== 'undefined' ? window.localStorage?.getItem(STAFF_CAPABILITIES_STORAGE_KEY) : null;
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeStoredCapabilities(staffId, caps) {
+  try {
+    const map = readStoredCapabilitiesMap();
+    map[staffId] = { ...DEFAULT_STAFF_CAPABILITIES, ...(map[staffId] || {}), ...(caps || {}) };
+    if (typeof window !== 'undefined') {
+      window.localStorage?.setItem(STAFF_CAPABILITIES_STORAGE_KEY, JSON.stringify(map));
+    }
+    return map[staffId];
+  } catch {
+    return { ...DEFAULT_STAFF_CAPABILITIES, ...(caps || {}) };
+  }
+}
+
 const localCrmStore = {
   offices: [
     { id: 'of_london', name: 'London Operations', manager_id: 'adm_om', manager_name: 'Olivia Manager', manager_email: 'manager@codexdynamics.com', team_count: 1, agent_count: 1, lead_count: 4, created_at: new Date().toISOString() },
@@ -208,10 +259,10 @@ const localCrmStore = {
     { id: 'tm_beta', name: 'Beta Enterprise', office_id: 'of_newyork', leader_id: null, leader_name: 'Unassigned', max_size: 10, agent_count: 1, lead_count: 2, created_at: new Date().toISOString() },
   ],
   staff: [
-    { id: 'adm_sa', name: 'Sarah Admin', email: 'superadmin@codexdynamics.com', role: 'Super Admin', office_id: null, team_id: null, status: 'Active', capabilities: { lead_upload: true, create_agent: true, registrations: true, notifications: true, security: true } },
-    { id: 'adm_om', name: 'Olivia Manager', email: 'manager@codexdynamics.com', role: 'Office Manager', office_id: 'of_london', team_id: null, status: 'Active', capabilities: { lead_upload: true, create_agent: true, registrations: true, notifications: true, security: true } },
-    { id: 'adm_tl', name: 'Thomas Leader', email: 'leader@codexdynamics.com', role: 'Team Leader', office_id: 'of_london', team_id: 'tm_alpha', status: 'Active', capabilities: { lead_upload: true, create_agent: true, registrations: true, notifications: true, security: true } },
-    { id: 'adm_ag', name: 'Alex Agent', email: 'agent@codexdynamics.com', role: 'Agent', office_id: 'of_london', team_id: 'tm_alpha', status: 'Active', capabilities: { lead_upload: true, create_agent: true, registrations: true, notifications: true, security: true } },
+    { id: 'adm_sa', name: 'Sarah Admin', email: 'superadmin@codexdynamics.com', role: 'Super Admin', office_id: null, team_id: null, status: 'Active', capabilities: { ...DEFAULT_STAFF_CAPABILITIES } },
+    { id: 'adm_om', name: 'Olivia Manager', email: 'manager@codexdynamics.com', role: 'Office Manager', office_id: 'of_london', team_id: null, status: 'Active', capabilities: { ...DEFAULT_STAFF_CAPABILITIES } },
+    { id: 'adm_tl', name: 'Thomas Leader', email: 'leader@codexdynamics.com', role: 'Team Leader', office_id: 'of_london', team_id: 'tm_alpha', status: 'Active', capabilities: { ...DEFAULT_STAFF_CAPABILITIES } },
+    { id: 'adm_ag', name: 'Alex Agent', email: 'agent@codexdynamics.com', role: 'Agent', office_id: 'of_london', team_id: 'tm_alpha', status: 'Active', capabilities: { ...DEFAULT_STAFF_CAPABILITIES } },
   ],
   leads: [
     { id: 'ld_1001', first_name: 'James', last_name: 'Morrison', name: 'James Morrison', email: 'james.morrison@enterprise.co.uk', phone: '+44 20 7946 0912', country: 'United Kingdom', country_code: 'GB', stage: 'In Line', status: 'In Line', assigned_office_id: 'of_london', assigned_team_id: 'tm_alpha', assigned_agent_id: 'adm_ag', funnel: 'Web Development', notes: 'Requirements discovery for global corporate web platform.', comment_history: [], status_history: [], created_at: new Date().toISOString() },
@@ -434,16 +485,41 @@ function handleLocalMock(path, method, body) {
 
   if (p === '/api/admin/staff') {
     if (method === 'POST') {
-      const created = { id: `adm_${Date.now()}`, name: body?.name || 'New Agent', email: body?.email || `agent_${Date.now()}@codexdynamics.com`, role: body?.role || 'Agent', office_id: body?.office_id || null, team_id: body?.team_id || null, status: 'Active', capabilities: { lead_upload: true, create_agent: true } };
+      const created = { id: `adm_${Date.now()}`, name: body?.name || 'New Agent', email: body?.email || `agent_${Date.now()}@codexdynamics.com`, role: body?.role || 'Agent', office_id: body?.office_id || null, team_id: body?.team_id || null, status: 'Active', capabilities: { ...DEFAULT_STAFF_CAPABILITIES } };
       localCrmStore.staff.push(created);
       return { staff: created };
     }
-    return { staff: localCrmStore.staff };
+    const storedMap = readStoredCapabilitiesMap();
+    return {
+      staff: localCrmStore.staff.map((s) => ({
+        ...s,
+        capabilities: { ...DEFAULT_STAFF_CAPABILITIES, ...(s.capabilities || {}), ...(storedMap[s.id] || {}) },
+      })),
+    };
   }
   if (p.startsWith('/api/admin/staff/')) {
     const id = p.split('/')[4];
     if (p.endsWith('/capabilities')) {
-      return { capabilities: { lead_upload: true, create_agent: true, registrations: true, notifications: true, security: true } };
+      const staffMember = localCrmStore.staff.find((s) => s.id === id);
+      const storedMap = readStoredCapabilitiesMap();
+      if (method === 'PUT' || method === 'POST' || method === 'PATCH') {
+        const nextCaps = writeStoredCapabilities(id, body?.capabilities || body || {});
+        if (staffMember) staffMember.capabilities = nextCaps;
+        const storedAdmin = getStoredAdminProfile();
+        if (storedAdmin && storedAdmin.id === id) {
+          setStoredAdminProfile({ ...storedAdmin, capabilities: nextCaps });
+        }
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('codex_capabilities_updated', { detail: { staffId: id, capabilities: nextCaps } }));
+        }
+        return { catalog: DEFAULT_CAPABILITY_CATALOG, capabilities: nextCaps };
+      }
+      const currentCaps = {
+        ...DEFAULT_STAFF_CAPABILITIES,
+        ...(staffMember?.capabilities || {}),
+        ...(storedMap[id] || {}),
+      };
+      return { catalog: DEFAULT_CAPABILITY_CATALOG, capabilities: currentCaps };
     }
     if (p.endsWith('/block')) {
       const u = localCrmStore.staff.find(s => s.id === id);
@@ -949,6 +1025,13 @@ export async function listStaff() {
 
 export async function getStaffCapabilities(staffId) {
   return adminFetch(`/api/admin/staff/${encodeURIComponent(staffId)}/capabilities`);
+}
+
+export async function updateStaffCapabilities(staffId, capabilities) {
+  return adminFetch(`/api/admin/staff/${encodeURIComponent(staffId)}/capabilities`, {
+    method: 'PUT',
+    body: { capabilities },
+  });
 }
 
 export async function createAgentApi({ teamId, name, password, email }) {
