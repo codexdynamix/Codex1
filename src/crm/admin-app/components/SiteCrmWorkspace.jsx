@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import ContentWorkspace from './ContentWorkspace.jsx';
 import LiveChatWorkspace from './LiveChatWorkspace.jsx';
+import EnquiriesWorkspace from './EnquiriesWorkspace.jsx';
 
 const TABS = [
   ['overview', 'Overview'],
@@ -68,6 +69,7 @@ async function crmAction(action, payload = {}) {
   if (action === 'save_project') localSiteCrmStore.projects.push({ id, ...payload });
   if (action === 'update_project') localSiteCrmStore.projects = localSiteCrmStore.projects.map((x) => (x.id === id ? { ...x, ...payload } : x));
   if (action === 'delete_project') localSiteCrmStore.projects = localSiteCrmStore.projects.filter((x) => x.id !== id);
+  if (action === 'save_enquiry') localSiteCrmStore.enquiries.unshift({ id, ...payload });
   if (action === 'delete_enquiry') localSiteCrmStore.enquiries = localSiteCrmStore.enquiries.filter((x) => x.id !== id);
   if (action === 'update_enquiry_status') {
     localSiteCrmStore.enquiries = localSiteCrmStore.enquiries.map((x) => (x.id === id ? { ...x, status: payload.status } : x));
@@ -129,6 +131,8 @@ export default function SiteCrmWorkspace({
   showNotification = () => {},
   defaultTab = 'overview',
   standalone = false,
+  onOpenLeadProfile = null,
+  leads = [],
 }) {
   const [tab, setTab] = useState(defaultTab);
   const [data, setData] = useState(null);
@@ -216,7 +220,15 @@ export default function SiteCrmWorkspace({
       <div className="crm-site-crm-panel wide"><h3>Recent enquiries</h3>{enquiries.slice(0, 6).map((row) => <div className="crm-site-crm-row" key={row.id}><div><strong>{row.name}</strong><span>{row.email}</span></div><em>{row.status}</em></div>)}</div>
     </div>}
 
-    {tab === 'enquiries' && <div className="crm-site-crm-panel"><h3>Enquiries</h3><Table>{enquiries.map((row) => <tr key={row.id}><td><strong>{row.name}</strong><small>{row.email} · {row.phone}</small></td><td>{row.message}</td><td><select value={row.status} onChange={(e) => run('update_enquiry_status', { id: row.id, status: e.target.value })}><option>new</option><option>contacted</option><option>closed</option></select><Button danger secondary onClick={() => run('delete_enquiry', { id: row.id })}>Delete</Button></td></tr>)}</Table></div>}
+    {tab === 'enquiries' && (
+      <EnquiriesWorkspace
+        enquiries={enquiries}
+        onAction={run}
+        showNotification={showNotification}
+        onOpenLeadProfile={onOpenLeadProfile}
+        leads={leads}
+      />
+    )}
 
     {tab === 'content' && (
       <ContentWorkspace

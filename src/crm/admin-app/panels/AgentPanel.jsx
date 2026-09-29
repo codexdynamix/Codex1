@@ -966,6 +966,41 @@ function LeadProfilePage({ role, viewingUser, data, updateLead, showNotification
         </div>
       </div>
 
+      {/* Quick Direct Communication Bar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '14px 0 18px', flexWrap: 'wrap' }}>
+        {lead.email && (
+          <a
+            href={`mailto:${lead.email}`}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 8, background: 'rgba(10, 132, 255, 0.15)', color: '#0A84FF', border: '1px solid rgba(10, 132, 255, 0.3)', textDecoration: 'none', fontSize: 12, fontWeight: 600 }}
+            title="Send email"
+          >
+            <svg style={{ width: 14, height: 14 }} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+            <span>Email: {lead.email}</span>
+          </a>
+        )}
+        {lead.phone && (
+          <a
+            href={`tel:${lead.phone}`}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 8, background: 'rgba(52, 199, 89, 0.15)', color: '#34C759', border: '1px solid rgba(52, 199, 89, 0.3)', textDecoration: 'none', fontSize: 12, fontWeight: 600 }}
+            title="Call lead"
+          >
+            <svg style={{ width: 14, height: 14 }} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+            <span>Call: {lead.phone}</span>
+          </a>
+        )}
+        {lead.phone && (
+          <a
+            href={`https://wa.me/${String(lead.phone).replace(/[^\d+]/g, '').replace(/^\+/, '')}?text=${encodeURIComponent(`Hi ${lead.firstName || lead.name}, thank you for contacting Codex Dynamics.`)}`}
+            target="_blank"
+            rel="noreferrer"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 8, background: 'rgba(37, 211, 102, 0.15)', color: '#25D366', border: '1px solid rgba(37, 211, 102, 0.3)', textDecoration: 'none', fontSize: 12, fontWeight: 600 }}
+            title="WhatsApp chat"
+          >
+            <span>WhatsApp Direct</span>
+          </a>
+        )}
+      </div>
+
       <div className="crm-detail-grid crm-detail-grid-three">
         <div className="crm-detail-column">
           <div className="crm-detail-row"><span className="crm-label">ID</span><span className="crm-value">{formatLeadId(lead.id)}</span></div>
@@ -975,12 +1010,11 @@ function LeadProfilePage({ role, viewingUser, data, updateLead, showNotification
           <div className="crm-detail-row"><span className="crm-label">Country</span><span className="crm-value crm-country-value">{getCountryFlag(lead.countryCode, lead.country)}<span className="crm-country-name">{lead.country || '-'}</span></span></div>
         </div>
         <div className="crm-detail-column">
-          <div className="crm-detail-row"><span className="crm-label">Office</span><span className="crm-value">{getOfficeName(lead.assignedToOffice, data.offices)}</span></div>
-          <div className="crm-detail-row"><span className="crm-label">Team</span><span className="crm-value">{getTeamName(lead.assignedToTeam, data.teams)}</span></div>
-          <div className="crm-detail-row"><span className="crm-label">Assigned To</span><span className="crm-value">{getUserName(lead.assignedToAgent, data.users)}</span></div>
-          <div className="crm-detail-row"><span className="crm-label">Assigned By</span><span className="crm-value" style={{ color: '#F0B90B', fontWeight: 600 }}>{assignedByDisplay}</span></div>
-          <div className="crm-detail-row"><span className="crm-label">Funnel</span><span className="crm-value">{lead.funnel || '-'}</span></div>
-          <div className="crm-detail-row"><span className="crm-label">Affiliate</span><span className="crm-value">{lead.affiliate || '-'}</span></div>
+          <div className="crm-detail-row"><span className="crm-label">Company</span><span className="crm-value">{lead.company || '-'}</span></div>
+          <div className="crm-detail-row"><span className="crm-label">Service</span><span className="crm-value" style={{ color: '#0A84FF', fontWeight: 600 }}>{lead.service || lead.funnel || '-'}</span></div>
+          <div className="crm-detail-row"><span className="crm-label">Budget</span><span className="crm-value" style={{ color: '#34C759', fontWeight: 600 }}>{lead.budget || '-'}</span></div>
+          <div className="crm-detail-row"><span className="crm-label">Timeline</span><span className="crm-value">{lead.timeline || '-'}</span></div>
+          <div className="crm-detail-row"><span className="crm-label">Origin</span><span className="crm-value">{lead.source === 'website_contact_modal' ? 'Website Modal' : lead.source === 'website_contact_form' ? 'Website Form' : (lead.source || '-')}</span></div>
         </div>
         <div className="crm-detail-column">
           <div className="crm-detail-row"><span className="crm-label">Status</span><span className={`crm-status-chip ${statusClass(status)}`}>{status}</span></div>
@@ -1005,10 +1039,34 @@ function LeadProfilePage({ role, viewingUser, data, updateLead, showNotification
               }}
             >Save Status</button>
           </div>
-          <div className="crm-detail-row"><span className="crm-label">Last Comment</span><span className="crm-value">{lead.lastCommentDate || '-'}</span></div>
+          <div className="crm-detail-row"><span className="crm-label">Office / Team</span><span className="crm-value">{getOfficeName(lead.assignedToOffice, data.offices)} · {getTeamName(lead.assignedToTeam, data.teams)}</span></div>
           <div className="crm-detail-row"><span className="crm-label">Registered</span><span className="crm-value">{lead.registeredDate || '-'}</span></div>
         </div>
       </div>
+
+      {/* Customer Submission Message */}
+      {lead.message && (
+        <div style={{ background: '#2B2F38', border: '1px solid #444A55', borderRadius: 10, padding: 16, margin: '18px 0 22px' }}>
+          <div style={{ fontSize: 11, color: '#848E9C', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.04em' }}>
+            Customer Submission Message
+          </div>
+          <div style={{ color: '#EAECEF', fontSize: 13, lineHeight: 1.6, whiteSpace: 'pre-wrap', fontStyle: 'italic', background: 'rgba(0, 0, 0, 0.2)', padding: 14, borderRadius: 8, border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+            "{lead.message}"
+          </div>
+        </div>
+      )}
+
+      {/* Internal Staff Follow-Up Notes */}
+      {lead.notes && (
+        <div style={{ background: '#2B2F38', border: '1px solid #444A55', borderRadius: 10, padding: 16, margin: '0 0 22px' }}>
+          <div style={{ fontSize: 11, color: '#F0B90B', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8, letterSpacing: '0.04em' }}>
+            Internal Staff Follow-Up Notes
+          </div>
+          <div style={{ color: '#EAECEF', fontSize: 13, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+            {lead.notes}
+          </div>
+        </div>
+      )}
 
       <div className="crm-profile-grid">
         <div className="crm-profile-column crm-comment-column">

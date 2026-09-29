@@ -20,6 +20,7 @@ import {
   Archive,
   ArchiveRestore,
   Eraser,
+  CornerDownLeft,
 } from 'lucide-react';
 
 const CHAT_STORAGE_KEY = 'codex_crm_chat_threads_v3';
@@ -479,49 +480,58 @@ export default function LiveChatWorkspace({ showNotification = () => {} }) {
         <div className="crm-chat-console">
           {/* LEFT COLUMN: Joined Sidebar */}
           <aside className="crm-chat-sidebar">
-            {/* Top Search Bar (64px height, perfectly aligned with chat header) */}
+            {/* Top Search Bar: Small Archive toggle on the left, Search field in center, Enter button on the right */}
             <div className="crm-chat-sidebar-head">
-              <div className="crm-chat-search" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <div style={{ position: 'relative', flex: 1 }}>
-                  <Search size={15} />
+              <div className="crm-chat-search-bar">
+                {/* Archive View Toggle (Small, on the left of search field) */}
+                <button
+                  type="button"
+                  onClick={() => setShowArchivedView((p) => !p)}
+                  className={`crm-chat-archive-toggle-btn ${showArchivedView ? 'active' : ''}`}
+                  title={showArchivedView ? 'Show active conversations' : 'Show archived conversations'}
+                  aria-label="Archive toggle"
+                >
+                  <Archive size={14} />
+                </button>
+
+                {/* Search Input Field (Magnifying glass correctly positioned on left inside input) */}
+                <div className="crm-chat-search-field">
+                  <Search size={14} className="crm-chat-search-lens" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        showNotification(searchQuery.trim() ? `Filtered by "${searchQuery.trim()}"` : 'Showing all threads');
+                      }
+                    }}
                     placeholder="Search conversations..."
                   />
                   {searchQuery && (
                     <button
                       type="button"
                       onClick={() => setSearchQuery('')}
-                      style={{
-                        position: 'absolute',
-                        right: 10,
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        background: 'none',
-                        border: 'none',
-                        color: 'rgba(255, 255, 255, 0.45)',
-                        cursor: 'pointer',
-                        padding: 2,
-                        display: 'flex',
-                        alignItems: 'center',
-                      }}
+                      className="crm-chat-search-clear-btn"
                       title="Clear search"
                     >
-                      <X size={13} />
+                      <X size={12} />
                     </button>
                   )}
                 </div>
 
-                {/* Archive View Toggle */}
+                {/* Enter Button for Search (On the right) */}
                 <button
                   type="button"
-                  onClick={() => setShowArchivedView((p) => !p)}
-                  className={`crm-chat-control-icon-btn ${showArchivedView ? 'active' : ''}`}
-                  title={showArchivedView ? 'Show active conversations' : 'Show archived conversations'}
+                  onClick={() => {
+                    showNotification(searchQuery.trim() ? `Filtered by "${searchQuery.trim()}"` : 'Showing all threads');
+                  }}
+                  className="crm-chat-search-enter-btn"
+                  title="Search conversations"
                 >
-                  <Archive size={15} />
+                  <span>Enter</span>
+                  <CornerDownLeft size={11} />
                 </button>
               </div>
             </div>
@@ -620,44 +630,14 @@ export default function LiveChatWorkspace({ showNotification = () => {} }) {
                     </div>
                   </div>
 
-                  {/* Clean Action Toolbar with Clear History, Archive, Delete Person & Diagonal Maximize/Minimize */}
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    {/* Clear Entire History */}
-                    <button
-                      type="button"
-                      onClick={handleClearHistory}
-                      className="crm-chat-control-icon-btn"
-                      title="Clear chat history"
-                    >
-                      <Eraser size={15} />
-                    </button>
-
-                    {/* Archive / Unarchive Person */}
-                    <button
-                      type="button"
-                      onClick={() => handleToggleArchive(activeThread.id)}
-                      className={`crm-chat-control-icon-btn ${activeThread.is_archived ? 'active' : ''}`}
-                      title={activeThread.is_archived ? 'Unarchive conversation' : 'Archive conversation'}
-                    >
-                      {activeThread.is_archived ? <ArchiveRestore size={15} /> : <Archive size={15} />}
-                    </button>
-
-                    {/* Delete Person From Chat */}
-                    <button
-                      type="button"
-                      onClick={() => handleDeletePerson(activeThread.id)}
-                      className="crm-chat-delete-btn"
-                      title="Delete person from chat"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-
-                    {/* Diagonal Maximize / Downsize Feature Control (No text label) */}
+                  {/* Maximize / Downsize Control: Just the arrows only (No button frame) */}
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
                     <button
                       type="button"
                       onClick={() => setShowRightPanel((p) => !p)}
-                      className="crm-chat-diagonal-expand-btn"
+                      className="crm-chat-arrows-only-btn"
                       title={showRightPanel ? 'Downsize details' : 'Maximize details'}
+                      aria-label={showRightPanel ? 'Downsize details' : 'Maximize details'}
                     >
                       {showRightPanel ? (
                         <Minimize2 size={16} />
@@ -697,14 +677,24 @@ export default function LiveChatWorkspace({ showNotification = () => {} }) {
                             {msg.text}
                           </div>
 
-                          {/* Delete Individual Message Button */}
+                          {/* Delete Individual Message Button (Compact, small) */}
                           <button
                             type="button"
                             onClick={() => handleDeleteMessage(msg.id)}
                             className="crm-chat-msg-delete-btn"
                             title="Delete this message"
+                            style={{
+                              width: 18,
+                              height: 18,
+                              minWidth: 18,
+                              maxWidth: 18,
+                              minHeight: 18,
+                              maxHeight: 18,
+                              padding: 0,
+                              margin: 0,
+                            }}
                           >
-                            <Trash2 size={12} />
+                            <Trash2 size={10} />
                           </button>
                         </div>
 
@@ -792,7 +782,8 @@ export default function LiveChatWorkspace({ showNotification = () => {} }) {
                   <User size={13} />
                   <span>Visitor Context</span>
                 </span>
-                <span style={{ fontSize: 10, color: '#34C759', fontWeight: 600, background: 'rgba(52, 199, 89, 0.15)', border: '1px solid rgba(52, 199, 89, 0.3)', padding: '2px 7px', borderRadius: 4 }}>
+                <span style={{ fontSize: 11.5, color: '#34C759', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ width: 6.5, height: 6.5, borderRadius: '50%', background: '#34C759', display: 'inline-block', boxShadow: '0 0 6px rgba(52, 199, 89, 0.7)' }} />
                   Online
                 </span>
               </div>
@@ -837,24 +828,40 @@ export default function LiveChatWorkspace({ showNotification = () => {} }) {
               </div>
             </div>
 
-            {/* Quick Actions Card */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-              <button
-                type="button"
-                onClick={() => handleToggleArchive(activeThread.id)}
-                className="crm-chat-panel-action-btn"
-              >
-                <Archive size={13} />
-                <span>{activeThread.is_archived ? 'Unarchive' : 'Archive'}</span>
-              </button>
+            {/* Quick Actions Card with Archive, Delete Person, and Delete Chat History */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => handleToggleArchive(activeThread.id)}
+                  className="crm-chat-panel-action-btn"
+                  title={activeThread.is_archived ? 'Unarchive conversation' : 'Archive conversation'}
+                >
+                  {activeThread.is_archived ? <ArchiveRestore size={13} /> : <Archive size={13} />}
+                  <span>{activeThread.is_archived ? 'Unarchive' : 'Archive'}</span>
+                </button>
 
+                <button
+                  type="button"
+                  onClick={() => handleDeletePerson(activeThread.id)}
+                  className="crm-chat-panel-action-btn danger"
+                  title="Delete person from chat"
+                >
+                  <Trash2 size={13} />
+                  <span>Delete Person</span>
+                </button>
+              </div>
+
+              {/* Deleting chat history option in visitor context / profile */}
               <button
                 type="button"
-                onClick={() => handleDeletePerson(activeThread.id)}
-                className="crm-chat-panel-action-btn danger"
+                onClick={handleClearHistory}
+                className="crm-chat-panel-action-btn warning"
+                style={{ width: '100%', justifyContent: 'center' }}
+                title="Delete entire chat history for this visitor"
               >
-                <Trash2 size={13} />
-                <span>Delete Person</span>
+                <Eraser size={13} />
+                <span>Delete Chat History</span>
               </button>
             </div>
 
