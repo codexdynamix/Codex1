@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Inbox,
   Download,
@@ -8,7 +8,9 @@ import {
   Trash2,
   Copy,
   ExternalLink,
+  MessageSquare,
 } from 'lucide-react';
+import { StatusDropdown } from '../shared';
 
 const DEFAULT_SEED_ENQUIRIES = [
   {
@@ -98,6 +100,234 @@ function formatRelativeTime(dateString) {
 
 function cleanPhoneForWhatsApp(phone = '') {
   return String(phone).replace(/[^\d+]/g, '').replace(/^\+/, '');
+}
+
+function EnquiryMessagePreview({ message, name, service, budget, timeline, created_at }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [coords, setCoords] = useState({ top: 0, left: 0, showAbove: false });
+  const triggerRef = useRef(null);
+
+  const cleanMsg = (message || '').trim();
+
+  const handleMouseEnter = () => {
+    if (!cleanMsg) return;
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const popoverWidth = 380;
+      const left = Math.max(12, Math.min(rect.left - 20, window.innerWidth - popoverWidth - 20));
+      const showAbove = rect.bottom + 260 > window.innerHeight && rect.top > 260;
+      const top = showAbove ? rect.top - 8 : rect.bottom + 8;
+      setCoords({ top, left, showAbove });
+    }
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+  };
+
+  return (
+    <div
+      ref={triggerRef}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      style={{ position: 'relative', width: '100%', maxWidth: 170 }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          height: 26,
+          padding: '0 8px',
+          borderRadius: 6,
+          background: isHovered ? '#282D37' : '#1F242D',
+          border: `1px solid ${isHovered ? '#F0B90B' : '#3B424E'}`,
+          cursor: cleanMsg ? 'pointer' : 'default',
+          transition: 'all 0.15s ease',
+          boxSizing: 'border-box',
+          width: '100%',
+        }}
+      >
+        <MessageSquare
+          size={12}
+          style={{
+            color: isHovered ? '#F0B90B' : cleanMsg ? '#0A84FF' : '#555E6E',
+            flexShrink: 0,
+            transition: 'color 0.15s ease',
+          }}
+        />
+        <span
+          style={{
+            color: isHovered ? '#FFFFFF' : cleanMsg ? '#D1D4DC' : '#707784',
+            fontSize: 11.5,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            fontStyle: cleanMsg ? 'normal' : 'italic',
+            flex: 1,
+            lineHeight: '24px',
+          }}
+        >
+          {cleanMsg || 'No message'}
+        </span>
+      </div>
+
+      {isHovered && cleanMsg && (
+        <div
+          style={{
+            position: 'fixed',
+            top: coords.showAbove ? undefined : coords.top,
+            bottom: coords.showAbove ? window.innerHeight - coords.top : undefined,
+            left: coords.left,
+            width: 380,
+            maxWidth: 'calc(100vw - 32px)',
+            background: '#181B22',
+            border: '1px solid #444A55',
+            borderRadius: 10,
+            padding: '14px 16px',
+            boxShadow: '0 18px 48px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.08)',
+            zIndex: 999999,
+            pointerEvents: 'none',
+            animation: 'crmFadeIn 0.12s ease-out',
+          }}
+        >
+          {/* Popover Header */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 10,
+              paddingBottom: 8,
+              borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span
+                style={{
+                  width: 24,
+                  height: 24,
+                  borderRadius: '50%',
+                  background: '#F0B90B',
+                  color: '#1A1D23',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 11.5,
+                  fontWeight: 700,
+                  flexShrink: 0,
+                }}
+              >
+                {name ? name.charAt(0).toUpperCase() : 'C'}
+              </span>
+              <div>
+                <div style={{ color: '#FFFFFF', fontSize: 13, fontWeight: 600 }}>
+                  {name || 'Prospective Client'}
+                </div>
+                {service && (
+                  <div style={{ color: '#0A84FF', fontSize: 11, fontWeight: 500 }}>
+                    {service}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <span
+                style={{
+                  display: 'inline-block',
+                  background: 'rgba(240, 185, 11, 0.15)',
+                  color: '#F0B90B',
+                  fontSize: 9.5,
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  padding: '1px 6px',
+                  borderRadius: 4,
+                  marginBottom: 2,
+                }}
+              >
+                Inquiry Message
+              </span>
+              {created_at && (
+                <div style={{ color: '#848E9C', fontSize: 10.5 }}>
+                  {formatRelativeTime(created_at)}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Popover Message Content: Multi-line, Pre-wrap, Proper Line Height */}
+          <div
+            style={{
+              color: '#F4F5F7',
+              fontSize: 12.5,
+              lineHeight: 1.65,
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+              overflowWrap: 'break-word',
+              maxHeight: 280,
+              overflowY: 'auto',
+              background: 'rgba(0, 0, 0, 0.4)',
+              borderRadius: 8,
+              padding: '12px 14px',
+              border: '1px solid rgba(255, 255, 255, 0.07)',
+              fontStyle: 'normal',
+            }}
+          >
+            "{cleanMsg}"
+          </div>
+
+          {/* Popover Footer Badges */}
+          {(budget || timeline) && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                marginTop: 10,
+                paddingTop: 8,
+                borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+                flexWrap: 'wrap',
+              }}
+            >
+              {budget && (
+                <span
+                  style={{
+                    fontSize: 11,
+                    color: '#0ECB81',
+                    background: 'rgba(14, 203, 129, 0.12)',
+                    border: '1px solid rgba(14, 203, 129, 0.25)',
+                    padding: '2px 7px',
+                    borderRadius: 4,
+                    fontFamily: 'monospace',
+                    fontWeight: 600,
+                  }}
+                >
+                  Budget: {budget}
+                </span>
+              )}
+              {timeline && (
+                <span
+                  style={{
+                    fontSize: 11,
+                    color: '#F0B90B',
+                    background: 'rgba(240, 185, 11, 0.12)',
+                    border: '1px solid rgba(240, 185, 11, 0.25)',
+                    padding: '2px 7px',
+                    borderRadius: 4,
+                    fontWeight: 500,
+                  }}
+                >
+                  Timeline: {timeline}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function EnquiriesWorkspace({
@@ -636,9 +866,19 @@ export default function EnquiriesWorkspace({
         Click any row to open the client profile. Showing {paginatedList.length} of {filteredList.length} enquiries (page {page}/{totalPages})
       </div>
 
-      {/* 4. Table - Matching Leads Table (`crm-admin-table`) Exactly */}
-      <div className="crm-admin-table-container">
-        <table className="crm-admin-table">
+      {/* 4. Table - Designed to fit cleanly on screen like the Leads Table */}
+      <div
+        className="crm-admin-table-container"
+        style={{
+          width: '100%',
+          maxWidth: '100%',
+          overflowX: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          display: 'block',
+          boxSizing: 'border-box',
+        }}
+      >
+        <table className="crm-admin-table" style={{ width: '100%' }}>
           <thead>
             <tr>
               <th style={{ width: 28 }}>
@@ -648,22 +888,21 @@ export default function EnquiriesWorkspace({
                   onChange={handleToggleSelectAll}
                 />
               </th>
-              <th>Client ID</th>
-              <th>Customer / Lead</th>
-              <th>Contact</th>
-              <th>Service</th>
-              <th>Budget / Scope</th>
-              <th>Message Preview</th>
-              <th>Origin</th>
-              <th>Received</th>
-              <th>Status</th>
-              <th>Actions</th>
+              <th style={{ width: 75, whiteSpace: 'nowrap' }}>Client ID</th>
+              <th>Customer</th>
+              <th>Contact Details</th>
+              <th>Service & Scope</th>
+              <th style={{ minWidth: 120, maxWidth: 165 }}>Message Preview</th>
+              <th style={{ width: 60, whiteSpace: 'nowrap' }}>Origin</th>
+              <th style={{ width: 75, whiteSpace: 'nowrap' }}>Received</th>
+              <th style={{ width: 115, whiteSpace: 'nowrap' }}>Status</th>
+              <th style={{ width: 95, textAlign: 'right', whiteSpace: 'nowrap' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {paginatedList.length === 0 ? (
               <tr>
-                <td colSpan={11} style={{ textAlign: 'center', padding: 28, color: '#848E9C' }}>
+                <td colSpan={10} style={{ textAlign: 'center', padding: 28, color: '#848E9C' }}>
                   No customer enquiries match your filters.
                 </td>
               </tr>
@@ -682,7 +921,7 @@ export default function EnquiriesWorkspace({
                     onClick={() => handleOpenLead(item)}
                   >
                     {/* Checkbox */}
-                    <td onClick={(e) => e.stopPropagation()}>
+                    <td onClick={(e) => e.stopPropagation()} style={{ width: 28 }}>
                       <input
                         type="checkbox"
                         checked={isSelected}
@@ -691,9 +930,9 @@ export default function EnquiriesWorkspace({
                     </td>
 
                     {/* Client ID with Copy */}
-                    <td style={{ whiteSpace: 'nowrap' }}>
+                    <td style={{ whiteSpace: 'nowrap', width: 75 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <span style={{ fontFamily: 'monospace', fontSize: 13, color: '#EAECEF' }}>
+                        <span style={{ fontFamily: 'monospace', fontSize: 12.5, color: '#EAECEF' }}>
                           {String(displayId).slice(0, 10)}
                         </span>
                         <button
@@ -720,31 +959,61 @@ export default function EnquiriesWorkspace({
                       </div>
                     </td>
 
-                    {/* Customer Name & Company */}
+                    {/* Customer Name & Company (Stacked neatly like Leads table) */}
                     <td>
-                      <div style={{ fontWeight: 600, color: '#EAECEF' }}>{item.name}</div>
-                      {item.company && (
-                        <div style={{ fontSize: 11, color: '#848E9C' }}>{item.company}</div>
-                      )}
+                      <div
+                        style={{
+                          fontWeight: 600,
+                          color: '#EAECEF',
+                          fontSize: 12.5,
+                          maxWidth: 135,
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {item.name}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 11,
+                          color: '#848E9C',
+                          maxWidth: 135,
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {item.company || 'Individual Client'}
+                      </div>
                     </td>
 
-                    {/* Contact Details */}
+                    {/* Contact Details (Email + Phone + WhatsApp) */}
                     <td onClick={(e) => e.stopPropagation()}>
-                      <div style={{ fontSize: 12, color: '#848E9C', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                         {item.email && (
                           <a
                             href={`mailto:${item.email}`}
-                            style={{ color: '#3a7bd5', textDecoration: 'none' }}
+                            style={{
+                              color: '#0A84FF',
+                              textDecoration: 'none',
+                              fontSize: 11.5,
+                              maxWidth: 135,
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              display: 'block',
+                            }}
                             title={item.email}
                           >
                             {item.email}
                           </a>
                         )}
                         {item.phone && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                             <a
                               href={`tel:${item.phone}`}
-                              style={{ color: '#848E9C', textDecoration: 'none' }}
+                              style={{ color: '#848E9C', textDecoration: 'none', fontSize: 11 }}
                             >
                               {item.phone}
                             </a>
@@ -752,123 +1021,103 @@ export default function EnquiriesWorkspace({
                               href={`https://wa.me/${cleanPhoneForWhatsApp(item.phone)}?text=${encodeURIComponent(`Hi ${item.name}, thank you for contacting Codex Dynamics regarding ${item.service || 'your project'}.`)}`}
                               target="_blank"
                               rel="noreferrer"
-                              style={{ color: '#0ECB81', fontSize: 11, textDecoration: 'none', fontWeight: 600 }}
+                              style={{
+                                color: '#0ECB81',
+                                background: 'rgba(14,203,129,0.1)',
+                                border: '1px solid rgba(14,203,129,0.3)',
+                                borderRadius: 3,
+                                padding: '1px 5px',
+                                fontSize: 10,
+                                textDecoration: 'none',
+                                fontWeight: 600,
+                              }}
                               title="Chat on WhatsApp"
                             >
-                              WhatsApp
+                              WA
                             </a>
                           </div>
                         )}
                       </div>
                     </td>
 
-                    {/* Service */}
+                    {/* Service & Scope (Combined neatly to fit screen) */}
                     <td>
-                      <span style={{ color: '#EAECEF', fontSize: 12 }}>
-                        {item.service || 'General Inquiry'}
-                      </span>
-                    </td>
-
-                    {/* Budget / Scope */}
-                    <td style={{ whiteSpace: 'nowrap' }}>
-                      {item.budget ? (
-                        <span style={{ color: '#0ECB81', fontWeight: 600, fontSize: 12, fontFamily: 'monospace' }}>
-                          {item.budget}
-                        </span>
-                      ) : item.timeline ? (
-                        <span style={{ color: '#F0B90B', fontSize: 11.5 }}>
-                          {item.timeline}
-                        </span>
-                      ) : (
-                        <span style={{ color: '#555', fontSize: 12 }}>—</span>
-                      )}
-                    </td>
-
-                    {/* Message Preview */}
-                    <td style={{ maxWidth: 220 }}>
                       <div
                         style={{
-                          color: '#848E9C',
+                          color: '#EAECEF',
                           fontSize: 12,
+                          fontWeight: 500,
+                          maxWidth: 130,
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
-                          fontStyle: 'italic',
                         }}
-                        title={item.message}
                       >
-                        "{item.message || 'No text'}"
+                        {item.service || 'General Inquiry'}
                       </div>
+                      {item.budget ? (
+                        <span style={{ color: '#0ECB81', background: 'rgba(14,203,129,0.12)', padding: '1px 6px', borderRadius: 4, fontWeight: 600, fontSize: 10.5, fontFamily: 'monospace', display: 'inline-block', marginTop: 2 }}>
+                          {item.budget}
+                        </span>
+                      ) : item.timeline ? (
+                        <span style={{ color: '#F0B90B', background: 'rgba(240,185,11,0.12)', padding: '1px 6px', borderRadius: 4, fontSize: 10.5, display: 'inline-block', marginTop: 2 }}>
+                          {item.timeline}
+                        </span>
+                      ) : null}
+                    </td>
+
+                    {/* Message Preview (Interactive with Rich Hover Card) */}
+                    <td onClick={(e) => e.stopPropagation()} style={{ minWidth: 120, maxWidth: 165 }}>
+                      <EnquiryMessagePreview
+                        message={item.message}
+                        name={item.name}
+                        service={item.service}
+                        budget={item.budget}
+                        timeline={item.timeline}
+                        created_at={item.created_at}
+                      />
                     </td>
 
                     {/* Origin */}
-                    <td style={{ whiteSpace: 'nowrap', fontSize: 11, color: '#848E9C' }}>
-                      {item.source === 'website_contact_modal'
-                        ? 'Website Modal'
-                        : item.source === 'manual_crm_entry'
-                        ? 'Manual Entry'
-                        : 'Website Form'}
+                    <td style={{ whiteSpace: 'nowrap', fontSize: 11, color: '#848E9C', width: 60 }}>
+                      <span style={{ background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.08)', fontSize: 10.5 }}>
+                        {item.source === 'website_contact_modal'
+                          ? 'Modal'
+                          : item.source === 'manual_crm_entry'
+                          ? 'Manual'
+                          : 'Form'}
+                      </span>
                     </td>
 
                     {/* Received */}
                     <td
-                      style={{ whiteSpace: 'nowrap', fontSize: 11, color: '#848E9C' }}
+                      style={{ whiteSpace: 'nowrap', fontSize: 11, color: '#848E9C', width: 75 }}
                       title={new Date(item.created_at).toLocaleString()}
                     >
                       {formatRelativeTime(item.created_at)}
                     </td>
 
-                    {/* Status Dropdown */}
-                    <td onClick={(e) => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
-                      <select
+                    {/* Status Dropdown Menu (Designed consistently) */}
+                    <td onClick={(e) => e.stopPropagation()} style={{ whiteSpace: 'nowrap', width: 115 }}>
+                      <StatusDropdown
                         value={item.status}
-                        onChange={(e) => handleUpdateStatus(item.id, e.target.value)}
-                        className="crm-super-admin-select"
-                        style={{
-                          fontSize: 11,
-                          padding: '2px 6px',
-                          height: 24,
-                          background:
-                            item.status === 'new'
-                              ? 'rgba(14,203,129,0.12)'
-                              : item.status === 'contacted'
-                              ? 'rgba(10,132,255,0.15)'
-                              : item.status === 'converted'
-                              ? 'rgba(240,185,11,0.15)'
-                              : '#2A2E36',
-                          color:
-                            item.status === 'new'
-                              ? '#0ECB81'
-                              : item.status === 'contacted'
-                              ? '#0A84FF'
-                              : item.status === 'converted'
-                              ? '#F0B90B'
-                              : '#EAECEF',
-                          borderColor:
-                            item.status === 'new'
-                              ? '#0ECB8140'
-                              : item.status === 'contacted'
-                              ? '#0A84FF40'
-                              : item.status === 'converted'
-                              ? '#F0B90B40'
-                              : '#444A55',
-                          fontWeight: 600,
-                        }}
-                      >
-                        <option value="new">New</option>
-                        <option value="contacted">Contacted</option>
-                        <option value="converted">Converted</option>
-                        <option value="closed">Closed</option>
-                      </select>
+                        options={[
+                          { value: 'new', label: 'New' },
+                          { value: 'contacted', label: 'Contacted' },
+                          { value: 'converted', label: 'Converted' },
+                          { value: 'closed', label: 'Closed' },
+                        ]}
+                        onChange={(nextStatus) => handleUpdateStatus(item.id, nextStatus)}
+                      />
                     </td>
 
                     {/* Action Buttons */}
-                    <td onClick={(e) => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
+                    <td onClick={(e) => e.stopPropagation()} style={{ whiteSpace: 'nowrap', textAlign: 'right', width: 95 }}>
                       <button
                         className="crm-super-admin-btn crm-super-admin-btn-small"
                         style={{
                           fontSize: 11,
-                          padding: '4px 10px',
+                          padding: '3px 8px',
                           background: '#3a7bd5',
                           color: '#fff',
                           fontWeight: 600,
@@ -882,15 +1131,16 @@ export default function EnquiriesWorkspace({
                         className="crm-super-admin-btn crm-super-admin-btn-small"
                         style={{
                           fontSize: 11,
-                          padding: '4px 8px',
+                          padding: '3px 6px',
                           marginLeft: 4,
-                          background: '#c0392b',
-                          color: '#fff',
+                          background: 'rgba(246,70,93,0.15)',
+                          color: '#F6465D',
+                          border: '1px solid rgba(246,70,93,0.3)',
                         }}
                         onClick={() => handleDeleteEnquiry(item.id, item.name)}
                         title="Delete enquiry"
                       >
-                        🗑 Bin
+                        🗑
                       </button>
                     </td>
                   </tr>

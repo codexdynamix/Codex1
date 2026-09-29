@@ -5,6 +5,7 @@ import {
   getOfficeName, getTeamName, getUserName, getCountryFlag, statusClass,
   EditLeadModal, makeLoginLink,
   EditOfficeModal, EditTeamModal, EditAgentModal,
+  StatusDropdown,
 } from '../shared';
 import { useConfirmDialog } from '../components/ConfirmModal/ConfirmModal';
 import Dashboard from '../components/Dashboard/Dashboard.jsx';
@@ -14,7 +15,6 @@ import LeadProfileModal from '../components/LeadProfileModal.jsx';
 import AuditLog from '../components/AuditLog/AuditLog.jsx';
 import Notifications from '../components/Notifications/Notifications.jsx';
 import NotificationToast from '../components/NotificationToast/NotificationToast.jsx';
-import SignupRequests from '../components/SignupRequests/SignupRequests.jsx';
 import SecurityRequests from '../components/SecurityRequests/SecurityRequests.jsx';
 import Sessions from '../components/Sessions/Sessions.jsx';
 import AgentAccess from '../components/AgentAccess.jsx';
@@ -40,7 +40,6 @@ import {
   importLeadsApi, bulkUpdateLeadStatusApi, cleanupBinApi, purgeBinLeads,
   sendHeartbeat,
   searchAdminLeads,
-  getClientWorkspaceAdmin, updateClientWorkspaceAdmin,
 } from '../adminApi';
 import { fetchAdminSettings } from '../../platformDefaults';
 import { getLeadProfilePath } from '../leadProfileRouting';
@@ -96,6 +95,19 @@ function AllLeadsTable({ data, currentUser, setData, setLeadAssignment, showNoti
 
   // Client ID lookup
   const [idLookupQuery, setIdLookupQuery] = useState('');
+
+  const handleLeadStatusChange = async (leadId, newStage) => {
+    setData(prev => ({
+      ...prev,
+      leads: prev.leads.map(l => (l.id === leadId ? { ...l, stage: newStage, status: newStage } : l)),
+    }));
+    try {
+      await updateLeadApi(leadId, { stage: newStage, status: newStage });
+      showNotification(`Status updated to "${newStage}".`);
+    } catch (err) {
+      showNotification('Failed to update status.');
+    }
+  };
 
   const handleQuickAssign = (lead) => {
     const agentId = quickAssignAgentId || null;
@@ -1415,7 +1427,13 @@ function AllLeadsTable({ data, currentUser, setData, setLeadAssignment, showNoti
                       <div style={{ fontSize: 11, color: '#848E9C' }}>{lead.email}</div>
                     </td>
                     <td>{getCountryFlag(lead.countryCode, lead.country)} {lead.country}</td>
-                    <td><span className={`crm-status-badge ${statusClass(lead.stage)}`}>{normalizeStage(lead.stage)}</span></td>
+                    <td onClick={e => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
+                      <StatusDropdown
+                        value={normalizeStage(lead.stage)}
+                        options={LEAD_STATUSES}
+                        onChange={(newStage) => handleLeadStatusChange(lead.id, newStage)}
+                      />
+                    </td>
                     <td style={{ color: lead.assignedToOffice ? '#EAECEF' : '#F0B90B', fontSize: 12 }}>
                       {lead.assignedToOffice ? getOfficeName(lead.assignedToOffice, data.offices) : 'Pool'}
                     </td>
@@ -2152,73 +2170,6 @@ function RecycleBin({ data, setData, showNotification }) {
   );
 }
 
-function ClientBackOfficeManager({ data, showNotification }) {
-  const clients = (data.leads || []).filter((lead) => lead?.id);
-  const [selectedId, setSelectedId] = useState(clients[0]?.id || '');
-  const [workspace, setWorkspace] = useState({ links: [], permissions: {}, requests: [] });
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const selectedClient = clients.find((lead) => lead.id === selectedId);
-  const connectionTypes = [
-    ['website', 'Website management', 'Pages, content, site settings and booking embed.'],
-    ['bookings', 'Bookings', 'Appointments collected from the client website.'],
-    ['mail', 'Business email', 'Zoho Mail or Hostinger Mail inbox.'],
-    ['chat', 'Client chat', 'Conversations with website visitors and customers.'],
-    ['analytics', 'Analytics & advertising', 'Google Analytics, Google Ads and Meta reporting.'],
-  ];
-
-  useEffect(() => {
-    if (!selectedId) return;
-    setLoading(true);
-    getClientWorkspaceAdmin(selectedId)
-      .then((value) => setWorkspace(value || { links: [], permissions: {}, requests: [] }))
-      .catch((error) => showNotification(error.message || 'Could not load client Back Office.'))
-      .finally(() => setLoading(false));
-  }, [selectedId, showNotification]);
-
-  const getLink = (type) => workspace.links?.find((link) => link.type === type) || { type, url: '', provider: '', status: 'not_connected' };
-  const updateLink = (type, patch) => {
-    const current = getLink(type);
-    const next = { ...current, ...patch };
-    setWorkspace((value) => ({ ...value, links: [...(value.links || []).filter((link) => link.type !== type), next] }));
-  };
-  const save = async () => {
-    setSaving(true);
-    try {
-      await updateClientWorkspaceAdmin(selectedId, workspace);
-      showNotification('Client Back Office saved.');
-    } catch (error) {
-      showNotification(error.message || 'Could not save client Back Office.');
-    } finally { setSaving(false); }
-  };
-
-  return (
-    <div className="crm-super-admin-card" style={{ padding: 22 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap', marginBottom: 20 }}>
-        <div><h2 style={{ margin: 0 }}>Client Back Office</h2><p style={{ color: '#848E9C', fontSize: 13, margin: '6px 0 0' }}>Configure the business tools inside a client&apos;s Back Office.</p></div>
-        <select className="crm-super-admin-select" value={selectedId} onChange={(event) => setSelectedId(event.target.value)} style={{ minWidth: 240 }}>
-          <option value="">Select a client</option>
-          {clients.map((client) => <option key={client.id} value={client.id}>{client.firstName} {client.lastName} · {client.email}</option>)}
-        </select>
-      </div>
-      {!selectedClient ? <div style={{ padding: 40, textAlign: 'center', color: '#848E9C' }}>Select a client to configure their Back Office.</div> : loading ? <div style={{ padding: 40, textAlign: 'center', color: '#848E9C' }}>Loading Back Office...</div> : (
-        <>
-          <div style={{ display: 'grid', gap: 12 }}>
-            {connectionTypes.map(([type, title, detail]) => {
-              const link = getLink(type);
-              return <div key={type} style={{ border: '1px solid #444A55', borderRadius: 9, padding: 16, background: '#2A2E36' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', marginBottom: 8 }}><div><strong>{title}</strong><div style={{ color: '#848E9C', fontSize: 12, marginTop: 3 }}>{detail}</div></div><select value={link.status || 'not_connected'} onChange={(event) => updateLink(type, { status: event.target.value })} style={{ background: '#363B44', color: '#EAECEF', border: '1px solid #4A515C', borderRadius: 6, padding: '6px 8px', fontSize: 12 }}><option value="not_connected">Not connected</option><option value="requested">Connection requested</option><option value="connected">Connected</option><option value="expired">Expired</option></select></div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}><input className="crm-super-admin-input" value={link.provider || ''} onChange={(event) => updateLink(type, { provider: event.target.value })} placeholder="Provider (Zoho, Hostinger, WordPress...)" /><input className="crm-super-admin-input" value={link.url || ''} onChange={(event) => updateLink(type, { url: event.target.value })} placeholder="External URL" /></div>
-              </div>;
-            })}
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 18 }}><button className="crm-super-admin-btn" onClick={save} disabled={saving}>{saving ? 'Saving...' : 'Save Back Office'}</button></div>
-        </>
-      )}
-    </div>
-  );
-}
-
 function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, createOfficeWithManager, createTeamLeader, createAgent, toggleStaffBlocked, setLeadAssignment, setUserLoginState, createLead, showNotification }) {
   const navigate = useNavigate();
   const [activeProfileLead, setActiveProfileLead] = useState(null);
@@ -2526,7 +2477,7 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
   const [staffSubTab, setStaffSubTab] = useState('Staff');
   const [activeSubTab, setActiveSubTab] = useState(() => {
     const saved = sessionStorage.getItem('sa_activeSubTab');
-    const allowed = ['Lead Management', 'Lead Upload', 'Back Office', 'Registrations', 'Notifications', 'Security'];
+    const allowed = ['Lead Management', 'Lead Upload', 'Notifications', 'Security'];
     return allowed.includes(saved) ? saved : 'Lead Management';
   });
   const tabsScrollRef = useRef(null);
@@ -2847,12 +2798,6 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
       <button className={"crm-tab-btn " + (activeTab === 'Leads' && activeSubTab === 'Lead Upload' ? 'crm-active' : '')} onClick={() => { setActiveTab('Leads'); setActiveSubTab('Lead Upload'); }}>
         Lead Upload
       </button>
-      <button className={"crm-tab-btn " + (activeTab === 'Leads' && activeSubTab === 'Back Office' ? 'crm-active' : '')} onClick={() => { setActiveTab('Leads'); setActiveSubTab('Back Office'); }}>
-        Back Office
-      </button>
-      <button className={"crm-tab-btn " + (activeTab === 'Leads' && activeSubTab === 'Registrations' ? 'crm-active' : '')} onClick={() => { setActiveTab('Leads'); setActiveSubTab('Registrations'); }}>
-        Registrations
-      </button>
       <button className={"crm-tab-btn " + (activeTab === 'Leads' && activeSubTab === 'Notifications' ? 'crm-active' : '')} onClick={() => { setActiveTab('Leads'); setActiveSubTab('Notifications'); }}>
         Notifications
       </button>
@@ -3117,23 +3062,6 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
                       </div>
                     </div>
                   </div>
-                ) : activeSubTab === 'Back Office' ? (
-                  <ClientBackOfficeManager data={data} showNotification={showNotification} />
-                ) : activeSubTab === 'Registrations' ? (
-                  <SignupRequests
-                    data={data}
-                    showNotification={showNotification}
-                    onLeadCreated={(lead) => {
-                      if (lead?.id) {
-                        setData((prev) => ({
-                          ...prev,
-                          leads: prev.leads.some((l) => l.id === lead.id)
-                            ? prev.leads.map((l) => (l.id === lead.id ? lead : l))
-                            : [...prev.leads, lead],
-                        }));
-                      }
-                    }}
-                  />
                 ) : activeSubTab === 'Notifications' ? (
                   <Notifications data={data} setData={setData} currentUserId={data.users.find(u => u.role === ROLE.SUPER_ADMIN)?.id} />
                 ) : activeSubTab === 'Security' ? (
@@ -3143,13 +3071,19 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
             ) : activeTab === 'Enquiries' ? (
               <div className="leads-content">
                 {renderLeadWorkspaceTabs()}
-                <SiteCrmWorkspace
-                  defaultTab="enquiries"
-                  standalone
-                  showNotification={showNotification}
-                  onOpenLeadProfile={openLeadProfile}
-                  leads={data.leads}
-                />
+                <div className="crm-super-admin-card" style={{ minWidth: 0, maxWidth: '100%' }}>
+                  <h2 style={{ marginBottom: 6 }}>📬 Customer Enquiries</h2>
+                  <p style={{ color: '#848E9C', fontSize: 13, marginBottom: 20 }}>
+                    Inbound customer enquiries submitted through public website contact forms, booking modals, and CRM intake.
+                  </p>
+                  <SiteCrmWorkspace
+                    defaultTab="enquiries"
+                    standalone
+                    showNotification={showNotification}
+                    onOpenLeadProfile={openLeadProfile}
+                    leads={data.leads}
+                  />
+                </div>
               </div>
             ) : activeTab === 'Content' ? (
               <div className="leads-content">

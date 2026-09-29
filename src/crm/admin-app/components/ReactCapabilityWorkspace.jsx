@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import SignupRequests from './SignupRequests/SignupRequests.jsx';
 import Notifications from './Notifications/Notifications.jsx';
 import SecurityRequests from './SecurityRequests/SecurityRequests.jsx';
 import { DataContext, NotificationContext } from '../shared';
 import { getStaffCapabilities } from '../adminApi';
 
 const TOOLS = [
-  ['registrations', 'Registrations', SignupRequests],
   ['notifications', 'Notifications', Notifications],
   ['security', 'Security', SecurityRequests],
 ];
@@ -33,7 +31,6 @@ export default function ReactCapabilityWorkspace({
       .then((payload) => {
         if (cancelled) return;
         const next = payload?.capabilities || {
-          registrations: true,
           notifications: true,
           security: true,
         };
@@ -61,7 +58,7 @@ export default function ReactCapabilityWorkspace({
 
   if (!visibleTools.length) return null;
   const Component = current?.[2];
-  const props = current?.[0] === 'registrations' ? { data, showNotification } : current?.[0] === 'security' ? { showNotification } : {};
+  const props = current?.[0] === 'security' ? { showNotification } : {};
 
   const scopedClients = data.leads || [];
   const contextValue = {

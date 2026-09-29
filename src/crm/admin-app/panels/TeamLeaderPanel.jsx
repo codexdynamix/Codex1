@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ROLE, normalizeStage, getTeamName, getUserName, getCountryFlag, EditLeadModal, CreateAgentModal, CreateLeadModal, AddCommentModal, stageColor, assignableAgents, assignableAgentLabel } from '../shared';
+import { ROLE, LEAD_STATUSES, normalizeStage, getTeamName, getUserName, getCountryFlag, EditLeadModal, CreateAgentModal, CreateLeadModal, AddCommentModal, stageColor, assignableAgents, assignableAgentLabel, StatusDropdown } from '../shared';
 import { SearchAutocomplete } from '../components/UserChrome.jsx';
 import { searchAdminLeads } from '../adminApi';
 import { bulkAssignLeadsApi } from '../adminApi';
@@ -983,7 +983,18 @@ function TeamLeaderPanel({ data, setData, currentUser, createAgent, canCreateAge
                         </td>
                         <td><div style={{ fontWeight: 600 }}>{lead.firstName} {lead.lastName}</div><div style={{ fontSize: 11, color: '#848E9C' }}>{lead.email}</div></td>
                         <td>{getCountryFlag(lead.countryCode, lead.country)} {lead.country || '-'}</td>
-                        <td><span style={{ background: stagePillColor + '18', color: stagePillColor, border: '1px solid ' + stagePillColor + '40', padding: '2px 8px', borderRadius: 4, fontSize: 11 }}>{stage}</span></td>
+                        <td onClick={e => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
+                          <StatusDropdown
+                            value={stage}
+                            options={LEAD_STATUSES}
+                            onChange={async (newStage) => {
+                              if (updateLead) {
+                                await updateLead(lead.id, { stage: newStage, status: newStage });
+                                showNotification?.(`Status updated to "${newStage}".`);
+                              }
+                            }}
+                          />
+                        </td>
                         <td style={{ fontSize: 12 }}>{getUserName(lead.assignedToAgent, data.users) || <span style={{ color: '#848E9C' }}>Unassigned</span>}</td>
                         <td style={{ textAlign: 'center', fontSize: 12 }}>{(lead.commentHistory || []).length}</td>
                         <td style={{ fontSize: 11, color: '#848E9C' }}>{lead.registeredDate || '-'}</td>

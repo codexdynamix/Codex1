@@ -65,6 +65,359 @@ export const stageColor = (stage) => {
   return STAGE_FALLBACK_PALETTE[hash % STAGE_FALLBACK_PALETTE.length];
 };
 
+export function getStatusTheme(status) {
+  const norm = String(status || '').toLowerCase().trim();
+  if (norm === 'new') {
+    return {
+      dot: '#0ECB81',
+      bg: 'rgba(14, 203, 129, 0.14)',
+      color: '#0ECB81',
+      border: 'rgba(14, 203, 129, 0.35)',
+    };
+  }
+  if (norm === 'contacted' || norm === 'in line') {
+    return {
+      dot: '#0A84FF',
+      bg: 'rgba(10, 132, 255, 0.14)',
+      color: '#0A84FF',
+      border: 'rgba(10, 132, 255, 0.35)',
+    };
+  }
+  if (norm === 'converted' || norm === 'deposit' || norm === 'qualified' || norm === 'won') {
+    return {
+      dot: '#F0B90B',
+      bg: 'rgba(240, 185, 11, 0.15)',
+      color: '#F0B90B',
+      border: 'rgba(240, 185, 11, 0.35)',
+    };
+  }
+  if (norm === 'call back') {
+    return {
+      dot: '#7eb59a',
+      bg: 'rgba(126, 181, 154, 0.16)',
+      color: '#7eb59a',
+      border: 'rgba(126, 181, 154, 0.35)',
+    };
+  }
+  if (norm === 'no answer' || norm === 'na1' || norm === 'na2' || norm === 'na3') {
+    return {
+      dot: '#c9a86a',
+      bg: 'rgba(201, 168, 106, 0.16)',
+      color: '#c9a86a',
+      border: 'rgba(201, 168, 106, 0.35)',
+    };
+  }
+  if (norm === 'not interested' || norm === 'failed deposit' || norm === 'never answer' || norm === 'no potential') {
+    return {
+      dot: '#F6465D',
+      bg: 'rgba(246, 70, 93, 0.14)',
+      color: '#F6465D',
+      border: 'rgba(246, 70, 93, 0.35)',
+    };
+  }
+  if (norm === 'closed' || norm === 'archived' || norm === 'frozen' || norm === 'blocked') {
+    return {
+      dot: '#848E9C',
+      bg: 'rgba(132, 142, 156, 0.14)',
+      color: '#A8AEB8',
+      border: 'rgba(132, 142, 156, 0.3)',
+    };
+  }
+  // Custom fallback by stageColor
+  const baseColor = stageColor(status);
+  return {
+    dot: baseColor,
+    bg: `${baseColor}18`,
+    color: baseColor,
+    border: `${baseColor}40`,
+  };
+}
+
+export function StatusDropdown({ value, options, onChange, disabled = false, style = {} }) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [coords, setCoords] = React.useState({ top: 0, left: 0, showAbove: false, width: 130 });
+  const buttonRef = React.useRef(null);
+  const menuRef = React.useRef(null);
+  const theme = getStatusTheme(value);
+
+  const parsedOptions = React.useMemo(() => {
+    return (options || []).map((opt) => {
+      if (typeof opt === 'string') return { value: opt, label: opt };
+      return { value: opt.value, label: opt.label || opt.value };
+    });
+  }, [options]);
+
+  const currentOption = parsedOptions.find(
+    (o) => String(o.value).toLowerCase() === String(value).toLowerCase()
+  ) || {
+    value,
+    label: value || 'Select status',
+  };
+
+  const handleToggle = (e) => {
+    e.stopPropagation();
+    if (disabled) return;
+    if (!isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const menuHeight = Math.min(260, parsedOptions.length * 34 + 30);
+      const showAbove = rect.bottom + menuHeight > window.innerHeight && rect.top > menuHeight;
+      setCoords({
+        top: showAbove ? rect.top - 5 : rect.bottom + 5,
+        left: Math.max(8, Math.min(rect.left, window.innerWidth - 170)),
+        showAbove,
+        width: Math.max(124, rect.width),
+      });
+    }
+    setIsOpen((prev) => !prev);
+  };
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleOutsideClick = (e) => {
+      if (
+        buttonRef.current &&
+        !buttonRef.current.contains(e.target) &&
+        menuRef.current &&
+        !menuRef.current.contains(e.target)
+      ) {
+        setIsOpen(false);
+      }
+    };
+    const handleScrollOrResize = () => {
+      setIsOpen(false);
+    };
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick, true);
+    window.addEventListener('scroll', handleScrollOrResize, true);
+    window.addEventListener('resize', handleScrollOrResize);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick, true);
+      window.removeEventListener('scroll', handleScrollOrResize, true);
+      window.removeEventListener('resize', handleScrollOrResize);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen]);
+
+  const handleSelect = (val, e) => {
+    if (e) e.stopPropagation();
+    if (disabled) return;
+    setIsOpen(false);
+    if (val !== value && onChange) {
+      onChange(val);
+    }
+  };
+
+  return (
+    <div
+      onClick={(e) => e.stopPropagation()}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        position: 'relative',
+        ...style,
+      }}
+    >
+      <button
+        ref={buttonRef}
+        type="button"
+        disabled={disabled}
+        onClick={handleToggle}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 6,
+          height: 28,
+          minWidth: 104,
+          padding: '0 8px 0 9px',
+          borderRadius: 6,
+          background: isOpen ? '#282D37' : '#1F242D',
+          border: `1px solid ${isOpen ? '#F0B90B' : '#3B424E'}`,
+          color: '#EAECEF',
+          fontSize: 12,
+          fontWeight: 500,
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          opacity: disabled ? 0.6 : 1,
+          boxShadow: isOpen
+            ? '0 0 0 2px rgba(240, 185, 11, 0.25)'
+            : '0 1px 2px rgba(0, 0, 0, 0.25)',
+          transition: 'all 0.15s ease',
+          userSelect: 'none',
+          whiteSpace: 'nowrap',
+          boxSizing: 'border-box',
+        }}
+        onMouseEnter={(e) => {
+          if (!disabled && !isOpen) {
+            e.currentTarget.style.borderColor = '#555E6E';
+            e.currentTarget.style.background = '#262B34';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!disabled && !isOpen) {
+            e.currentTarget.style.borderColor = '#3B424E';
+            e.currentTarget.style.background = '#1F242D';
+          }
+        }}
+      >
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, overflow: 'hidden' }}>
+          <span
+            style={{
+              width: 7,
+              height: 7,
+              borderRadius: '50%',
+              backgroundColor: theme.dot,
+              boxShadow: `0 0 6px ${theme.dot}90`,
+              flexShrink: 0,
+            }}
+          />
+          <span
+            style={{
+              color: theme.color,
+              fontWeight: 600,
+              fontSize: 11.5,
+              letterSpacing: '0.01em',
+            }}
+          >
+            {currentOption.label}
+          </span>
+        </span>
+        <svg
+          style={{
+            width: 10,
+            height: 10,
+            color: '#848E9C',
+            transition: 'transform 0.15s ease',
+            transform: isOpen ? 'rotate(180deg)' : 'none',
+            flexShrink: 0,
+            marginLeft: 2,
+          }}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <div
+          ref={menuRef}
+          role="listbox"
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            position: 'fixed',
+            top: coords.showAbove ? undefined : coords.top,
+            bottom: coords.showAbove ? window.innerHeight - coords.top : undefined,
+            left: coords.left,
+            width: Math.max(140, coords.width),
+            minWidth: 140,
+            background: '#1F242D',
+            border: '1px solid #444A55',
+            borderRadius: 8,
+            padding: 4,
+            boxShadow: '0 12px 32px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08)',
+            zIndex: 999999,
+            animation: 'crmFadeIn 0.12s ease-out',
+            maxHeight: 260,
+            overflowY: 'auto',
+          }}
+        >
+          <div
+            style={{
+              padding: '4px 6px 4px 6px',
+              fontSize: 10,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              color: '#848E9C',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+              marginBottom: 3,
+            }}
+          >
+            Change Status
+          </div>
+          {parsedOptions.map((opt) => {
+            const isSelected =
+              String(opt.value).toLowerCase() === String(value).toLowerCase();
+            const optTheme = getStatusTheme(opt.value);
+            return (
+              <div
+                key={opt.value}
+                role="option"
+                aria-selected={isSelected}
+                onClick={(e) => handleSelect(opt.value, e)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 8,
+                  padding: '6px 8px',
+                  borderRadius: 5,
+                  cursor: 'pointer',
+                  background: isSelected ? 'rgba(240, 185, 11, 0.12)' : 'transparent',
+                  color: isSelected ? '#FFFFFF' : '#EAECEF',
+                  fontSize: 12,
+                  fontWeight: isSelected ? 600 : 400,
+                  transition: 'background 0.1s ease',
+                  userSelect: 'none',
+                }}
+                onMouseEnter={(e) => {
+                  if (!isSelected) {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isSelected) {
+                    e.currentTarget.style.background = 'transparent';
+                  }
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, overflow: 'hidden' }}>
+                  <span
+                    style={{
+                      width: 6.5,
+                      height: 6.5,
+                      borderRadius: '50%',
+                      backgroundColor: optTheme.dot,
+                      boxShadow: `0 0 5px ${optTheme.dot}80`,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {opt.label}
+                  </span>
+                </div>
+                {isSelected && (
+                  <svg
+                    style={{ width: 12, height: 12, color: '#F0B90B', flexShrink: 0 }}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export const normalizeStage = (stage) => {
   if (!stage || typeof stage !== 'string') return 'Unknown';
   const normalized = stage.trim();

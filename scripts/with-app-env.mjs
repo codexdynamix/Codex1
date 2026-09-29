@@ -110,24 +110,38 @@ function main(argv) {
     console.error("usage: node scripts/with-app-env.mjs <command> [args…]");
     process.exit(2);
   }
-  // Strip accidental positional args injected by npm when npm run dev is invoked with flags
-  const args = rawArgs.filter((arg, index, allArgs) => {
-    if (command !== "vite") return true;
-
-    const prev = allArgs[index - 1];
-    const isHostValue = arg === "0.0.0.0" || arg === "127.0.0.1";
-    const isPortValue = arg === "3000" || arg === "8080";
-
-    if (prev === "--host" || prev === "--port") {
-      return true;
+  // Deduplicate --host and --port flags so multiple appends don't confuse Vite
+  const args = [];
+  let seenHost = false;
+  let seenPort = false;
+  for (let i = 0; i < rawArgs.length; i++) {
+    const a = rawArgs[i];
+    if (command === "vite" && a === "--host") {
+      if (seenHost) {
+        if (i + 1 < rawArgs.length && !rawArgs[i + 1].startsWith("-")) i++;
+        continue;
+      }
+      seenHost = true;
+      args.push(a);
+      if (i + 1 < rawArgs.length && !rawArgs[i + 1].startsWith("-")) {
+        args.push(rawArgs[++i]);
+      }
+      continue;
     }
-
-    if (isHostValue || isPortValue) {
-      return false;
+    if (command === "vite" && a === "--port") {
+      if (seenPort) {
+        if (i + 1 < rawArgs.length && !rawArgs[i + 1].startsWith("-")) i++;
+        continue;
+      }
+      seenPort = true;
+      args.push(a);
+      if (i + 1 < rawArgs.length && !rawArgs[i + 1].startsWith("-")) {
+        args.push(rawArgs[++i]);
+      }
+      continue;
     }
-
-    return true;
-  });
+    args.push(a);
+  }
   const env = mergeAppEnv(readAppEnv(projectRoot()), process.env);
   const binPath = join(projectRoot(), "node_modules", ".bin");
   const separator = process.platform === "win32" ? ";" : ":";
