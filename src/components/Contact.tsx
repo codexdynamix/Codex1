@@ -96,8 +96,10 @@ function persistInquiry(data: Inquiry) {
     const prior = raw ? (JSON.parse(raw) as unknown[]) : [];
     localStorage.setItem(
       "codex-inquiries",
-      JSON.stringify([...prior, { ...data, at: new Date().toISOString() }]),
+      JSON.stringify([...prior, { ...data, at: new Date().toISOString(), status: "new" }]),
     );
+    window.dispatchEvent(new Event("storage"));
+    window.dispatchEvent(new CustomEvent("codex_inquiry_added", { detail: data }));
   } catch {
     /* ignore quota */
   }

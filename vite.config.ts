@@ -157,6 +157,43 @@ function preventViteReloadPlugin(): Plugin {
         next();
       });
 
+      // 0.1 Handle /api/crm/leads and /api/crm/action
+      server.middlewares.use((req, res, next) => {
+        const url = req.url?.split("?")[0] || "";
+        if (url === "/api/crm/leads") {
+          if (req.method === "GET") {
+            res.statusCode = 200;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ ok: true, leads: [] }));
+            return;
+          }
+          if (req.method === "POST") {
+            const chunks: Buffer[] = [];
+            req.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+            req.on("end", () => {
+              try {
+                const body = JSON.parse(Buffer.concat(chunks).toString("utf-8") || "{}");
+                res.statusCode = 200;
+                res.setHeader("Content-Type", "application/json");
+                res.end(JSON.stringify({ ok: true, id: `ld_${Date.now()}`, lead: body }));
+              } catch {
+                res.statusCode = 200;
+                res.setHeader("Content-Type", "application/json");
+                res.end(JSON.stringify({ ok: true }));
+              }
+            });
+            return;
+          }
+        }
+        if (url === "/api/crm/action") {
+          res.statusCode = 200;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ ok: true }));
+          return;
+        }
+        next();
+      });
+
       // 1. Suppress unintended full-reloads emitted over WebSocket for non-source file changes
       const origSend = server.ws.send;
       server.ws.send = function (payload: any, ...args: any[]) {
