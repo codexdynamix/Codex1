@@ -522,11 +522,21 @@ function App() {
       }
     }, 15000);
 
+    const handleInquirySync = () => {
+      loadBackendAdminData();
+    };
+    window.addEventListener('storage', handleInquirySync);
+    window.addEventListener('codex_inquiry_added', handleInquirySync);
+
     window.onunhandledrejection = (event) => {
       console.error('[App] Unhandled promise rejection:', event.reason);
       return true;
     };
-    return () => clearInterval(leadRefreshId);
+    return () => {
+      clearInterval(leadRefreshId);
+      window.removeEventListener('storage', handleInquirySync);
+      window.removeEventListener('codex_inquiry_added', handleInquirySync);
+    };
   }, []);
 
   if (!appLoaded) {

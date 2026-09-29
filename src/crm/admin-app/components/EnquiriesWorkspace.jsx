@@ -1,35 +1,19 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
   Inbox,
-  Mail,
-  Phone,
-  Clock,
-  Trash2,
-  Building,
   Download,
-  FileSpreadsheet,
-  FileJson,
-  CheckSquare,
-  Square,
-  MinusSquare,
   Search,
   X,
   Plus,
-  Send,
-  Sparkles,
-  CheckCircle2,
-  Eye,
-  Tag,
-  DollarSign,
-  Calendar,
-  ChevronDown,
-  UserPlus,
-  StickyNote,
+  Trash2,
+  Copy,
+  ExternalLink,
 } from 'lucide-react';
 
 const DEFAULT_SEED_ENQUIRIES = [
   {
     id: 1789912001,
+    leadId: 'ld_enq_1789912001',
     name: 'Eleanor Vance',
     email: 'eleanor.vance@vancetech.io',
     phone: '+1 (415) 890-2341',
@@ -45,6 +29,7 @@ const DEFAULT_SEED_ENQUIRIES = [
   },
   {
     id: 1789912002,
+    leadId: 'ld_enq_1789912002',
     name: 'Marcus Brody',
     email: 'marcus@brodydesign.co',
     phone: '+44 20 7946 0912',
@@ -60,6 +45,7 @@ const DEFAULT_SEED_ENQUIRIES = [
   },
   {
     id: 1789912003,
+    leadId: 'ld_enq_1789912003',
     name: 'Dr. Sarah Lin',
     email: 'slin@biovista.health',
     phone: '+1 (617) 555-0198',
@@ -75,6 +61,7 @@ const DEFAULT_SEED_ENQUIRIES = [
   },
   {
     id: 1789912004,
+    leadId: 'ld_enq_1789912004',
     name: 'Julian Rossi',
     email: 'j.rossi@rossimotors.it',
     phone: '+39 02 8765 4321',
@@ -90,15 +77,8 @@ const DEFAULT_SEED_ENQUIRIES = [
   },
 ];
 
-function getInitials(name = '') {
-  const parts = name.trim().split(/\s+/);
-  if (!parts[0]) return 'EN';
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
 function formatRelativeTime(dateString) {
-  if (!dateString) return 'Just now';
+  if (!dateString) return '-';
   try {
     const timestamp = new Date(dateString).getTime();
     if (isNaN(timestamp)) return dateString;
@@ -117,28 +97,27 @@ function formatRelativeTime(dateString) {
 }
 
 function cleanPhoneForWhatsApp(phone = '') {
-  return phone.replace(/[^\d+]/g, '').replace(/^\+/, '');
+  return String(phone).replace(/[^\d+]/g, '').replace(/^\+/, '');
 }
 
 export default function EnquiriesWorkspace({
   enquiries = [],
   onAction,
   showNotification = () => {},
+  onOpenLeadProfile = null,
+  leads = [],
 }) {
   const [localList, setLocalList] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [serviceFilter, setServiceFilter] = useState('all');
   const [selectedIds, setSelectedIds] = useState(new Set());
-  const [activeModalEnquiry, setActiveModalEnquiry] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
-  const [noteDraft, setNoteDraft] = useState('');
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
+  const pageSize = 20;
 
   // Sync inquiries from CRM store and public website local submissions
-  useEffect(() => {
+  const syncInquiries = () => {
     let combined = [];
 
     // 1. Gather from public site localStorage 'codex-inquiries'
@@ -150,6 +129,7 @@ export default function EnquiriesWorkspace({
         if (Array.isArray(parsed)) {
           publicSiteInquiries = parsed.map((item, idx) => ({
             id: item.id || (1800000000 + idx),
+            leadId: item.leadId || `ld_enq_${item.id || (1800000000 + idx)}`,
             name: item.name || 'Anonymous Inquiry',
             email: item.email || '',
             phone: item.phone || '',
@@ -158,7 +138,7 @@ export default function EnquiriesWorkspace({
             budget: item.budget || '',
             timeline: item.timeline || '',
             message: item.message || '',
-            source: item.source || 'website_contact_form',
+            source: item.source || 'website_contact_modal',
             status: item.status || 'new',
             created_at: item.at || item.created_at || new Date().toISOString(),
             notes: item.notes || '',
@@ -177,7 +157,7 @@ export default function EnquiriesWorkspace({
     const merged = [];
 
     for (const item of [...crmItems, ...publicSiteInquiries]) {
-      const key = `${item.email || ''}_${item.name || ''}_${item.message?.slice(0, 20) || ''}`;
+      const key = `${(item.email || '').toLowerCase().trim()}_${(item.name || '').toLowerCase().trim()}_${item.message?.slice(0, 20) || ''}`;
       if (!seen.has(key) && !seen.has(item.id)) {
         seen.add(key);
         seen.add(item.id);
@@ -189,7 +169,7 @@ export default function EnquiriesWorkspace({
       }
     }
 
-    // If still completely empty, supply realistic default seed enquiries
+    // If still empty, supply realistic default seed enquiries
     if (merged.length === 0) {
       combined = DEFAULT_SEED_ENQUIRIES;
     } else {
@@ -199,9 +179,26 @@ export default function EnquiriesWorkspace({
     // Sort newest first
     combined.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     setLocalList(combined);
+  };
+
+  useEffect(() => {
+    syncInquiries();
   }, [enquiries]);
 
-  // Statistics
+  // Listen for real-time inquiry events from website forms
+  useEffect(() => {
+    const handleSync = () => {
+      syncInquiries();
+    };
+    window.addEventListener('storage', handleSync);
+    window.addEventListener('codex_inquiry_added', handleSync);
+    return () => {
+      window.removeEventListener('storage', handleSync);
+      window.removeEventListener('codex_inquiry_added', handleSync);
+    };
+  }, []);
+
+  // Statistics matching platform KPI boxes
   const stats = useMemo(() => {
     const total = localList.length;
     const newCount = localList.filter((e) => e.status === 'new').length;
@@ -222,15 +219,12 @@ export default function EnquiriesWorkspace({
   // Filtered inquiries
   const filteredList = useMemo(() => {
     return localList.filter((item) => {
-      // Status filter
       if (statusFilter !== 'all' && item.status !== statusFilter) {
         return false;
       }
-      // Service filter
       if (serviceFilter !== 'all' && item.service !== serviceFilter) {
         return false;
       }
-      // Search query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const matchName = item.name?.toLowerCase().includes(q);
@@ -247,29 +241,26 @@ export default function EnquiriesWorkspace({
     });
   }, [localList, statusFilter, serviceFilter, searchQuery]);
 
-  // Reset page when filters or search change
+  // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [searchQuery, statusFilter, serviceFilter, pageSize]);
+  }, [searchQuery, statusFilter, serviceFilter]);
 
-  // Paginated slice for high-performance rendering of thousands of records
-  const totalPages = pageSize === 'all' ? 1 : Math.ceil(filteredList.length / Number(pageSize)) || 1;
+  // Paginated list
+  const totalPages = Math.ceil(filteredList.length / pageSize) || 1;
   const paginatedList = useMemo(() => {
-    if (pageSize === 'all') return filteredList;
-    const start = (page - 1) * Number(pageSize);
-    return filteredList.slice(start, start + Number(pageSize));
+    const start = (page - 1) * pageSize;
+    return filteredList.slice(start, start + pageSize);
   }, [filteredList, page, pageSize]);
 
   // Selection handlers
-  const filteredIds = useMemo(() => filteredList.map((e) => e.id), [filteredList]);
-  const isAllSelected = filteredIds.length > 0 && filteredIds.every((id) => selectedIds.has(id));
-  const isSomeSelected = selectedIds.size > 0 && !isAllSelected;
-
-  const handleToggleSelectAll = () => {
-    if (isAllSelected) {
-      setSelectedIds(new Set());
+  const handleToggleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedIds(new Set([...selectedIds, ...paginatedList.map((i) => i.id)]));
     } else {
-      setSelectedIds(new Set(filteredIds));
+      const next = new Set(selectedIds);
+      paginatedList.forEach((i) => next.delete(i.id));
+      setSelectedIds(next);
     }
   };
 
@@ -288,9 +279,6 @@ export default function EnquiriesWorkspace({
     setLocalList((prev) =>
       prev.map((item) => (item.id === id ? { ...item, status: newStatus } : item))
     );
-    if (activeModalEnquiry && activeModalEnquiry.id === id) {
-      setActiveModalEnquiry((prev) => (prev ? { ...prev, status: newStatus } : null));
-    }
     try {
       if (onAction) {
         await onAction('update_enquiry_status', { id, status: newStatus });
@@ -305,7 +293,6 @@ export default function EnquiriesWorkspace({
   const handleDeleteEnquiry = async (id, name = 'Inquiry') => {
     if (!window.confirm(`Delete inquiry from "${name}"?`)) return;
     setLocalList((prev) => prev.filter((item) => item.id !== id));
-    if (activeModalEnquiry?.id === id) setActiveModalEnquiry(null);
     setSelectedIds((prev) => {
       const next = new Set(prev);
       next.delete(id);
@@ -363,7 +350,7 @@ export default function EnquiriesWorkspace({
       showNotification('No inquiries to export.');
       return;
     }
-    const headers = ['ID', 'Name', 'Email', 'Phone', 'Company', 'Service', 'Budget', 'Status', 'Date', 'Message'];
+    const headers = ['ID', 'Name', 'Email', 'Phone', 'Company', 'Service', 'Budget', 'Timeline', 'Status', 'Date', 'Message'];
     const rows = items.map((e) => [
       e.id,
       `"${(e.name || '').replace(/"/g, '""')}"`,
@@ -372,6 +359,7 @@ export default function EnquiriesWorkspace({
       `"${(e.company || '').replace(/"/g, '""')}"`,
       `"${(e.service || '').replace(/"/g, '""')}"`,
       `"${(e.budget || '').replace(/"/g, '""')}"`,
+      `"${(e.timeline || '').replace(/"/g, '""')}"`,
       e.status,
       e.created_at,
       `"${(e.message || '').replace(/"/g, '""').replace(/\n/g, ' ')}"`,
@@ -383,7 +371,6 @@ export default function EnquiriesWorkspace({
     link.href = url;
     link.download = `codex-enquiries-${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
-    setIsExportMenuOpen(false);
     showNotification(`Exported ${items.length} inquiries to CSV.`);
   };
 
@@ -400,776 +387,609 @@ export default function EnquiriesWorkspace({
     link.href = url;
     link.download = `codex-enquiries-${new Date().toISOString().slice(0, 10)}.json`;
     link.click();
-    setIsExportMenuOpen(false);
     showNotification(`Exported ${items.length} inquiries to JSON.`);
   };
 
-  // Promote inquiry directly to CRM Lead
-  const handlePromoteToCrmLead = (enquiry) => {
-    try {
-      const rawLeads = localStorage.getItem('codex_crm_leads_v2');
-      const leads = rawLeads ? JSON.parse(rawLeads) : [];
-      const newLead = {
-        id: `lead_${Date.now()}`,
-        name: enquiry.name,
-        email: enquiry.email,
-        phone: enquiry.phone,
-        company: enquiry.company || 'Website Inquiry',
-        status: 'New',
-        value: enquiry.budget ? parseInt(enquiry.budget.replace(/[^\d]/g, ''), 10) || 5000 : 5000,
-        source: 'Website Form Submission',
-        assignedTo: 'Unassigned',
-        createdAt: new Date().toISOString(),
-        notes: `Converted from Website Enquiry.\nService: ${enquiry.service}\n\nClient Message:\n${enquiry.message}`,
-      };
-      leads.unshift(newLead);
-      localStorage.setItem('codex_crm_leads_v2', JSON.stringify(leads));
-      handleUpdateStatus(enquiry.id, 'converted');
-      showNotification(`Promoted "${enquiry.name}" to CRM Lead!`);
-    } catch {
-      showNotification('Promoted customer inquiry to CRM Lead!');
+  // Open the unified lead profile modal that is created in CRM
+  const handleOpenLead = (enquiry) => {
+    let matched = null;
+    const allLeads = Array.isArray(leads) ? leads : [];
+
+    if (enquiry.leadId) {
+      matched = allLeads.find((l) => l.id === enquiry.leadId);
+    }
+    if (!matched && enquiry.id) {
+      matched = allLeads.find(
+        (l) =>
+          l.id === `ld_enq_${enquiry.id}` ||
+          l.id === String(enquiry.id) ||
+          l.enquiryId === enquiry.id
+      );
+    }
+    if (!matched && enquiry.email) {
+      const qEmail = enquiry.email.toLowerCase().trim();
+      matched = allLeads.find(
+        (l) => l.email && l.email.toLowerCase().trim() === qEmail
+      );
+    }
+    if (!matched && enquiry.name) {
+      const qName = enquiry.name.toLowerCase().trim();
+      matched = allLeads.find(
+        (l) => l.name && l.name.toLowerCase().trim() === qName
+      );
+    }
+
+    // Merge or construct unified lead object with all intake details
+    const parts = (enquiry.name || 'New Customer').trim().split(/\s+/);
+    const first = parts[0] || 'New';
+    const last = parts.slice(1).join(' ') || 'Lead';
+
+    const unifiedLead = matched
+      ? {
+          ...matched,
+          // Ensure all rich enquiry intake details are merged into the profile
+          company: matched.company || enquiry.company || 'Individual / None',
+          service: matched.service || enquiry.service || 'General Inquiry',
+          funnel: matched.funnel || enquiry.service || 'Website Inquiry',
+          budget: matched.budget || enquiry.budget || 'Not specified',
+          timeline: matched.timeline || enquiry.timeline || 'Flexible',
+          message: matched.message || enquiry.message || '',
+          source: matched.source || enquiry.source || 'website_contact_modal',
+          notes: matched.notes || enquiry.notes || '',
+        }
+      : {
+          id: enquiry.leadId || `ld_enq_${enquiry.id || Date.now()}`,
+          firstName: first,
+          lastName: last,
+          name: enquiry.name || `${first} ${last}`,
+          email: enquiry.email || '',
+          phone: enquiry.phone || '',
+          country: enquiry.country || 'United Kingdom',
+          countryCode: enquiry.countryCode || 'GB',
+          company: enquiry.company || 'Individual / None',
+          service: enquiry.service || 'General Inquiry',
+          funnel: enquiry.service || 'Website Inquiry',
+          budget: enquiry.budget || 'Not specified',
+          timeline: enquiry.timeline || 'Flexible',
+          message: enquiry.message || '',
+          source: enquiry.source || 'website_contact_modal',
+          stage: enquiry.stage || (enquiry.status === 'converted' ? 'Deposit' : enquiry.status === 'contacted' ? 'In Line' : 'New'),
+          status: enquiry.status === 'converted' ? 'Deposit' : enquiry.status === 'contacted' ? 'In Line' : 'New',
+          notes: enquiry.notes || '',
+          registeredDate: new Date(enquiry.created_at || Date.now()).toLocaleDateString(),
+          createdAt: enquiry.created_at || new Date().toISOString(),
+          commentHistory: enquiry.message
+            ? [
+                {
+                  id: `c_${Date.now()}`,
+                  author: 'Website Intake',
+                  text: `[${enquiry.service || 'Website Inquiry'}] ${enquiry.message}`,
+                  timestamp: enquiry.created_at || new Date().toISOString(),
+                },
+              ]
+            : [],
+          statusHistory: [
+            {
+              id: `s_${Date.now()}`,
+              status: 'New',
+              timestamp: enquiry.created_at || new Date().toISOString(),
+            },
+          ],
+        };
+
+    if (onOpenLeadProfile) {
+      onOpenLeadProfile(unifiedLead);
     }
   };
 
-  // Save notes on active modal enquiry
-  const handleSaveNote = () => {
-    if (!activeModalEnquiry) return;
-    const updated = { ...activeModalEnquiry, notes: noteDraft };
-    setLocalList((prev) => prev.map((e) => (e.id === activeModalEnquiry.id ? updated : e)));
-    setActiveModalEnquiry(updated);
-    showNotification('Inquiry internal note saved.');
-  };
+  const allPageSelected = paginatedList.length > 0 && paginatedList.every((i) => selectedIds.has(i.id));
 
   return (
-    <section className="crm-content-hub crm-enquiries-suite">
-      {/* 1. Header with Kicker, Title, and Action Buttons */}
-      <header className="crm-content-hub-header">
-        <div className="crm-content-hub-header-copy">
-          <div className="crm-content-hub-title-row">
-            <span className="crm-content-hub-header-mark" style={{ background: 'rgba(10, 132, 255, 0.15)', color: '#0A84FF', borderColor: 'rgba(10, 132, 255, 0.3)' }}>
-              <Inbox size={20} />
-            </span>
-            <div>
-              <span className="crm-content-hub-kicker" style={{ color: '#0A84FF' }}>Leads / Customer Forms</span>
-              <h2>Customer Enquiries</h2>
-            </div>
-          </div>
-          <p>Real-time intake for form submissions, consultation requests, and quotes from website visitors.</p>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          {/* Form Ingestion Status Pill */}
-          <div className="crm-enquiry-live-pill">
-            <span className="crm-enquiry-live-dot" />
-            <span>Form Ingestion Active</span>
-          </div>
-
-          {/* Export Menu */}
-          <div style={{ position: 'relative' }}>
-            <button
-              type="button"
-              onClick={() => setIsExportMenuOpen((p) => !p)}
-              className="crm-chat-panel-action-btn"
-              style={{ height: 36, padding: '0 12px' }}
-            >
-              <Download size={14} />
-              <span>Export</span>
-              <ChevronDown size={12} />
-            </button>
-            {isExportMenuOpen && (
-              <div className="crm-enquiries-dropdown-menu">
-                <button type="button" onClick={handleExportCsv} className="crm-enquiries-dropdown-item">
-                  <FileSpreadsheet size={14} style={{ color: '#34C759' }} />
-                  <div>
-                    <div style={{ fontWeight: 600, color: '#FFFFFF' }}>Download CSV</div>
-                    <div style={{ fontSize: 10.5, color: 'rgba(255, 255, 255, 0.45)' }}>Excel & Google Sheets</div>
-                  </div>
-                </button>
-                <button type="button" onClick={handleExportJson} className="crm-enquiries-dropdown-item">
-                  <FileJson size={14} style={{ color: '#FF9F0A' }} />
-                  <div>
-                    <div style={{ fontWeight: 600, color: '#FFFFFF' }}>Export JSON</div>
-                    <div style={{ fontSize: 10.5, color: 'rgba(255, 255, 255, 0.45)' }}>Raw data structure</div>
-                  </div>
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Add Manual Form Submission */}
-          <button
-            type="button"
-            onClick={() => setIsAddModalOpen(true)}
-            className="crm-chat-send-btn"
-            style={{ width: 'auto', padding: '0 14px', gap: 6, fontSize: 12, fontWeight: 600 }}
-            title="Log manual customer inquiry"
+    <div style={{ width: '100%' }}>
+      {/* 1. Stat Summary Cards - Exactly Matching Leads Table Layout */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 16 }}>
+        {[
+          { label: 'Total Intake', value: stats.total, color: '#EAECEF' },
+          { label: 'New Enquiries', value: stats.newCount, color: '#0ECB81' },
+          { label: 'Contacted', value: stats.contactedCount, color: '#0A84FF' },
+          { label: 'Converted', value: stats.convertedCount, color: '#F0B90B' },
+        ].map((s) => (
+          <div
+            key={s.label}
+            style={{
+              background: '#363B44',
+              border: '1px solid #444A55',
+              borderRadius: 6,
+              padding: '10px 14px',
+            }}
           >
-            <Plus size={15} />
-            <span>Log Enquiry</span>
-          </button>
-        </div>
-      </header>
-
-      {/* 2. Executive KPI Cards */}
-      <div className="crm-content-hub-summary" aria-label="Customer inquiries overview">
-        <div className="crm-content-hub-summary-card">
-          <span className="crm-content-hub-summary-icon" style={{ background: 'rgba(10, 132, 255, 0.12)', color: '#0A84FF', borderColor: 'rgba(10, 132, 255, 0.22)' }}>
-            <Inbox size={18} strokeWidth={2.2} />
-          </span>
-          <div className="crm-content-hub-summary-body">
-            <div className="crm-content-hub-summary-val-row">
-              <strong>{stats.total}</strong>
-              <span>Total Intake</span>
-            </div>
-            <small>All website submissions</small>
+            <div style={{ fontSize: 11, color: '#848E9C', marginBottom: 4 }}>{s.label}</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: s.color }}>{s.value}</div>
           </div>
-        </div>
-
-        <div className="crm-content-hub-summary-card" style={{ borderColor: stats.newCount > 0 ? 'rgba(52, 199, 89, 0.4)' : undefined }}>
-          <span className="crm-content-hub-summary-icon" style={{ background: 'rgba(52, 199, 89, 0.12)', color: '#34C759', borderColor: 'rgba(52, 199, 89, 0.22)' }}>
-            <Sparkles size={18} strokeWidth={2.2} />
-          </span>
-          <div className="crm-content-hub-summary-body">
-            <div className="crm-content-hub-summary-val-row">
-              <strong style={{ color: '#34C759' }}>{stats.newCount}</strong>
-              <span>New Inquiries</span>
-            </div>
-            <small>Awaiting team review</small>
-          </div>
-        </div>
-
-        <div className="crm-content-hub-summary-card">
-          <span className="crm-content-hub-summary-icon" style={{ background: 'rgba(255, 159, 10, 0.12)', color: '#FF9F0A', borderColor: 'rgba(255, 159, 10, 0.22)' }}>
-            <Phone size={18} strokeWidth={2.2} />
-          </span>
-          <div className="crm-content-hub-summary-body">
-            <div className="crm-content-hub-summary-val-row">
-              <strong>{stats.contactedCount}</strong>
-              <span>Contacted</span>
-            </div>
-            <small>In direct follow-up</small>
-          </div>
-        </div>
-
-        <div className="crm-content-hub-summary-card">
-          <span className="crm-content-hub-summary-icon" style={{ background: 'rgba(175, 82, 222, 0.12)', color: '#AF52DE', borderColor: 'rgba(175, 82, 222, 0.22)' }}>
-            <CheckCircle2 size={18} strokeWidth={2.2} />
-          </span>
-          <div className="crm-content-hub-summary-body">
-            <div className="crm-content-hub-summary-val-row">
-              <strong>{stats.convertedCount}</strong>
-              <span>Converted / Closed</span>
-            </div>
-            <small>Promoted to client projects</small>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* 3. Search & Filter Bar */}
-      <div className="crm-enquiries-toolbar">
-        {/* Status Tabs */}
-        <div className="crm-enquiries-status-pills">
-          {[
-            ['all', 'All', stats.total],
-            ['new', 'New', stats.newCount],
-            ['contacted', 'Contacted', stats.contactedCount],
-            ['converted', 'Converted', stats.convertedCount],
-          ].map(([key, label, count]) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setStatusFilter(key)}
-              className={`crm-enquiries-filter-chip ${statusFilter === key ? 'active' : ''}`}
-            >
-              <span>{label}</span>
-              <span className="crm-enquiries-chip-count">{count}</span>
-            </button>
-          ))}
-        </div>
+      {/* 2. Filters & Search Bar */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+        <input
+          type="text"
+          className="crm-super-admin-input"
+          placeholder="Search customer, email, phone, company, service..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{ flex: 2, minWidth: 200 }}
+        />
 
-        {/* Search Field & Service Select */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 260, justifyContent: 'flex-end' }}>
-          {/* Service Dropdown */}
-          {serviceOptions.length > 0 && (
-            <select
-              value={serviceFilter}
-              onChange={(e) => setServiceFilter(e.target.value)}
-              className="crm-enquiries-select"
-              aria-label="Filter by service"
-            >
-              <option value="all">All Services</option>
-              {serviceOptions.map((svc) => (
-                <option key={svc} value={svc}>
-                  {svc}
-                </option>
-              ))}
-            </select>
-          )}
-
-          {/* Search Box */}
-          <div className="crm-chat-search-field" style={{ maxWidth: 280, width: '100%' }}>
-            <Search size={14} className="crm-chat-search-lens" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search name, email, company..."
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="crm-chat-search-clear-btn"
-                title="Clear search"
-              >
-                <X size={12} />
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* 4. Multi-Select Batch Actions Bar (when items are checked) */}
-      {selectedIds.size > 0 && (
-        <div className="crm-enquiries-batch-bar animate-in fade-in">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <CheckSquare size={16} style={{ color: '#0A84FF' }} />
-            <strong style={{ color: '#FFFFFF', fontSize: 13 }}>{selectedIds.size} inquiries selected</strong>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <button
-              type="button"
-              onClick={() => handleBulkUpdateStatus('contacted')}
-              className="crm-chat-panel-action-btn"
-            >
-              <Phone size={13} />
-              <span>Mark Contacted</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleBulkUpdateStatus('converted')}
-              className="crm-chat-panel-action-btn"
-            >
-              <CheckCircle2 size={13} style={{ color: '#34C759' }} />
-              <span>Mark Converted</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleBulkDelete}
-              className="crm-chat-panel-action-btn danger"
-            >
-              <Trash2 size={13} />
-              <span>Delete</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedIds(new Set())}
-              style={{ background: 'none', border: 'none', color: 'rgba(255, 255, 255, 0.5)', fontSize: 12, cursor: 'pointer', padding: '0 6px' }}
-            >
-              Clear
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* 5. Inquiries List Subheader with Select All & Rows Per Page */}
-      <div className="crm-enquiries-list-header">
-        <button
-          type="button"
-          onClick={handleToggleSelectAll}
-          className="crm-enquiries-select-all-btn"
+        <select
+          className="crm-super-admin-select"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          style={{ flex: 1, minWidth: 130 }}
         >
-          {isAllSelected ? (
-            <CheckSquare size={15} style={{ color: '#0A84FF' }} />
-          ) : isSomeSelected ? (
-            <MinusSquare size={15} style={{ color: '#0A84FF' }} />
-          ) : (
-            <Square size={15} style={{ color: 'rgba(255, 255, 255, 0.35)' }} />
-          )}
-          <span>Select All ({filteredList.length})</span>
+          <option value="all">All Statuses ({localList.length})</option>
+          <option value="new">New ({stats.newCount})</option>
+          <option value="contacted">Contacted ({stats.contactedCount})</option>
+          <option value="converted">Converted ({stats.convertedCount})</option>
+          <option value="closed">Closed</option>
+        </select>
+
+        <select
+          className="crm-super-admin-select"
+          value={serviceFilter}
+          onChange={(e) => setServiceFilter(e.target.value)}
+          style={{ flex: 1, minWidth: 150 }}
+        >
+          <option value="all">All Services</option>
+          {serviceOptions.map((svc) => (
+            <option key={svc} value={svc}>
+              {svc}
+            </option>
+          ))}
+        </select>
+
+        {(searchQuery || statusFilter !== 'all' || serviceFilter !== 'all') && (
+          <button
+            className="crm-super-admin-btn crm-super-admin-btn-small"
+            onClick={() => {
+              setSearchQuery('');
+              setStatusFilter('all');
+              setServiceFilter('all');
+              setPage(1);
+            }}
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
+      {/* 3. Action Toolbar & Bulk Operations */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10, alignItems: 'center' }}>
+        <button
+          className="crm-super-admin-btn crm-super-admin-btn-small"
+          style={{ background: '#F0B90B', color: '#1A1D23', fontWeight: 600 }}
+          onClick={() => setIsAddModalOpen(true)}
+        >
+          + Log Enquiry
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 11.5, color: 'rgba(255, 255, 255, 0.45)', fontFamily: 'monospace' }}>
-            {selectedIds.size > 0 ? `${selectedIds.size} of ${filteredList.length} selected` : `${filteredList.length} total enquiries`}
-          </span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: 'rgba(255, 255, 255, 0.5)' }}>
-            <span>Rows:</span>
-            <select
-              value={pageSize}
-              onChange={(e) => {
-                setPageSize(e.target.value === 'all' ? 'all' : Number(e.target.value));
-                setPage(1);
-              }}
-              className="crm-enquiries-select"
-              style={{ height: 26, fontSize: 11, padding: '0 6px' }}
+        <button
+          className="crm-super-admin-btn crm-super-admin-btn-small crm-super-admin-btn-secondary"
+          onClick={handleExportCsv}
+        >
+          Export CSV
+        </button>
+
+        <button
+          className="crm-super-admin-btn crm-super-admin-btn-small crm-super-admin-btn-secondary"
+          onClick={handleExportJson}
+        >
+          Export JSON
+        </button>
+
+        {selectedIds.size > 0 && (
+          <>
+            <span style={{ color: '#F0B90B', fontSize: 12, fontWeight: 600 }}>
+              {selectedIds.size} selected
+              <button
+                onClick={() => setSelectedIds(new Set())}
+                style={{
+                  marginLeft: 8,
+                  background: 'transparent',
+                  border: '1px solid #444A55',
+                  color: '#848E9C',
+                  fontSize: 11,
+                  padding: '3px 8px',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                }}
+              >
+                clear
+              </button>
+            </span>
+            <span style={{ width: 1, height: 22, background: '#444A55' }} />
+            <button
+              className="crm-super-admin-btn crm-super-admin-btn-small"
+              style={{ background: 'rgba(10,132,255,0.15)', color: '#0A84FF', border: '1px solid #0A84FF40' }}
+              onClick={() => handleBulkUpdateStatus('contacted')}
             >
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-              <option value="all">All</option>
-            </select>
-          </div>
-        </div>
+              Mark Contacted
+            </button>
+            <button
+              className="crm-super-admin-btn crm-super-admin-btn-small"
+              style={{ background: 'rgba(14,203,129,0.12)', color: '#0ECB81', border: '1px solid #0ECB8140' }}
+              onClick={() => handleBulkUpdateStatus('converted')}
+            >
+              Mark Converted
+            </button>
+            <button
+              className="crm-super-admin-btn crm-super-admin-btn-small"
+              style={{ background: '#c0392b', color: '#fff' }}
+              onClick={handleBulkDelete}
+            >
+              🗑 Delete Selected
+            </button>
+          </>
+        )}
       </div>
 
-      {/* 6. High-Density Table View for Maximum Screen Real Estate & Thousands of Records */}
-      <div className="crm-enquiries-table-wrap">
-        {filteredList.length === 0 ? (
-          <div className="crm-enquiries-empty-state">
-            <div className="crm-enquiries-empty-icon">
-              <Inbox size={28} />
-            </div>
-            <h3 style={{ margin: '0 0 6px', color: '#FFFFFF', fontSize: 15 }}>No enquiries match your filters</h3>
-            <p style={{ margin: 0, color: 'rgba(255, 255, 255, 0.45)', fontSize: 12.5 }}>
-              Customer messages submitted via the website contact form and modal will appear here in real time.
-            </p>
-            {(searchQuery || statusFilter !== 'all' || serviceFilter !== 'all') && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchQuery('');
-                  setStatusFilter('all');
-                  setServiceFilter('all');
-                }}
-                className="crm-chat-panel-action-btn"
-                style={{ marginTop: 14 }}
-              >
-                Reset Filters
-              </button>
-            )}
-          </div>
-        ) : (
-          <table className="crm-enquiries-table">
-            <thead>
+      <div style={{ fontSize: 12, color: '#848E9C', marginBottom: 8 }}>
+        Click any row to open the client profile. Showing {paginatedList.length} of {filteredList.length} enquiries (page {page}/{totalPages})
+      </div>
+
+      {/* 4. Table - Matching Leads Table (`crm-admin-table`) Exactly */}
+      <div className="crm-admin-table-container">
+        <table className="crm-admin-table">
+          <thead>
+            <tr>
+              <th style={{ width: 28 }}>
+                <input
+                  type="checkbox"
+                  checked={allPageSelected}
+                  onChange={handleToggleSelectAll}
+                />
+              </th>
+              <th>Client ID</th>
+              <th>Customer / Lead</th>
+              <th>Contact</th>
+              <th>Service</th>
+              <th>Budget / Scope</th>
+              <th>Message Preview</th>
+              <th>Origin</th>
+              <th>Received</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedList.length === 0 ? (
               <tr>
-                <th style={{ width: 38, textAlign: 'center', padding: '10px 8px' }}>
-                  <button
-                    type="button"
-                    onClick={handleToggleSelectAll}
-                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  >
-                    {isAllSelected ? (
-                      <CheckSquare size={14} style={{ color: '#0A84FF' }} />
-                    ) : isSomeSelected ? (
-                      <MinusSquare size={14} style={{ color: '#0A84FF' }} />
-                    ) : (
-                      <Square size={14} style={{ color: 'rgba(255, 255, 255, 0.3)' }} />
-                    )}
-                  </button>
-                </th>
-                <th style={{ minWidth: 190 }}>Customer / Lead</th>
-                <th style={{ minWidth: 220 }}>Contact</th>
-                <th style={{ minWidth: 150 }}>Service</th>
-                <th style={{ minWidth: 120 }}>Budget / Timeline</th>
-                <th style={{ minWidth: 240 }}>Message Preview</th>
-                <th style={{ minWidth: 95 }}>Source</th>
-                <th style={{ minWidth: 95 }}>Received</th>
-                <th style={{ minWidth: 110 }}>Status</th>
-                <th style={{ width: 80, textAlign: 'right' }}>Actions</th>
+                <td colSpan={11} style={{ textAlign: 'center', padding: 28, color: '#848E9C' }}>
+                  No customer enquiries match your filters.
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {paginatedList.map((item) => {
+            ) : (
+              paginatedList.map((item) => {
                 const isSelected = selectedIds.has(item.id);
-                const isNew = item.status === 'new';
+                const displayId = item.leadId || `ld_${item.id}`;
 
                 return (
                   <tr
                     key={item.id}
-                    className={`${isSelected ? 'selected' : ''} ${isNew ? 'is-new' : ''}`}
-                    onClick={() => {
-                      setActiveModalEnquiry(item);
-                      setNoteDraft(item.notes || '');
+                    style={{
+                      cursor: 'pointer',
+                      background: isSelected ? '#363B44' : undefined,
                     }}
+                    onClick={() => handleOpenLead(item)}
                   >
                     {/* Checkbox */}
-                    <td style={{ textAlign: 'center', padding: '8px 8px' }} onClick={(e) => e.stopPropagation()}>
-                      <button
-                        type="button"
-                        onClick={() => handleToggleSelectOne(item.id)}
-                        className="crm-enquiry-checkbox-btn"
-                        style={{ margin: '0 auto' }}
-                      >
-                        {isSelected ? (
-                          <CheckSquare size={15} style={{ color: '#0A84FF' }} />
-                        ) : (
-                          <Square size={15} style={{ color: 'rgba(255, 255, 255, 0.25)' }} />
-                        )}
-                      </button>
+                    <td onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => handleToggleSelectOne(item.id)}
+                      />
+                    </td>
+
+                    {/* Client ID with Copy */}
+                    <td style={{ whiteSpace: 'nowrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span style={{ fontFamily: 'monospace', fontSize: 13, color: '#EAECEF' }}>
+                          {String(displayId).slice(0, 10)}
+                        </span>
+                        <button
+                          title="Copy full ID"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigator.clipboard.writeText(String(displayId));
+                            showNotification('Client ID copied!');
+                          }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            color: '#848E9C',
+                            padding: '2px 4px',
+                            lineHeight: 1,
+                            borderRadius: 3,
+                          }}
+                          onMouseEnter={(e) => (e.currentTarget.style.color = '#F0B90B')}
+                          onMouseLeave={(e) => (e.currentTarget.style.color = '#848E9C')}
+                        >
+                          <Copy size={11} />
+                        </button>
+                      </div>
                     </td>
 
                     {/* Customer Name & Company */}
                     <td>
-                      <div className="crm-table-lead-cell">
-                        <div className="crm-table-avatar">
-                          {getInitials(item.name)}
-                        </div>
-                        <div style={{ minWidth: 0 }}>
-                          <span className="crm-table-name">{item.name}</span>
-                          {item.company && (
-                            <span className="crm-table-company">· {item.company}</span>
-                          )}
-                        </div>
-                      </div>
+                      <div style={{ fontWeight: 600, color: '#EAECEF' }}>{item.name}</div>
+                      {item.company && (
+                        <div style={{ fontSize: 11, color: '#848E9C' }}>{item.company}</div>
+                      )}
                     </td>
 
                     {/* Contact Details */}
                     <td onClick={(e) => e.stopPropagation()}>
-                      <div className="crm-table-contact-cell">
+                      <div style={{ fontSize: 12, color: '#848E9C', display: 'flex', flexDirection: 'column', gap: 2 }}>
                         {item.email && (
-                          <a href={`mailto:${item.email}`} className="crm-enquiry-contact-link email" title={item.email}>
-                            <Mail size={12} />
-                            <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {item.email}
-                            </span>
-                          </a>
-                        )}
-                        {item.phone && (
-                          <a href={`tel:${item.phone}`} className="crm-enquiry-contact-link phone" title={item.phone}>
-                            <Phone size={11} />
-                          </a>
-                        )}
-                        {item.phone && (
                           <a
-                            href={`https://wa.me/${cleanPhoneForWhatsApp(item.phone)}?text=${encodeURIComponent(`Hi ${item.name}, thank you for contacting Codex Dynamics regarding ${item.service || 'your project'}.`)}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="crm-enquiry-contact-link whatsapp"
-                            title="Chat on WhatsApp"
+                            href={`mailto:${item.email}`}
+                            style={{ color: '#3a7bd5', textDecoration: 'none' }}
+                            title={item.email}
                           >
-                            <Send size={11} />
+                            {item.email}
                           </a>
+                        )}
+                        {item.phone && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <a
+                              href={`tel:${item.phone}`}
+                              style={{ color: '#848E9C', textDecoration: 'none' }}
+                            >
+                              {item.phone}
+                            </a>
+                            <a
+                              href={`https://wa.me/${cleanPhoneForWhatsApp(item.phone)}?text=${encodeURIComponent(`Hi ${item.name}, thank you for contacting Codex Dynamics regarding ${item.service || 'your project'}.`)}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{ color: '#0ECB81', fontSize: 11, textDecoration: 'none', fontWeight: 600 }}
+                              title="Chat on WhatsApp"
+                            >
+                              WhatsApp
+                            </a>
+                          </div>
                         )}
                       </div>
                     </td>
 
                     {/* Service */}
                     <td>
-                      {item.service ? (
-                        <span className="crm-enquiry-service-badge" style={{ fontSize: 10, padding: '1px 6px' }}>
-                          <Tag size={9} />
-                          <span>{item.service}</span>
-                        </span>
-                      ) : (
-                        <span style={{ color: 'rgba(255, 255, 255, 0.35)', fontSize: 11 }}>General</span>
-                      )}
+                      <span style={{ color: '#EAECEF', fontSize: 12 }}>
+                        {item.service || 'General Inquiry'}
+                      </span>
                     </td>
 
                     {/* Budget / Scope */}
-                    <td>
+                    <td style={{ whiteSpace: 'nowrap' }}>
                       {item.budget ? (
-                        <span style={{ color: '#34C759', fontWeight: 600, fontSize: 11.5, fontFamily: 'monospace' }}>
+                        <span style={{ color: '#0ECB81', fontWeight: 600, fontSize: 12, fontFamily: 'monospace' }}>
                           {item.budget}
                         </span>
                       ) : item.timeline ? (
-                        <span style={{ color: '#FF9F0A', fontSize: 11 }}>
+                        <span style={{ color: '#F0B90B', fontSize: 11.5 }}>
                           {item.timeline}
                         </span>
                       ) : (
-                        <span style={{ color: 'rgba(255, 255, 255, 0.35)', fontSize: 11 }}>—</span>
+                        <span style={{ color: '#555', fontSize: 12 }}>—</span>
                       )}
                     </td>
 
                     {/* Message Preview */}
-                    <td>
-                      <div className="crm-table-msg-preview" title={item.message}>
+                    <td style={{ maxWidth: 220 }}>
+                      <div
+                        style={{
+                          color: '#848E9C',
+                          fontSize: 12,
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          fontStyle: 'italic',
+                        }}
+                        title={item.message}
+                      >
                         "{item.message || 'No text'}"
                       </div>
                     </td>
 
-                    {/* Source */}
-                    <td>
-                      <span className="crm-enquiry-pill muted" style={{ fontSize: 10, padding: '1px 6px' }}>
-                        {item.source === 'website_contact_modal' ? 'Modal' : item.source === 'manual_crm_entry' ? 'Manual' : 'Form'}
-                      </span>
+                    {/* Origin */}
+                    <td style={{ whiteSpace: 'nowrap', fontSize: 11, color: '#848E9C' }}>
+                      {item.source === 'website_contact_modal'
+                        ? 'Website Modal'
+                        : item.source === 'manual_crm_entry'
+                        ? 'Manual Entry'
+                        : 'Website Form'}
                     </td>
 
-                    {/* Timestamp */}
-                    <td>
-                      <span className="crm-enquiry-time" title={new Date(item.created_at).toLocaleString()}>
-                        <Clock size={10} />
-                        {formatRelativeTime(item.created_at)}
-                      </span>
+                    {/* Received */}
+                    <td
+                      style={{ whiteSpace: 'nowrap', fontSize: 11, color: '#848E9C' }}
+                      title={new Date(item.created_at).toLocaleString()}
+                    >
+                      {formatRelativeTime(item.created_at)}
                     </td>
 
-                    {/* Status Select */}
-                    <td onClick={(e) => e.stopPropagation()}>
+                    {/* Status Dropdown */}
+                    <td onClick={(e) => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
                       <select
                         value={item.status}
                         onChange={(e) => handleUpdateStatus(item.id, e.target.value)}
-                        className={`crm-enquiry-status-select ${item.status}`}
-                        style={{ height: 24, fontSize: 10.5, padding: '0 6px' }}
+                        className="crm-super-admin-select"
+                        style={{
+                          fontSize: 11,
+                          padding: '2px 6px',
+                          height: 24,
+                          background:
+                            item.status === 'new'
+                              ? 'rgba(14,203,129,0.12)'
+                              : item.status === 'contacted'
+                              ? 'rgba(10,132,255,0.15)'
+                              : item.status === 'converted'
+                              ? 'rgba(240,185,11,0.15)'
+                              : '#2A2E36',
+                          color:
+                            item.status === 'new'
+                              ? '#0ECB81'
+                              : item.status === 'contacted'
+                              ? '#0A84FF'
+                              : item.status === 'converted'
+                              ? '#F0B90B'
+                              : '#EAECEF',
+                          borderColor:
+                            item.status === 'new'
+                              ? '#0ECB8140'
+                              : item.status === 'contacted'
+                              ? '#0A84FF40'
+                              : item.status === 'converted'
+                              ? '#F0B90B40'
+                              : '#444A55',
+                          fontWeight: 600,
+                        }}
                       >
-                        <option value="new">● New</option>
-                        <option value="contacted">● Contacted</option>
-                        <option value="converted">● Converted</option>
-                        <option value="closed">● Closed</option>
+                        <option value="new">New</option>
+                        <option value="contacted">Contacted</option>
+                        <option value="converted">Converted</option>
+                        <option value="closed">Closed</option>
                       </select>
                     </td>
 
-                    {/* Row Actions */}
-                    <td style={{ textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
-                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setActiveModalEnquiry(item);
-                            setNoteDraft(item.notes || '');
-                          }}
-                          className="crm-chat-arrows-only-btn"
-                          title="View customer dossier"
-                          style={{ padding: 4 }}
-                        >
-                          <Eye size={13} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteEnquiry(item.id, item.name)}
-                          className="crm-chat-msg-delete-btn"
-                          style={{ opacity: 0.8 }}
-                          title="Delete inquiry"
-                        >
-                          <Trash2 size={10} />
-                        </button>
-                      </div>
+                    {/* Action Buttons */}
+                    <td onClick={(e) => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
+                      <button
+                        className="crm-super-admin-btn crm-super-admin-btn-small"
+                        style={{
+                          fontSize: 11,
+                          padding: '4px 10px',
+                          background: '#3a7bd5',
+                          color: '#fff',
+                          fontWeight: 600,
+                        }}
+                        onClick={() => handleOpenLead(item)}
+                        title="Open client profile"
+                      >
+                        Profile
+                      </button>
+                      <button
+                        className="crm-super-admin-btn crm-super-admin-btn-small"
+                        style={{
+                          fontSize: 11,
+                          padding: '4px 8px',
+                          marginLeft: 4,
+                          background: '#c0392b',
+                          color: '#fff',
+                        }}
+                        onClick={() => handleDeleteEnquiry(item.id, item.name)}
+                        title="Delete enquiry"
+                      >
+                        🗑 Bin
+                      </button>
                     </td>
                   </tr>
                 );
-              })}
-            </tbody>
-          </table>
-        )}
+              })
+            )}
+          </tbody>
+        </table>
       </div>
 
-      {/* 7. Pagination Bar */}
-      {filteredList.length > 0 && pageSize !== 'all' && (
-        <div className="crm-enquiries-pagination-bar">
-          <div>
-            Showing <strong>{Math.min((page - 1) * Number(pageSize) + 1, filteredList.length)}</strong> to{' '}
-            <strong>{Math.min(page * Number(pageSize), filteredList.length)}</strong> of{' '}
-            <strong>{filteredList.length}</strong> enquiries
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <button
-              type="button"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(p - 1, 1))}
-              className="crm-chat-panel-action-btn"
-              style={{ height: 28, padding: '0 10px', opacity: page <= 1 ? 0.4 : 1 }}
-            >
-              Previous
-            </button>
-
-            <span style={{ fontSize: 11.5, color: 'rgba(255, 255, 255, 0.7)', padding: '0 4px' }}>
-              Page {page} of {totalPages}
-            </span>
-
-            <button
-              type="button"
-              disabled={page >= totalPages}
-              onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-              className="crm-chat-panel-action-btn"
-              style={{ height: 28, padding: '0 10px', opacity: page >= totalPages ? 0.4 : 1 }}
-            >
-              Next
-            </button>
-          </div>
+      {/* 5. Pagination Bar matching Leads table */}
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', gap: 8, marginTop: 12, alignItems: 'center' }}>
+          <button
+            className="crm-super-admin-btn crm-super-admin-btn-small crm-pagination-btn-gold"
+            disabled={page === 1}
+            onClick={() => setPage(1)}
+          >
+            «
+          </button>
+          <button
+            className="crm-super-admin-btn crm-super-admin-btn-small crm-pagination-btn-gold"
+            disabled={page === 1}
+            onClick={() => setPage((p) => p - 1)}
+          >
+            ‹ Prev
+          </button>
+          <span style={{ color: '#848E9C', fontSize: 12 }}>
+            Page {page} of {totalPages}
+          </span>
+          <button
+            className="crm-super-admin-btn crm-super-admin-btn-small crm-pagination-btn-gold"
+            disabled={page >= totalPages}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Next ›
+          </button>
+          <button
+            className="crm-super-admin-btn crm-super-admin-btn-small crm-pagination-btn-gold"
+            disabled={page >= totalPages}
+            onClick={() => setPage(totalPages)}
+          >
+            »
+          </button>
         </div>
       )}
 
-      {/* 7. Comprehensive Inquiry Detail Drawer / Modal */}
-      {activeModalEnquiry && (
-        <div className="crm-site-crm-modal" onClick={() => setActiveModalEnquiry(null)}>
-          <div className="crm-site-crm-modal-card crm-enquiry-detail-modal" onClick={(e) => e.stopPropagation()}>
-            {/* Modal Header */}
-            <div className="crm-site-crm-panel-heading" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: 14 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div className="crm-enquiry-avatar" style={{ width: 40, height: 40 }}>
-                  {getInitials(activeModalEnquiry.name)}
-                </div>
-                <div>
-                  <h3 style={{ margin: 0, fontSize: 16, color: '#FFFFFF' }}>{activeModalEnquiry.name}</h3>
-                  <div style={{ fontSize: 11.5, color: 'rgba(255, 255, 255, 0.5)', marginTop: 2 }}>
-                    Customer form submission · {formatRelativeTime(activeModalEnquiry.created_at)}
-                  </div>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setActiveModalEnquiry(null)}
-                className="crm-chat-arrows-only-btn"
-                title="Close"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="crm-enquiry-modal-body">
-              {/* Quick Contact Bar */}
-              <div className="crm-enquiry-quick-reach-grid">
-                {activeModalEnquiry.email && (
-                  <a href={`mailto:${activeModalEnquiry.email}`} className="crm-enquiry-reach-card email">
-                    <Mail size={16} />
-                    <div>
-                      <div className="label">Email Customer</div>
-                      <div className="val">{activeModalEnquiry.email}</div>
-                    </div>
-                  </a>
-                )}
-                {activeModalEnquiry.phone && (
-                  <a href={`tel:${activeModalEnquiry.phone}`} className="crm-enquiry-reach-card phone">
-                    <Phone size={16} />
-                    <div>
-                      <div className="label">Direct Call</div>
-                      <div className="val">{activeModalEnquiry.phone}</div>
-                    </div>
-                  </a>
-                )}
-                {activeModalEnquiry.phone && (
-                  <a
-                    href={`https://wa.me/${cleanPhoneForWhatsApp(activeModalEnquiry.phone)}?text=${encodeURIComponent(`Hi ${activeModalEnquiry.name}, thank you for contacting Codex Dynamics.`)}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="crm-enquiry-reach-card whatsapp"
-                  >
-                    <Send size={16} />
-                    <div>
-                      <div className="label">WhatsApp Direct</div>
-                      <div className="val">Send Message</div>
-                    </div>
-                  </a>
-                )}
-              </div>
-
-              {/* Submission Information Grid */}
-              <div className="crm-enquiry-info-grid">
-                <div>
-                  <span className="kicker">Company / Organization</span>
-                  <strong>{activeModalEnquiry.company || 'Individual / None'}</strong>
-                </div>
-                <div>
-                  <span className="kicker">Service Selected</span>
-                  <strong style={{ color: '#0A84FF' }}>{activeModalEnquiry.service || 'General Inquiry'}</strong>
-                </div>
-                <div>
-                  <span className="kicker">Estimated Budget</span>
-                  <strong>{activeModalEnquiry.budget || 'Not specified'}</strong>
-                </div>
-                <div>
-                  <span className="kicker">Target Timeline</span>
-                  <strong>{activeModalEnquiry.timeline || 'Flexible'}</strong>
-                </div>
-                <div>
-                  <span className="kicker">Submission Timestamp</span>
-                  <span>{new Date(activeModalEnquiry.created_at).toLocaleString()}</span>
-                </div>
-                <div>
-                  <span className="kicker">Entry Origin</span>
-                  <span>{activeModalEnquiry.source}</span>
-                </div>
-              </div>
-
-              {/* Message Content */}
-              <div style={{ marginTop: 14 }}>
-                <span className="kicker" style={{ display: 'block', marginBottom: 6 }}>Customer Submission Message</span>
-                <div className="crm-enquiry-full-message">
-                  {activeModalEnquiry.message || 'No text provided.'}
-                </div>
-              </div>
-
-              {/* Internal Staff Notes */}
-              <div style={{ marginTop: 16 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                  <span className="kicker" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <StickyNote size={12} />
-                    <span>Internal Staff Follow-Up Notes</span>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleSaveNote}
-                    className="crm-chat-panel-action-btn"
-                    style={{ height: 26, fontSize: 11, padding: '0 8px' }}
-                  >
-                    Save Note
-                  </button>
-                </div>
-                <textarea
-                  rows={3}
-                  value={noteDraft}
-                  onChange={(e) => setNoteDraft(e.target.value)}
-                  placeholder="Record call logs, client preferences, quotes discussed, or next action steps..."
-                  className="crm-enquiry-note-input"
-                />
-              </div>
-            </div>
-
-            {/* Modal Footer Controls */}
-            <div className="crm-enquiry-modal-footer">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                {/* Promote to Lead */}
-                <button
-                  type="button"
-                  onClick={() => handlePromoteToCrmLead(activeModalEnquiry)}
-                  className="crm-chat-send-btn"
-                  style={{ width: 'auto', padding: '0 14px', fontSize: 12, fontWeight: 600, gap: 6 }}
-                >
-                  <UserPlus size={14} />
-                  <span>Promote to CRM Lead</span>
-                </button>
-
-                {/* Change Status */}
-                <select
-                  value={activeModalEnquiry.status}
-                  onChange={(e) => handleUpdateStatus(activeModalEnquiry.id, e.target.value)}
-                  className={`crm-enquiry-status-select ${activeModalEnquiry.status}`}
-                  style={{ height: 36 }}
-                >
-                  <option value="new">● New</option>
-                  <option value="contacted">● Contacted</option>
-                  <option value="converted">● Converted</option>
-                  <option value="closed">● Closed</option>
-                </select>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <button
-                  type="button"
-                  onClick={() => handleDeleteEnquiry(activeModalEnquiry.id, activeModalEnquiry.name)}
-                  className="crm-chat-panel-action-btn danger"
-                  style={{ height: 36 }}
-                >
-                  <Trash2 size={13} />
-                  <span>Delete Enquiry</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveModalEnquiry(null)}
-                  className="crm-chat-panel-action-btn"
-                  style={{ height: 36 }}
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 8. Log Manual Customer Inquiry Modal */}
+      {/* 6. Manual Log Enquiry Modal - Styled with CRM Platform Design */}
       {isAddModalOpen && (
-        <div className="crm-site-crm-modal" onClick={() => setIsAddModalOpen(false)}>
-          <div className="crm-site-crm-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 540 }}>
-            <div className="crm-site-crm-panel-heading">
-              <h3 style={{ margin: 0, fontSize: 16, color: '#FFFFFF' }}>Log Customer Form / Enquiry</h3>
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.75)',
+            zIndex: 2000,
+            overflowY: 'auto',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '32px 16px',
+          }}
+          onClick={() => setIsAddModalOpen(false)}
+        >
+          <div
+            style={{
+              background: '#363B44',
+              border: '1px solid #444A55',
+              borderRadius: 12,
+              width: '100%',
+              maxWidth: 560,
+              padding: 24,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: 16,
+              }}
+            >
+              <h3 style={{ margin: 0, fontSize: 16, color: '#FFFFFF', fontWeight: 700 }}>
+                Log Customer Enquiry / Lead
+              </h3>
               <button
                 type="button"
                 onClick={() => setIsAddModalOpen(false)}
-                className="crm-chat-arrows-only-btn"
+                style={{
+                  background: 'none',
+                  border: '1px solid #444A55',
+                  color: '#848E9C',
+                  borderRadius: 6,
+                  padding: '4px 8px',
+                  cursor: 'pointer',
+                  fontSize: 16,
+                }}
               >
-                <X size={18} />
+                ✕
               </button>
             </div>
 
@@ -1177,9 +997,11 @@ export default function EnquiriesWorkspace({
               onSubmit={(e) => {
                 e.preventDefault();
                 const formData = new FormData(e.currentTarget);
+                const name = formData.get('name') || 'Customer';
                 const newEnquiry = {
                   id: Date.now(),
-                  name: formData.get('name') || 'Customer',
+                  leadId: `ld_enq_${Date.now()}`,
+                  name,
                   email: formData.get('email') || '',
                   phone: formData.get('phone') || '',
                   company: formData.get('company') || '',
@@ -1193,73 +1015,147 @@ export default function EnquiriesWorkspace({
                   notes: '',
                 };
                 setLocalList((prev) => [newEnquiry, ...prev]);
+
+                // Store in public inquiries storage too
+                try {
+                  const raw = localStorage.getItem('codex-inquiries');
+                  const list = raw ? JSON.parse(raw) : [];
+                  list.unshift(newEnquiry);
+                  localStorage.setItem('codex-inquiries', JSON.stringify(list));
+                  window.dispatchEvent(new Event('storage'));
+                  window.dispatchEvent(new CustomEvent('codex_inquiry_added', { detail: newEnquiry }));
+                } catch {
+                  /* ignore */
+                }
+
                 if (onAction) {
                   onAction('save_enquiry', newEnquiry).catch(() => {});
                 }
                 setIsAddModalOpen(false);
-                showNotification(`Logged customer inquiry from "${newEnquiry.name}".`);
+                showNotification(`Logged customer inquiry from "${name}".`);
               }}
-              style={{ display: 'grid', gap: 12, padding: '16px 0 0' }}
+              style={{ display: 'grid', gap: 12 }}
             >
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <label className="crm-content-hub-field">
-                  <span>Customer Name *</span>
-                  <input name="name" required placeholder="Full Name" />
-                </label>
-                <label className="crm-content-hub-field">
-                  <span>Company (Optional)</span>
-                  <input name="company" placeholder="Business Name" />
-                </label>
+                <div>
+                  <label style={{ fontSize: 11, color: '#848E9C', display: 'block', marginBottom: 4 }}>
+                    Customer Name *
+                  </label>
+                  <input
+                    name="name"
+                    required
+                    placeholder="Full Name"
+                    className="crm-super-admin-input"
+                    style={{ width: '100%' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, color: '#848E9C', display: 'block', marginBottom: 4 }}>
+                    Company / Organization
+                  </label>
+                  <input
+                    name="company"
+                    placeholder="Business Name"
+                    className="crm-super-admin-input"
+                    style={{ width: '100%' }}
+                  />
+                </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <label className="crm-content-hub-field">
-                  <span>Contact Email *</span>
-                  <input name="email" type="email" required placeholder="client@company.com" />
-                </label>
-                <label className="crm-content-hub-field">
-                  <span>Phone Number</span>
-                  <input name="phone" placeholder="+1 (555) 000-0000" />
-                </label>
+                <div>
+                  <label style={{ fontSize: 11, color: '#848E9C', display: 'block', marginBottom: 4 }}>
+                    Contact Email *
+                  </label>
+                  <input
+                    name="email"
+                    type="email"
+                    required
+                    placeholder="client@company.com"
+                    className="crm-super-admin-input"
+                    style={{ width: '100%' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, color: '#848E9C', display: 'block', marginBottom: 4 }}>
+                    Phone Number
+                  </label>
+                  <input
+                    name="phone"
+                    placeholder="+1 (555) 000-0000"
+                    className="crm-super-admin-input"
+                    style={{ width: '100%' }}
+                  />
+                </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <label className="crm-content-hub-field">
-                  <span>Service Requested</span>
-                  <input name="service" placeholder="e.g. High-Performance Website" defaultValue="High-Performance Website" />
-                </label>
-                <label className="crm-content-hub-field">
-                  <span>Estimated Budget</span>
-                  <input name="budget" placeholder="e.g. $10k - $20k" />
-                </label>
+                <div>
+                  <label style={{ fontSize: 11, color: '#848E9C', display: 'block', marginBottom: 4 }}>
+                    Service Requested
+                  </label>
+                  <input
+                    name="service"
+                    defaultValue="High-Performance Website"
+                    className="crm-super-admin-input"
+                    style={{ width: '100%' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, color: '#848E9C', display: 'block', marginBottom: 4 }}>
+                    Estimated Budget
+                  </label>
+                  <input
+                    name="budget"
+                    placeholder="e.g. $15,000 - $25,000"
+                    className="crm-super-admin-input"
+                    style={{ width: '100%' }}
+                  />
+                </div>
               </div>
 
-              <label className="crm-content-hub-field">
-                <span>Customer Message / Project Inquiry *</span>
-                <textarea name="message" rows={3} required placeholder="Describe project requirements or customer notes..." />
-              </label>
+              <div>
+                <label style={{ fontSize: 11, color: '#848E9C', display: 'block', marginBottom: 4 }}>
+                  Customer Intake Message *
+                </label>
+                <textarea
+                  name="message"
+                  rows={3}
+                  required
+                  placeholder="Describe client requirements, project scope, or initial consultation notes..."
+                  style={{
+                    width: '100%',
+                    background: '#2A2E36',
+                    border: '1px solid #444A55',
+                    borderRadius: 6,
+                    color: '#EAECEF',
+                    padding: '8px 10px',
+                    fontSize: 12.5,
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 10 }}>
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="crm-chat-panel-action-btn"
-                  style={{ height: 36 }}
+                  className="crm-super-admin-btn crm-super-admin-btn-small crm-super-admin-btn-secondary"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="crm-chat-send-btn"
-                  style={{ width: 'auto', padding: '0 16px', fontSize: 12, fontWeight: 600 }}
+                  className="crm-super-admin-btn crm-super-admin-btn-small"
+                  style={{ background: '#0ECB81', color: '#1A1D23', fontWeight: 600 }}
                 >
-                  Save Customer Enquiry
+                  Save & Register Lead
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-    </section>
+    </div>
   );
 }

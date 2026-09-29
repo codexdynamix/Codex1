@@ -10,6 +10,7 @@ import { useConfirmDialog } from '../components/ConfirmModal/ConfirmModal';
 import Dashboard from '../components/Dashboard/Dashboard.jsx';
 import SiteSettingsTab from '../components/SiteSettings/SiteSettingsTab.jsx';
 import SiteCrmWorkspace from '../components/SiteCrmWorkspace.jsx';
+import LeadProfileModal from '../components/LeadProfileModal.jsx';
 import AuditLog from '../components/AuditLog/AuditLog.jsx';
 import Notifications from '../components/Notifications/Notifications.jsx';
 import NotificationToast from '../components/NotificationToast/NotificationToast.jsx';
@@ -48,7 +49,7 @@ import {
   createLogActivity,
 } from '../data/data';
 
-function AllLeadsTable({ data, currentUser, setData, setLeadAssignment, showNotification }) {
+function AllLeadsTable({ data, currentUser, setData, setLeadAssignment, showNotification, onOpenProfile }) {
   const navigate = useNavigate();
   const [confirmDialog, confirm] = useConfirmDialog();
   const [search, setSearch] = useState('');
@@ -528,6 +529,10 @@ function AllLeadsTable({ data, currentUser, setData, setLeadAssignment, showNoti
   };
 
   const openProfile = (lead) => {
+    if (onOpenProfile) {
+      onOpenProfile(lead);
+      return;
+    }
     setProfileLead(lead);
     setProfileStage(lead.stage || '');
     setProfileComment(lead.comment || '');
@@ -2216,6 +2221,13 @@ function ClientBackOfficeManager({ data, showNotification }) {
 
 function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, createOfficeWithManager, createTeamLeader, createAgent, toggleStaffBlocked, setLeadAssignment, setUserLoginState, createLead, showNotification }) {
   const navigate = useNavigate();
+  const [activeProfileLead, setActiveProfileLead] = useState(null);
+  const openLeadProfile = (lead) => {
+    setActiveProfileLead(lead);
+  };
+  const closeLeadProfile = () => {
+    setActiveProfileLead(null);
+  };
   const [officeId, setOfficeId] = useState('');
   const [officeName, setOfficeName] = useState('');
   const [managerName, setManagerName] = useState('');
@@ -2922,7 +2934,7 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
                       <p style={{ color: '#848E9C', fontSize: 13, marginBottom: 20 }}>
                         Leads are the single account source visible to agents, teams, and offices - filtered by their scope. Here you see every record system-wide.
                       </p>
-                      <AllLeadsTable data={data} currentUser={currentUser} setData={setData} setLeadAssignment={setLeadAssignment} showNotification={showNotification} />
+                      <AllLeadsTable data={data} currentUser={currentUser} setData={setData} setLeadAssignment={setLeadAssignment} showNotification={showNotification} onOpenProfile={openLeadProfile} />
                     </div>
                   </div>
                 ) : activeSubTab === 'Lead Upload' ? (
@@ -3135,7 +3147,7 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
                   defaultTab="enquiries"
                   standalone
                   showNotification={showNotification}
-                  onOpenLeadProfile={openProfile}
+                  onOpenLeadProfile={openLeadProfile}
                   leads={data.leads}
                 />
               </div>
@@ -3886,6 +3898,17 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
               </div>
             </div>
           </div>
+        )}
+        {activeProfileLead && (
+          <LeadProfileModal
+            lead={activeProfileLead}
+            onClose={closeLeadProfile}
+            data={data}
+            currentUser={currentUser}
+            setData={setData}
+            setLeadAssignment={setLeadAssignment}
+            showNotification={showNotification}
+          />
         )}
       </DataContext.Provider>
     </NotificationContext.Provider>

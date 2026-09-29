@@ -27,6 +27,7 @@ interface FormState {
   name: string;
   email: string;
   phone: string;
+  company: string;
   service: string;
   message: string;
 }
@@ -45,6 +46,7 @@ export function ContactModal({ isOpen, onClose, defaultService }: ContactModalPr
     name: "",
     email: "",
     phone: "",
+    company: "",
     service: defaultService || SERVICES[0],
     message: "",
   });
@@ -113,7 +115,7 @@ export function ContactModal({ isOpen, onClose, defaultService }: ContactModalPr
         name: form.name.trim(),
         email: form.email.trim(),
         phone: form.phone.trim(),
-        company: "",
+        company: form.company.trim(),
         service: form.service,
         message: `[Service: ${form.service}]\n${form.message.trim()}`,
         source: "website_contact_modal",
@@ -132,8 +134,10 @@ export function ContactModal({ isOpen, onClose, defaultService }: ContactModalPr
       try {
         const raw = localStorage.getItem("codex-inquiries");
         const list = raw ? JSON.parse(raw) : [];
-        list.push({ ...payload, at: new Date().toISOString() });
+        list.push({ ...payload, status: "new", at: new Date().toISOString(), created_at: new Date().toISOString() });
         localStorage.setItem("codex-inquiries", JSON.stringify(list));
+        window.dispatchEvent(new Event("storage"));
+        window.dispatchEvent(new CustomEvent("codex_inquiry_added", { detail: payload }));
       } catch {
         // ignore quota
       }
@@ -294,11 +298,11 @@ export function ContactModal({ isOpen, onClose, defaultService }: ContactModalPr
                     </div>
                   </div>
 
-                  {/* Phone & Service Row */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Phone, Company & Service Row */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-label flex items-center justify-between">
-                        <span>Phone (optional)</span>
+                        <span>Phone</span>
                       </label>
                       <input
                         type="tel"
@@ -307,6 +311,22 @@ export function ContactModal({ isOpen, onClose, defaultService }: ContactModalPr
                           setForm((f) => ({ ...f, phone: e.target.value }))
                         }
                         placeholder="+1 (555) 000-0000"
+                        disabled={isSubmitting}
+                        className="w-full h-10 rounded-xl bg-paper px-3.5 text-xs text-label border border-hairline focus:border-blue focus:ring-1 focus:ring-blue outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-label flex items-center justify-between">
+                        <span>Company</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={form.company}
+                        onChange={(e) =>
+                          setForm((f) => ({ ...f, company: e.target.value }))
+                        }
+                        placeholder="Company / Org"
                         disabled={isSubmitting}
                         className="w-full h-10 rounded-xl bg-paper px-3.5 text-xs text-label border border-hairline focus:border-blue focus:ring-1 focus:ring-blue outline-none transition-colors"
                       />
