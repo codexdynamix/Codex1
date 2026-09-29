@@ -1,31 +1,46 @@
 import React, { useEffect, useState } from 'react';
-import { listStaff, getStaffCapabilities } from '../adminApi';
+import { listStaff, getStaffCapabilities, updateStaffCapabilities } from '../adminApi';
 
 const DEFAULT_CATALOG = {
   lead_upload: 'Lead Upload',
   create_agent: 'Create Agent',
   notifications: 'Notifications',
   security: 'Security',
+  content: 'Content',
+  enquiries: 'Enquiries',
+  chat: 'Chat',
+};
+
+const DEFAULT_CAPABILITY_STATE = {
+  lead_upload: true,
+  create_agent: true,
+  notifications: true,
+  security: true,
+  content: true,
+  enquiries: true,
+  chat: true,
 };
 
 export default function AgentAccess({ showNotification }) {
   const [staff, setStaff] = useState([]);
   const [selected, setSelected] = useState('');
   const [catalog, setCatalog] = useState(DEFAULT_CATALOG);
-  const [capabilities, setCapabilities] = useState({});
+  const [capabilities, setCapabilities] = useState(DEFAULT_CAPABILITY_STATE);
   const [dirty, setDirty] = useState(false);
   const [status, setStatus] = useState('');
 
   const loadStaff = async () => {
     const rows = await listStaff();
-    setStaff((rows || []).filter((user) => ['Agent', 'Team Leader', 'Office Manager'].includes(user.role)));
+    const filtered = (rows || []).filter((user) => ['Agent', 'Team Leader', 'Office Manager'].includes(user.role));
+    setStaff(filtered);
+    setSelected((prev) => (prev && filtered.some((u) => u.id === prev) ? prev : (filtered[0]?.id || '')));
   };
 
   const loadCapabilities = async (id) => {
     if (!id) return;
     const payload = await getStaffCapabilities(id);
-    setCatalog(payload?.catalog || DEFAULT_CATALOG);
-    setCapabilities(payload?.capabilities || { lead_upload: true, create_agent: true, notifications: true, security: true });
+    setCatalog({ ...DEFAULT_CATALOG, ...(payload?.catalog || {}) });
+    setCapabilities({ ...DEFAULT_CAPABILITY_STATE, ...(payload?.capabilities || {}) });
     setDirty(false);
     setStatus('');
   };
@@ -34,9 +49,21 @@ export default function AgentAccess({ showNotification }) {
   useEffect(() => { loadCapabilities(selected).catch(() => setStatus('Could not load capabilities.')); }, [selected]);
 
   const save = async () => {
-    setDirty(false);
-    setStatus('Access saved.');
-    showNotification?.('Staff access updated.');
+    if (!selected) return;
+    try {
+      const payload = await updateStaffCapabilities(selected, capabilities);
+      if (payload?.capabilities) {
+        setCapabilities({ ...DEFAULT_CAPABILITY_STATE, ...payload.capabilities });
+      }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('codex-capabilities-updated', { detail: { staffId: selected, capabilities } }));
+      }
+      setDirty(false);
+      setStatus('Access saved.');
+      showNotification?.('Staff access updated.');
+    } catch {
+      setStatus('Could not save access.');
+    }
   };
 
   const currentStaff = staff.find((user) => user.id === selected);

@@ -12,6 +12,7 @@ import Dashboard from '../components/Dashboard/Dashboard.jsx';
 import SiteSettingsTab from '../components/SiteSettings/SiteSettingsTab.jsx';
 import SiteCrmWorkspace from '../components/SiteCrmWorkspace.jsx';
 import LeadProfileModal from '../components/LeadProfileModal.jsx';
+import StaffProfileModal from '../components/StaffProfileModal.jsx';
 import AuditLog from '../components/AuditLog/AuditLog.jsx';
 import Notifications from '../components/Notifications/Notifications.jsx';
 import NotificationToast from '../components/NotificationToast/NotificationToast.jsx';
@@ -2179,6 +2180,13 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
   const closeLeadProfile = () => {
     setActiveProfileLead(null);
   };
+  const [activeProfileStaff, setActiveProfileStaff] = useState(null);
+  const openStaffProfile = (staffMember) => {
+    setActiveProfileStaff(staffMember);
+  };
+  const closeStaffProfile = () => {
+    setActiveProfileStaff(null);
+  };
   const [officeId, setOfficeId] = useState('');
   const [officeName, setOfficeName] = useState('');
   const [managerName, setManagerName] = useState('');
@@ -3172,6 +3180,9 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
                       <div style={{ marginBottom: 12 }}>
                         <input className="crm-super-admin-input" style={{ width: '100%', maxWidth: 340 }} placeholder="[search]  Search offices or managers..." value={officeSearch} onChange={e => setOfficeSearch(e.target.value)} autoComplete="off" />
                       </div>
+                      <div style={{ fontSize: 12, color: '#848E9C', marginBottom: 8 }}>
+                        Click any office / manager row to open their summary modal and access their full profile.
+                      </div>
                       <div className="crm-super-admin-table-wrapper">
                         <table className="crm-super-admin-table">
                           <thead>
@@ -3184,7 +3195,6 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
                               <th style={{ textAlign: 'center' }}>Leads</th>
                               <th style={{ textAlign: 'center' }}>Deposits</th>
                               <th>Status</th>
-                              <th>Actions</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -3200,7 +3210,23 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
                               const officeAgents = data.users.filter(u => u.role === ROLE.AGENT && u.officeId === office.id);
                               const officeDeposits = officeLeads.filter(l => l.stage === 'Deposit').length;
                               return (
-                                <tr key={office.id} style={{ cursor: 'pointer' }} onClick={() => setInfoModal({ type: 'office', id: office.id })}>
+                                <tr
+                                  key={office.id}
+                                  style={{ cursor: 'pointer' }}
+                                  onClick={() =>
+                                    openStaffProfile(
+                                      officeManager || {
+                                        id: `office_${office.id}`,
+                                        isOfficeOnly: true,
+                                        officeId: office.id,
+                                        role: ROLE.OFFICE_MANAGER,
+                                        name: `${office.name} (Unassigned Manager)`,
+                                        status: 'Active',
+                                      }
+                                    )
+                                  }
+                                  title={`Open summary for ${officeManager ? officeManager.name : office.name}`}
+                                >
                                   <td style={{ whiteSpace: 'nowrap' }} onClick={e => e.stopPropagation()}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                       <span style={{ fontFamily: 'monospace', fontSize: 12, color: '#848E9C' }}>{office.id ? office.id.slice(0, 6) : '-'}</span>
@@ -3212,10 +3238,10 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
                                     {officeManager ? (
                                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                         <span className={'status-indicator ' + (officeManager.isLoggedIn ? 'crm-online' : 'crm-offline')}></span>
-                                        {officeManager.name}
+                                        <span style={{ fontWeight: 600, color: '#EAECEF' }}>{officeManager.name}</span>
                                       </div>
                                     ) : (
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }} onClick={e => e.stopPropagation()}>
                                         <select className="crm-super-admin-select" style={{ fontSize: 12, padding: '3px 6px', flex: 1 }} value={officeId} onChange={e => setOfficeId(e.target.value)}>
                                           <option value="">Assign manager...</option>
                                           {data.users.filter(u => u.role === ROLE.OFFICE_MANAGER && !u.officeId).map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
@@ -3232,15 +3258,6 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
                                     {officeManager ? (
                                       <span className={'crm-badge ' + (staffBlockedStatus[officeManager.id] ? 'crm-badge-danger' : 'crm-badge-success')}>{staffBlockedStatus[officeManager.id] ? 'Blocked' : 'Active'}</span>
                                     ) : <span className="crm-badge crm-badge-warning">No Manager</span>}
-                                  </td>
-                                  <td>
-                                    <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
-                                      {officeManager && (
-                                        <button className="crm-staff-action-btn btn-impersonate" onClick={() => navigate(`/admin/office-manager/${officeManager.id}`)} title="View panel">View Panel</button>
-                                      )}
-                                      <button className="crm-staff-action-btn btn-edit-name" onClick={() => setEditingOffice({ ...office, _mgr: officeManager })} title="Edit office"> Edit</button>
-                                      <button className="crm-staff-action-btn" style={{ background: 'rgba(246,70,93,0.15)', color: '#F6465D', border: '1px solid #F6465D40' }} onClick={() => softDeleteOffice(office)} title="Move office to bin">🗑 Delete</button>
-                                    </div>
                                   </td>
                                 </tr>
                               );
@@ -3313,6 +3330,9 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
                       <div style={{ marginBottom: 12 }}>
                         <input className="crm-super-admin-input" style={{ width: '100%', maxWidth: 340 }} placeholder="[search]  Search teams, offices, or leaders..." value={teamSearch} onChange={e => setTeamSearch(e.target.value)} autoComplete="off" />
                       </div>
+                      <div style={{ fontSize: 12, color: '#848E9C', marginBottom: 8 }}>
+                        Click any team / team leader row to open their summary modal and access their full profile.
+                      </div>
                       <div className="crm-super-admin-table-wrapper">
                         <table className="crm-super-admin-table">
                           <thead>
@@ -3325,7 +3345,6 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
                               <th style={{ textAlign: 'center' }}>Leads</th>
                               <th style={{ textAlign: 'center' }}>Deposits</th>
                               <th>Status</th>
-                              <th>Actions</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -3346,7 +3365,24 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
                               const teamDeposits = teamLeads.filter(l => l.stage === 'Deposit').length;
                               const office = data.offices.find(o => o.id === team.officeId);
                               return (
-                                <tr key={team.id} style={{ cursor: 'pointer' }} onClick={() => setInfoModal({ type: 'team', id: team.id })}>
+                                <tr
+                                  key={team.id}
+                                  style={{ cursor: 'pointer' }}
+                                  onClick={() =>
+                                    openStaffProfile(
+                                      teamLeader || {
+                                        id: `team_${team.id}`,
+                                        isTeamOnly: true,
+                                        teamId: team.id,
+                                        officeId: team.officeId,
+                                        role: ROLE.TEAM_LEADER,
+                                        name: `${team.name} (Unassigned Leader)`,
+                                        status: 'Active',
+                                      }
+                                    )
+                                  }
+                                  title={`Open summary for ${teamLeader ? teamLeader.name : team.name}`}
+                                >
                                   <td style={{ whiteSpace: 'nowrap' }} onClick={e => e.stopPropagation()}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                       <span style={{ fontFamily: 'monospace', fontSize: 12, color: '#848E9C' }}>{team.id ? team.id.slice(0, 6) : '-'}</span>
@@ -3359,7 +3395,7 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
                                     {teamLeader ? (
                                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                         <span className={'status-indicator ' + (teamLeader.isLoggedIn ? 'crm-online' : 'crm-offline')}></span>
-                                        {teamLeader.name}
+                                        <span style={{ fontWeight: 600, color: '#EAECEF' }}>{teamLeader.name}</span>
                                       </div>
                                     ) : <span style={{ color: '#848E9C', fontSize: 12 }}>Unassigned</span>}
                                   </td>
@@ -3370,15 +3406,6 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
                                     {teamLeader ? (
                                       <span className={'crm-badge ' + (staffBlockedStatus[teamLeader.id] ? 'crm-badge-danger' : 'crm-badge-success')}>{staffBlockedStatus[teamLeader.id] ? 'Blocked' : 'Active'}</span>
                                     ) : <span className="crm-badge crm-badge-warning">No Leader</span>}
-                                  </td>
-                                  <td>
-                                    <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }} onClick={e => e.stopPropagation()}>
-                                      {teamLeader && (
-                                        <button className="crm-staff-action-btn btn-impersonate" onClick={() => navigate(`/admin/team-leader/${teamLeader.id}`)} title="View panel">View Panel</button>
-                                      )}
-                                      <button className="crm-staff-action-btn btn-edit-name" onClick={() => setEditingTeam({ ...team, _ldr: teamLeader })} title="Edit team"> Edit</button>
-                                      <button className="crm-staff-action-btn" style={{ background: 'rgba(246,70,93,0.15)', color: '#F6465D', border: '1px solid #F6465D40' }} onClick={() => softDeleteTeam(team)} title="Move team to bin">🗑 Delete</button>
-                                    </div>
                                   </td>
                                 </tr>
                               );
@@ -3431,6 +3458,9 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
                       <div style={{ marginBottom: 12 }}>
                         <input className="crm-super-admin-input" style={{ width: '100%', maxWidth: 340 }} placeholder="[search]  Search agents, teams, or offices..." value={agentSearch} onChange={e => setAgentSearch(e.target.value)} autoComplete="off" />
                       </div>
+                      <div style={{ fontSize: 12, color: '#848E9C', marginBottom: 8 }}>
+                        Click any agent row to open their staff profile modal and manage their account.
+                      </div>
                       <div className="crm-super-admin-table-wrapper">
                         <table className="crm-super-admin-table">
                           <thead>
@@ -3442,7 +3472,6 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
                               <th>Leads</th>
                               <th>Deposits</th>
                               <th>Status</th>
-                              <th>Actions</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -3463,8 +3492,13 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
                               const agentLeads = data.leads.filter(l => l.assignedToAgent === agent.id);
                               const agentDeposits = agentLeads.filter(l => l.stage === 'Deposit').length;
                               return (
-                                <tr key={agent.id}>
-                                  <td style={{ whiteSpace: 'nowrap' }}>
+                                <tr
+                                  key={agent.id}
+                                  style={{ cursor: 'pointer' }}
+                                  onClick={() => openStaffProfile(agent)}
+                                  title={`Open profile for ${agent.name}`}
+                                >
+                                  <td style={{ whiteSpace: 'nowrap' }} onClick={e => e.stopPropagation()}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                       <span style={{ fontFamily: 'monospace', fontSize: 12, color: '#848E9C' }}>{agent.id ? agent.id.slice(0, 6) : '-'}</span>
                                       {agent.id && <button title={agent.id} onClick={() => navigator.clipboard.writeText(agent.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#848E9C', padding: '2px 4px', lineHeight: 1, borderRadius: 3 }} onMouseEnter={e => e.currentTarget.style.color = '#F0B90B'} onMouseLeave={e => e.currentTarget.style.color = '#848E9C'}><i className="fas fa-copy" style={{ fontSize: 10 }}></i></button>}
@@ -3473,8 +3507,9 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
                                   <td>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                       <span className={`status-indicator ${agent.isLoggedIn ? 'crm-online' : 'crm-offline'}`}></span>
-                                      {agent.name}
+                                      <span style={{ fontWeight: 600, color: '#EAECEF' }}>{agent.name}</span>
                                     </div>
+                                    {agent.email && <div style={{ fontSize: 11, color: '#848E9C', marginTop: 2 }}>{agent.email}</div>}
                                   </td>
                                   <td>{agentTeam?.name || 'Unassigned'}</td>
                                   <td>{agentOffice?.name || 'Unknown'}</td>
@@ -3484,13 +3519,6 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
                                     <span className={`crm-badge ${staffBlockedStatus[agent.id] ? 'crm-badge-danger' : 'crm-badge-success'}`}>
                                       {staffBlockedStatus[agent.id] ? 'Blocked' : 'Active'}
                                     </span>
-                                  </td>
-                                  <td>
-                                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                                      <button className="crm-staff-action-btn btn-impersonate" onClick={() => navigate(`/admin/agent/${agent.id}`)} title="View agent panel">View Panel</button>
-                                      <button className="crm-staff-action-btn btn-edit-name" onClick={() => setEditingAgent(agent)} title="Edit agent"> Edit</button>
-                                      <button className="crm-staff-action-btn" style={{ background: 'rgba(246,70,93,0.15)', color: '#F6465D', border: '1px solid #F6465D40' }} onClick={() => softDeleteAgent(agent)} title="Move agent to bin">🗑 Delete</button>
-                                    </div>
                                   </td>
                                 </tr>
                               );
@@ -3523,6 +3551,9 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
                           <button className="crm-super-admin-btn crm-super-admin-btn-small" style={{ background: '#444A55', color: '#EAECEF' }} onClick={() => { setStaffSearch(''); setStaffRoleFilter(''); }}>✕ Clear</button>
                         )}
                       </div>
+                      <div style={{ fontSize: 12, color: '#848E9C', marginBottom: 8 }}>
+                        Click any staff member on a row to open their staff profile modal and manage their account.
+                      </div>
                       <div className="crm-super-admin-table-wrapper">
                         <table className="crm-super-admin-table">
                           <thead>
@@ -3534,21 +3565,29 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
                               <th>Team</th>
                               <th>Leads</th>
                               <th>Status</th>
-                              <th>Actions</th>
                             </tr>
                           </thead>
                           <tbody>
                             {staffRows.length === 0 ? (
-                              <tr><td colSpan={8} style={{ textAlign: 'center', padding: 24, color: '#848E9C' }}>No staff members match your search.</td></tr>
+                              <tr><td colSpan={7} style={{ textAlign: 'center', padding: 24, color: '#848E9C' }}>No staff members match your search.</td></tr>
                             ) : staffRows.map(u => {
                               const office = data.offices.find(o => o.id === u.officeId);
                               const team = data.teams.find(t => t.id === u.teamId);
-                              const leads = u.role === ROLE.AGENT ? data.leads.filter(l => l.assignedToAgent === u.id).length : '-';
+                              const leads =
+                                u.role === ROLE.OFFICE_MANAGER
+                                  ? data.leads.filter(l => l.assignedToOffice === u.officeId).length
+                                  : u.role === ROLE.TEAM_LEADER
+                                  ? data.leads.filter(l => l.assignedToTeam === u.teamId).length
+                                  : data.leads.filter(l => l.assignedToAgent === u.id).length;
                               const isBlocked = staffBlockedStatus[u.id];
-                              const navPath = u.role === ROLE.OFFICE_MANAGER ? `/admin/office-manager/${u.id}` : u.role === ROLE.TEAM_LEADER ? `/admin/team-leader/${u.id}` : `/admin/agent/${u.id}`;
                               return (
-                                <tr key={u.id}>
-                                  <td style={{ whiteSpace: 'nowrap' }}>
+                                <tr
+                                  key={u.id}
+                                  style={{ cursor: 'pointer' }}
+                                  onClick={() => openStaffProfile(u)}
+                                  title={`Click to open ${u.name}'s staff profile`}
+                                >
+                                  <td style={{ whiteSpace: 'nowrap' }} onClick={e => e.stopPropagation()}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                       <span style={{ fontFamily: 'monospace', fontSize: 12, color: '#848E9C' }}>{u.id ? u.id.slice(0, 6) : '-'}</span>
                                       {u.id && <button title={u.id} onClick={() => navigator.clipboard.writeText(u.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#848E9C', padding: '2px 4px', lineHeight: 1, borderRadius: 3 }} onMouseEnter={e => e.currentTarget.style.color = '#F0B90B'} onMouseLeave={e => e.currentTarget.style.color = '#848E9C'}><i className="fas fa-copy" style={{ fontSize: 10 }}></i></button>}
@@ -3557,7 +3596,7 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
                                   <td>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                       <span className={`status-indicator ${u.isLoggedIn ? 'crm-online' : 'crm-offline'}`} />
-                                      <span style={{ fontWeight: 600 }}>{u.name}</span>
+                                      <span style={{ fontWeight: 600, color: '#EAECEF' }}>{u.name}</span>
                                     </div>
                                     {u.email && <div style={{ fontSize: 11, color: '#848E9C', marginTop: 2 }}>{u.email}</div>}
                                   </td>
@@ -3573,16 +3612,6 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
                                     <span className={`crm-badge ${isBlocked ? 'crm-badge-danger' : 'crm-badge-success'}`}>
                                       {isBlocked ? 'Blocked' : 'Active'}
                                     </span>
-                                  </td>
-                                  <td>
-                                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                                      <button className="crm-staff-action-btn" style={{ background: 'rgba(240,185,11,0.15)', color: '#F0B90B', border: '1px solid #F0B90B40' }} onClick={() => { const link = u.loginLink || makeLoginLink(u.id, u.role); copyToClipboard(link); }} title="Copy login link to clipboard">[refresh] Copy Link</button>
-                                      <button className={`crm-staff-action-btn ${isBlocked ? 'btn-unblock' : 'btn-block'}`} onClick={() => blockUnblockStaff(u.id)} title={isBlocked ? 'Unblock' : 'Block'}>{isBlocked ? '🔓 Unblock' : '🔒 Block'}</button>
-                                      <button className="crm-staff-action-btn btn-edit-name" onClick={() => { setEditingStaffId(u.id); setEditModalType('name'); setEditingValue(u.name); setStaffMemberName(u.name); setEditModalTitle(`Edit Name - ${u.name}`); setIsEditModalOpen(true); }} title="Edit name"> Rename</button>
-                                      <button className="crm-staff-action-btn btn-edit-password" onClick={() => { setEditingStaffId(u.id); setEditModalType('password'); setEditingValue(''); setStaffMemberName(u.name); setEditModalTitle(`Change Password - ${u.name}`); setIsEditModalOpen(true); }} title="Change password">[security] Password</button>
-                                      <button className="crm-staff-action-btn btn-impersonate" onClick={() => navigate(navPath)} title="View panel">View Panel</button>
-                                      <button className="crm-staff-action-btn" style={{ background: 'rgba(246,70,93,0.15)', color: '#F6465D', border: '1px solid #F6465D40' }} onClick={() => softDeleteAgent(u)} title="Delete staff member">🗑 Delete</button>
-                                    </div>
                                   </td>
                                 </tr>
                               );
@@ -3841,6 +3870,18 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
             currentUser={currentUser}
             setData={setData}
             setLeadAssignment={setLeadAssignment}
+            showNotification={showNotification}
+          />
+        )}
+        {activeProfileStaff && (
+          <StaffProfileModal
+            staff={activeProfileStaff}
+            onClose={closeStaffProfile}
+            data={data}
+            currentUser={currentUser}
+            setData={setData}
+            toggleStaffBlocked={toggleStaffBlocked}
+            setUserLoginState={setUserLoginState}
             showNotification={showNotification}
           />
         )}

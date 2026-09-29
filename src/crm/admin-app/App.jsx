@@ -47,6 +47,7 @@ import SuperAdminPanel from './panels/SuperAdminPanel.jsx';
 import OfficeManagerPanel from './panels/OfficeManagerPanel.jsx';
 import TeamLeaderPanel from './panels/TeamLeaderPanel.jsx';
 import AgentPanel, { LeadProfilePage } from './panels/AgentPanel.jsx';
+import StaffProfilePage from './components/StaffProfilePage.jsx';
 import { UserChrome } from './components/UserChrome.jsx';
 import ReactCapabilityWorkspace from './components/ReactCapabilityWorkspace.jsx';
 
@@ -265,12 +266,16 @@ function RolePage({ data, dataLoading, role, setLeadAssignment, assignOfficeMana
               element={<LeadProfilePage role={role} viewingUser={user} data={data} updateLead={updateLead} showNotification={showNotification} />}
             />
             <Route
+              path="staff/:staffId"
+              element={<StaffProfilePage role={role} viewingUser={user} data={data} setData={setData} toggleStaffBlocked={toggleStaffBlocked} setUserLoginState={setUserLoginState} updateLead={updateLead} showNotification={showNotification} />}
+            />
+            <Route
               path=""
               element={(
                 <>
                   {role === ROLE.SUPER_ADMIN && <SuperAdminPanel data={data} currentUser={user} setData={setData} assignOfficeManager={assignOfficeManager} createOfficeWithManager={createOfficeWithManager} createTeamLeader={createTeamLeader} createAgent={createAgent} toggleStaffBlocked={toggleStaffBlocked} setLeadAssignment={setLeadAssignment} setUserLoginState={setUserLoginState} createLead={createLead} showNotification={showNotification} />}
-                  {role === ROLE.OFFICE_MANAGER && <OfficeManagerPanel data={data} currentUser={user} assignTeamLeader={assignTeamLeader} createTeamLeader={createTeamLeader} createAgent={createAgent} setLeadAssignment={setLeadAssignment} updateLead={updateLead} createLead={createLead} setUserLoginState={setUserLoginState} showNotification={showNotification} />}
-                  {role === ROLE.TEAM_LEADER && <TeamLeaderPanel data={data} setData={setData} currentUser={user} createAgent={createAgent} canCreateAgent={canCreateAgent} setLeadAssignment={setLeadAssignment} updateLead={updateLead} createLead={createLead} setUserLoginState={setUserLoginState} showNotification={showNotification} />}
+                  {role === ROLE.OFFICE_MANAGER && <OfficeManagerPanel data={data} setData={setData} currentUser={user} assignTeamLeader={assignTeamLeader} createTeamLeader={createTeamLeader} createAgent={createAgent} toggleStaffBlocked={toggleStaffBlocked} setLeadAssignment={setLeadAssignment} updateLead={updateLead} createLead={createLead} setUserLoginState={setUserLoginState} showNotification={showNotification} />}
+                  {role === ROLE.TEAM_LEADER && <TeamLeaderPanel data={data} setData={setData} currentUser={user} createAgent={createAgent} canCreateAgent={canCreateAgent} toggleStaffBlocked={toggleStaffBlocked} setLeadAssignment={setLeadAssignment} updateLead={updateLead} createLead={createLead} setUserLoginState={setUserLoginState} showNotification={showNotification} />}
                   {role === ROLE.AGENT && <AgentPanel data={data} currentUser={user} setData={setData} setUserLoginState={setUserLoginState} createLead={createLead} showNotification={showNotification} />}
                 </>
               )}
@@ -1005,11 +1010,11 @@ function App() {
           <Route path="super-admin/:userId/*" element={<RolePage role={ROLE.SUPER_ADMIN} data={data} dataLoading={dataLoading} setData={setData} setLeadAssignment={setLeadAssignment} assignOfficeManager={assignOfficeManager} createOfficeWithManager={createOfficeWithManager} createTeamLeader={createTeamLeader} createAgent={createAgent} toggleStaffBlocked={toggleStaffBlocked} setUserLoginState={setUserLoginState} updateLead={updateLead} createLead={createLead} showNotification={showNotification} />} />
           <Route path="admin/super-admin/:userId/*" element={<RolePage role={ROLE.SUPER_ADMIN} data={data} dataLoading={dataLoading} setData={setData} setLeadAssignment={setLeadAssignment} assignOfficeManager={assignOfficeManager} createOfficeWithManager={createOfficeWithManager} createTeamLeader={createTeamLeader} createAgent={createAgent} toggleStaffBlocked={toggleStaffBlocked} setUserLoginState={setUserLoginState} updateLead={updateLead} createLead={createLead} showNotification={showNotification} />} />
 
-          <Route path="office-manager/:userId/*" element={<RolePage role={ROLE.OFFICE_MANAGER} data={data} dataLoading={dataLoading} setData={setData} setLeadAssignment={setLeadAssignment} assignTeamLeader={assignTeamLeader} createTeamLeader={createTeamLeader} createAgent={createAgent} updateLead={updateLead} createLead={createLead} setUserLoginState={setUserLoginState} showNotification={showNotification} />} />
-          <Route path="admin/office-manager/:userId/*" element={<RolePage role={ROLE.OFFICE_MANAGER} data={data} dataLoading={dataLoading} setData={setData} setLeadAssignment={setLeadAssignment} assignTeamLeader={assignTeamLeader} createTeamLeader={createTeamLeader} createAgent={createAgent} updateLead={updateLead} createLead={createLead} setUserLoginState={setUserLoginState} showNotification={showNotification} />} />
+          <Route path="office-manager/:userId/*" element={<RolePage role={ROLE.OFFICE_MANAGER} data={data} dataLoading={dataLoading} setData={setData} setLeadAssignment={setLeadAssignment} assignTeamLeader={assignTeamLeader} createTeamLeader={createTeamLeader} createAgent={createAgent} toggleStaffBlocked={toggleStaffBlocked} updateLead={updateLead} createLead={createLead} setUserLoginState={setUserLoginState} showNotification={showNotification} />} />
+          <Route path="admin/office-manager/:userId/*" element={<RolePage role={ROLE.OFFICE_MANAGER} data={data} dataLoading={dataLoading} setData={setData} setLeadAssignment={setLeadAssignment} assignTeamLeader={assignTeamLeader} createTeamLeader={createTeamLeader} createAgent={createAgent} toggleStaffBlocked={toggleStaffBlocked} updateLead={updateLead} createLead={createLead} setUserLoginState={setUserLoginState} showNotification={showNotification} />} />
 
-          <Route path="team-leader/:userId/*" element={<RolePage role={ROLE.TEAM_LEADER} data={data} dataLoading={dataLoading} setData={setData} setLeadAssignment={setLeadAssignment} assignAgent={assignAgent} updateLead={updateLead} createLead={createLead} setUserLoginState={setUserLoginState} showNotification={showNotification} />} />
-          <Route path="admin/team-leader/:userId/*" element={<RolePage role={ROLE.TEAM_LEADER} data={data} dataLoading={dataLoading} setData={setData} setLeadAssignment={setLeadAssignment} assignAgent={assignAgent} updateLead={updateLead} createLead={createLead} setUserLoginState={setUserLoginState} showNotification={showNotification} />} />
+          <Route path="team-leader/:userId/*" element={<RolePage role={ROLE.TEAM_LEADER} data={data} dataLoading={dataLoading} setData={setData} setLeadAssignment={setLeadAssignment} assignAgent={assignAgent} toggleStaffBlocked={toggleStaffBlocked} updateLead={updateLead} createLead={createLead} setUserLoginState={setUserLoginState} showNotification={showNotification} />} />
+          <Route path="admin/team-leader/:userId/*" element={<RolePage role={ROLE.TEAM_LEADER} data={data} dataLoading={dataLoading} setData={setData} setLeadAssignment={setLeadAssignment} assignAgent={assignAgent} toggleStaffBlocked={toggleStaffBlocked} updateLead={updateLead} createLead={createLead} setUserLoginState={setUserLoginState} showNotification={showNotification} />} />
 
           <Route path="agent/:userId/*" element={<RolePage role={ROLE.AGENT} data={data} dataLoading={dataLoading} setData={setData} setUserLoginState={setUserLoginState} updateLead={updateLead} createLead={createLead} showNotification={showNotification} />} />
           <Route path="admin/agent/:userId/*" element={<RolePage role={ROLE.AGENT} data={data} dataLoading={dataLoading} setData={setData} setUserLoginState={setUserLoginState} updateLead={updateLead} createLead={createLead} showNotification={showNotification} />} />

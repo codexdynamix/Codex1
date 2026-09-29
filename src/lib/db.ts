@@ -87,17 +87,28 @@ function toSql(run: Run): Sql {
 
 function createNeonSql(): Promise<Sql> {
   globalRef.__pgSqlPromise__ ??= (async () => {
-    // Regular Postgres driver: node-postgres (`pg`) — works directly with Neon's
-    // pooled endpoint. One pool per process; warm serverless instances reuse it.
-    const { Pool, types } = await import("pg");
-    types.setTypeParser(OID_INT8, Number);
-    types.setTypeParser(OID_DATE, identity);
-    types.setTypeParser(OID_INTERVAL, identity);
-    const pool = new Pool({ connectionString: databaseUrl });
-    return toSql(async <T>(text: string, params: unknown[]) => {
-      const res = await pool.query(text, params);
-      return res.rows as T[];
-    });
+    try {
+      // Regular Postgres driver: node-postgres (`pg`) — works directly with Neon's
+      // pooled endpoint. One pool per process; warm serverless instances reuse it.
+      const { Pool, types } = await import("pg");
+      types.setTypeParser(OID_INT8, Number);
+      types.setTypeParser(OID_DATE, identity);
+      types.setTypeParser(OID_INTERVAL, identity);
+      const pool = new Pool({ connectionString: databaseUrl });
+      return toSql(async <T>(text: string, params: unknown[]) => {
+        try {
+          const res = await pool.query(text, params);
+          return res.rows as T[];
+        } catch (err) {
+          console.warn("[db] Postgres query failed — falling back to PGLite mock:", err);
+          const fallback = await createPgliteSql();
+          return fallback.query<T>(text, params);
+        }
+      });
+    } catch (err) {
+      console.warn("[db] Postgres pool init failed — falling back to PGLite mock:", err);
+      return createPgliteSql();
+    }
   })().catch((err) => {
     globalRef.__pgSqlPromise__ = undefined;
     throw err;

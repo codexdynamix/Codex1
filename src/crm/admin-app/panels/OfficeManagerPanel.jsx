@@ -11,10 +11,12 @@ import {
 } from '../shared';
 import { SearchAutocomplete } from '../components/UserChrome.jsx';
 import ReactCapabilityWorkspace from '../components/ReactCapabilityWorkspace.jsx';
+import StaffProfileModal from '../components/StaffProfileModal.jsx';
 import { searchAdminLeads } from '../adminApi';
 
-function OfficeManagerPanel({ data, currentUser, assignTeamLeader, createTeamLeader, createAgent, setLeadAssignment, updateLead, createLead, setUserLoginState, showNotification }) {
+function OfficeManagerPanel({ data, setData, currentUser, assignTeamLeader, createTeamLeader, createAgent, toggleStaffBlocked, setLeadAssignment, updateLead, createLead, setUserLoginState, showNotification }) {
   const navigate = useNavigate();
+  const [activeProfileStaff, setActiveProfileStaff] = useState(null);
   const [teamId, setTeamId] = useState('');
   const [newTeamName, setNewTeamName] = useState('');
   const [newLeaderName, setNewLeaderName] = useState('');
@@ -147,15 +149,35 @@ function OfficeManagerPanel({ data, currentUser, assignTeamLeader, createTeamLea
                 <table className="crm-super-admin-table">
                   <thead><tr><th>Team</th><th>Leader</th><th style={{ textAlign: 'center' }}>Agents</th><th style={{ textAlign: 'center' }}>Leads</th><th>Issue</th></tr></thead>
                   <tbody>
-                    {teamsNeedingAttention.map(t => (
-                      <tr key={t.id}>
-                        <td style={{ fontWeight: 600 }}>{t.name}</td>
-                        <td>{t.leaderName}</td>
-                        <td style={{ textAlign: 'center' }}>{t.agentCount}</td>
-                        <td style={{ textAlign: 'center' }}>{t.leadCount}</td>
-                        <td style={{ color: '#ff6464', fontSize: 12 }}>{!t.leaderOnline && 'Leader offline'}{!t.leaderOnline && t.agentCount === 0 && '  /  '}{t.agentCount === 0 && 'No agents'}</td>
-                      </tr>
-                    ))}
+                    {teamsNeedingAttention.map(t => {
+                      const leader = teamLeaders.find(l => l.teamId === t.id);
+                      return (
+                        <tr
+                          key={t.id}
+                          style={{ cursor: 'pointer' }}
+                          onClick={() =>
+                            setActiveProfileStaff(
+                              leader || {
+                                id: `team_${t.id}`,
+                                isTeamOnly: true,
+                                teamId: t.id,
+                                officeId: currentUser.officeId,
+                                role: ROLE.TEAM_LEADER,
+                                name: `${t.name} (Unassigned Leader)`,
+                                status: 'Active',
+                              }
+                            )
+                          }
+                          title={`Open summary for ${leader ? leader.name : t.name}`}
+                        >
+                          <td style={{ fontWeight: 600 }}>{t.name}</td>
+                          <td>{t.leaderName}</td>
+                          <td style={{ textAlign: 'center' }}>{t.agentCount}</td>
+                          <td style={{ textAlign: 'center' }}>{t.leadCount}</td>
+                          <td style={{ color: '#ff6464', fontSize: 12 }}>{!t.leaderOnline && 'Leader offline'}{!t.leaderOnline && t.agentCount === 0 && '  /  '}{t.agentCount === 0 && 'No agents'}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -182,17 +204,37 @@ function OfficeManagerPanel({ data, currentUser, assignTeamLeader, createTeamLea
               <table className="crm-super-admin-table">
                 <thead><tr><th>#</th><th>Team</th><th>Leader</th><th style={{ textAlign: 'center' }}>Leads</th><th style={{ textAlign: 'center' }}>Deposits</th><th style={{ textAlign: 'center' }}>Conversion</th><th style={{ textAlign: 'center' }}>Agents</th></tr></thead>
                 <tbody>
-                  {teamMetrics.sort((a, b) => parseFloat(b.conversionRate) - parseFloat(a.conversionRate)).map((team, idx) => (
-                    <tr key={team.id}>
-                      <td style={{ color: ['#ffd700','#c0c0c0','#cd7f32'][idx] || '#848E9C', fontWeight: 700, width: 32 }}>{idx + 1}</td>
-                      <td style={{ fontWeight: 600 }}>{team.name}</td>
-                      <td><div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: team.leaderOnline ? '#45d2a0' : '#A8AEB8', display: 'inline-block', flexShrink: 0 }}></span>{team.leaderName}</div></td>
-                      <td style={{ textAlign: 'center' }}>{team.leadCount}</td>
-                      <td style={{ textAlign: 'center', color: '#45d2a0', fontWeight: 600 }}>{team.depositsCount}</td>
-                      <td style={{ textAlign: 'center', color: '#F0B90B', fontWeight: 700 }}>{team.conversionRate}%</td>
-                      <td style={{ textAlign: 'center' }}>{team.agentCount}</td>
-                    </tr>
-                  ))}
+                  {teamMetrics.sort((a, b) => parseFloat(b.conversionRate) - parseFloat(a.conversionRate)).map((team, idx) => {
+                    const leader = teamLeaders.find(l => l.teamId === team.id);
+                    return (
+                      <tr
+                        key={team.id}
+                        style={{ cursor: 'pointer' }}
+                        onClick={() =>
+                          setActiveProfileStaff(
+                            leader || {
+                              id: `team_${team.id}`,
+                              isTeamOnly: true,
+                              teamId: team.id,
+                              officeId: currentUser.officeId,
+                              role: ROLE.TEAM_LEADER,
+                              name: `${team.name} (Unassigned Leader)`,
+                              status: 'Active',
+                            }
+                          )
+                        }
+                        title={`Open summary for ${leader ? leader.name : team.name}`}
+                      >
+                        <td style={{ color: ['#ffd700','#c0c0c0','#cd7f32'][idx] || '#848E9C', fontWeight: 700, width: 32 }}>{idx + 1}</td>
+                        <td style={{ fontWeight: 600 }}>{team.name}</td>
+                        <td><div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: team.leaderOnline ? '#45d2a0' : '#A8AEB8', display: 'inline-block', flexShrink: 0 }}></span>{team.leaderName}</div></td>
+                        <td style={{ textAlign: 'center' }}>{team.leadCount}</td>
+                        <td style={{ textAlign: 'center', color: '#45d2a0', fontWeight: 600 }}>{team.depositsCount}</td>
+                        <td style={{ textAlign: 'center', color: '#F0B90B', fontWeight: 700 }}>{team.conversionRate}%</td>
+                        <td style={{ textAlign: 'center' }}>{team.agentCount}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -202,27 +244,47 @@ function OfficeManagerPanel({ data, currentUser, assignTeamLeader, createTeamLea
 
       {omTab === 'teams' && (
         <div className="crm-super-admin-card">
+          <div style={{ fontSize: 12, color: '#848E9C', marginBottom: 8 }}>
+            Click any team / leader row to open their summary modal and access their full profile.
+          </div>
           <div className="crm-super-admin-table-wrapper">
             <table className="crm-super-admin-table">
-              <thead><tr><th>ID</th><th>Team</th><th>Leader</th><th style={{ textAlign: 'center' }}>Agents</th><th style={{ textAlign: 'center' }}>Cap.</th><th style={{ textAlign: 'center' }}>Leads</th><th style={{ textAlign: 'center' }}>Deposits</th><th style={{ textAlign: 'center' }}>Conv.</th><th>Actions</th></tr></thead>
+              <thead><tr><th>ID</th><th>Team</th><th>Leader</th><th style={{ textAlign: 'center' }}>Agents</th><th style={{ textAlign: 'center' }}>Cap.</th><th style={{ textAlign: 'center' }}>Leads</th><th style={{ textAlign: 'center' }}>Deposits</th><th style={{ textAlign: 'center' }}>Conv.</th></tr></thead>
               <tbody>
                 {teamsForOffice.length === 0 ? (
-                  <tr><td colSpan={9} style={{ textAlign: 'center', color: '#848E9C', padding: 24 }}>No teams yet - create one in the Create tab.</td></tr>
+                  <tr><td colSpan={8} style={{ textAlign: 'center', color: '#848E9C', padding: 24 }}>No teams yet - create one in the Create tab.</td></tr>
                 ) : teamsForOffice.map(team => {
                   const used = getTeamAgentCount(team.id, data.users);
                   const pct = Math.round((used / (team.maxSize || 1)) * 100);
                   const metric = teamMetrics.find(m => m.id === team.id);
-                  const leader = data.users.find(u => u.id === team.leaderId);
+                  const leader = data.users.find(u => (u.id === team.leaderId) || (u.role === ROLE.TEAM_LEADER && u.teamId === team.id));
                   return (
-                    <tr key={team.id}>
-                      <td style={{ whiteSpace: 'nowrap' }}>
+                    <tr
+                      key={team.id}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() =>
+                        setActiveProfileStaff(
+                          leader || {
+                            id: `team_${team.id}`,
+                            isTeamOnly: true,
+                            teamId: team.id,
+                            officeId: team.officeId,
+                            role: ROLE.TEAM_LEADER,
+                            name: `${team.name} (Unassigned Leader)`,
+                            status: 'Active',
+                          }
+                        )
+                      }
+                      title={`Open summary for ${leader ? leader.name : team.name}`}
+                    >
+                      <td style={{ whiteSpace: 'nowrap' }} onClick={e => e.stopPropagation()}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                           <span style={{ fontFamily: 'monospace', fontSize: 12, color: '#848E9C' }}>{team.id ? team.id.slice(0, 6) : '-'}</span>
                           {team.id && <button title={team.id} onClick={() => navigator.clipboard.writeText(team.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#848E9C', padding: '2px 4px', lineHeight: 1, borderRadius: 3 }} onMouseEnter={e => e.currentTarget.style.color = '#F0B90B'} onMouseLeave={e => e.currentTarget.style.color = '#848E9C'}><i className="fas fa-copy" style={{ fontSize: 10 }}></i></button>}
                         </div>
                       </td>
                       <td style={{ fontWeight: 600 }}>{team.name}</td>
-                      <td>{leader ? (<div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: leader.isLoggedIn ? '#45d2a0' : '#A8AEB8', display: 'inline-block', flexShrink: 0 }}></span>{leader.name}</div>) : <span style={{ color: '#848E9C', fontSize: 12 }}>Unassigned</span>}</td>
+                      <td>{leader ? (<div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 6, height: 6, borderRadius: '50%', background: leader.isLoggedIn ? '#45d2a0' : '#A8AEB8', display: 'inline-block', flexShrink: 0 }}></span><span style={{ fontWeight: 600, color: '#EAECEF' }}>{leader.name}</span></div>) : <span style={{ color: '#848E9C', fontSize: 12 }}>Unassigned</span>}</td>
                       <td style={{ textAlign: 'center' }}>{used}</td>
                       <td style={{ textAlign: 'center' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -235,7 +297,6 @@ function OfficeManagerPanel({ data, currentUser, assignTeamLeader, createTeamLea
                       <td style={{ textAlign: 'center' }}>{metric?.leadCount || 0}</td>
                       <td style={{ textAlign: 'center', color: '#45d2a0', fontWeight: 600 }}>{metric?.depositsCount || 0}</td>
                       <td style={{ textAlign: 'center', color: '#F0B90B', fontWeight: 600 }}>{metric?.conversionRate || 0}%</td>
-                      <td>{leader && <button onClick={() => navigate(`/admin/team-leader/${leader.id}`)} style={{ padding: '4px 10px', background: '#444A55', border: '1px solid #3C4754', borderRadius: 6, color: '#EAECEF', fontSize: 12, cursor: 'pointer' }}>View Panel</button>}</td>
                     </tr>
                   );
                 })}
@@ -247,17 +308,25 @@ function OfficeManagerPanel({ data, currentUser, assignTeamLeader, createTeamLea
 
       {omTab === 'agents' && (
         <div className="crm-super-admin-card">
+          <div style={{ fontSize: 12, color: '#848E9C', marginBottom: 8 }}>
+            Click any agent on a row to open their staff profile modal and manage their account.
+          </div>
           <div className="crm-super-admin-table-wrapper">
             <table className="crm-super-admin-table">
-              <thead><tr><th>ID</th><th>Agent</th><th>Team</th><th style={{ textAlign: 'center' }}>Leads</th><th>Status</th><th>Last Login</th><th>Actions</th></tr></thead>
+              <thead><tr><th>ID</th><th>Agent</th><th>Team</th><th style={{ textAlign: 'center' }}>Leads</th><th>Status</th><th>Last Login</th></tr></thead>
               <tbody>
                 {agentMetrics.length === 0 ? (
-                  <tr><td colSpan={7} style={{ textAlign: 'center', color: '#848E9C', padding: 24 }}>No agents yet.</td></tr>
+                  <tr><td colSpan={6} style={{ textAlign: 'center', color: '#848E9C', padding: 24 }}>No agents yet.</td></tr>
                 ) : agentMetrics.sort((a, b) => b.leadCount - a.leadCount).map(agent => {
                   const fullAgent = data.users.find(u => u.id === agent.id);
                   return (
-                    <tr key={agent.id}>
-                      <td style={{ whiteSpace: 'nowrap' }}>
+                    <tr
+                      key={agent.id}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => fullAgent && setActiveProfileStaff(fullAgent)}
+                      title={`Click to open ${agent.name}'s staff profile`}
+                    >
+                      <td style={{ whiteSpace: 'nowrap' }} onClick={e => e.stopPropagation()}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                           <span style={{ fontFamily: 'monospace', fontSize: 12, color: '#848E9C' }}>{agent.id ? agent.id.slice(0, 6) : '-'}</span>
                           {agent.id && <button title={agent.id} onClick={() => navigator.clipboard.writeText(agent.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#848E9C', padding: '2px 4px', lineHeight: 1, borderRadius: 3 }} onMouseEnter={e => e.currentTarget.style.color = '#F0B90B'} onMouseLeave={e => e.currentTarget.style.color = '#848E9C'}><i className="fas fa-copy" style={{ fontSize: 10 }}></i></button>}
@@ -268,21 +337,6 @@ function OfficeManagerPanel({ data, currentUser, assignTeamLeader, createTeamLea
                       <td style={{ textAlign: 'center', color: '#F0B90B', fontWeight: 700 }}>{agent.leadCount}</td>
                       <td><span style={{ padding: '3px 8px', borderRadius: 12, fontSize: 11, fontWeight: 600, background: agent.isOnline ? 'rgba(69,210,160,0.12)' : '#363B44', color: agent.isOnline ? '#45d2a0' : '#A8AEB8', border: '1px solid ' + (agent.isOnline ? '#45d2a030' : '#444A55') }}>{agent.isOnline ? ' Online' : '○ Offline'}</span></td>
                       <td style={{ color: '#848E9C', fontSize: 12 }}>{fullAgent?.lastLoginAt ? new Date(fullAgent.lastLoginAt).toLocaleString() : '-'}</td>
-                      <td>
-                        <button
-                          className="crm-staff-action-btn btn-impersonate"
-                          title={`View ${agent.name}'s panel`}
-                          onClick={() => navigate(`/admin/agent/${agent.id}`, {
-                            state: {
-                              returnTo: `/admin/office-manager/${currentUser.id}`,
-                              returnLabel: `Back to ${getOfficeName(currentUser.officeId, data.offices)}`,
-                              impersonatedFrom: currentUser.id,
-                            },
-                          })}
-                        >
-                          View Panel
-                        </button>
-                      </td>
                     </tr>
                   );
                 })}
@@ -348,6 +402,19 @@ function OfficeManagerPanel({ data, currentUser, assignTeamLeader, createTeamLea
             </div>
           </div>
         </div>
+      )}
+
+      {activeProfileStaff && (
+        <StaffProfileModal
+          staff={activeProfileStaff}
+          onClose={() => setActiveProfileStaff(null)}
+          data={data}
+          currentUser={currentUser}
+          setData={setData}
+          toggleStaffBlocked={toggleStaffBlocked}
+          setUserLoginState={setUserLoginState}
+          showNotification={showNotification}
+        />
       )}
     </div>
   );
