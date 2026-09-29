@@ -252,6 +252,20 @@ function preventViteReloadPlugin(): Plugin {
   };
 }
 
+function autoExitOnBuildPlugin(): Plugin {
+  return {
+    name: "auto-exit-on-build",
+    apply: "build",
+    closeBundle() {
+      // In Node 22 with Nitro/PGLite, lingering handles prevent Vite CLI from exiting.
+      // Explicitly exit once bundle write is completed.
+      setTimeout(() => {
+        process.exit(0);
+      }, 500);
+    },
+  };
+}
+
 // `0.0.0.0:3000` is the server contract.
 export default defineConfig(({ command, isPreview }) => ({
   server: {
@@ -307,5 +321,6 @@ export default defineConfig(({ command, isPreview }) => ({
         ]
       : []),
     viteReact(),
+    autoExitOnBuildPlugin(),
   ],
 }));

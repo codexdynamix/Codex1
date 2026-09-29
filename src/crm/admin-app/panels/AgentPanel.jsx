@@ -4,11 +4,12 @@ import {
   ROLE, LEAD_STATUSES, normalizeStage,
   getOfficeName, getTeamName, getUserName, getCountryFlag, statusClass,
   formatLeadId, EditLeadModal, CreateLeadModal, stageColor,
+  StatusDropdown,
 } from '../shared';
 import { useConfirmDialog } from '../components/ConfirmModal/ConfirmModal';
 import { SearchAutocomplete } from '../components/UserChrome.jsx';
 import { searchAdminLeads } from '../adminApi';
-import { getAdminMessages, sendAdminMessage, markAdminMessagesRead, getAdminUnreadMessageCounts, deleteAdminMessage, clearAdminChat, adminSetClientPassword, deleteLeadCommentApi, deleteLeadStatusEntryApi, getLeadNotificationsAsAdmin, fetchLeadById, postAdminPresence, getAdminMessageAttachmentUrl, getStaffCapabilities, fetchAdminMe } from '../adminApi';
+import { getAdminMessages, sendAdminMessage, markAdminMessagesRead, getAdminUnreadMessageCounts, deleteAdminMessage, clearAdminChat, adminSetClientPassword, deleteLeadCommentApi, deleteLeadStatusEntryApi, getLeadNotificationsAsAdmin, fetchLeadById, postAdminPresence, getAdminMessageAttachmentUrl, getStaffCapabilities, fetchAdminMe, updateLeadApi } from '../adminApi';
 import AdminNotificationsInbox from '../components/AdminNotificationsInbox/AdminNotificationsInbox.jsx';
 import ReactCapabilityWorkspace from '../components/ReactCapabilityWorkspace.jsx';
 import { getLeadProfilePath, getRoleScopedLeads, getRoleWorkspacePath } from '../leadProfileRouting';

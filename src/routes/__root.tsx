@@ -114,6 +114,12 @@ export const Route = createRootRoute({
         content:
           "High-performance websites, web design, web development, custom CRMs, and digital marketing agency.",
       },
+      { property: "og:title", content: APP_NAME },
+      {
+        property: "og:description",
+        content:
+          "High-performance websites, web design, web development, custom CRMs, and digital marketing agency.",
+      },
       { name: "theme-color", content: "#ffffff" },
     ],
     links: [

@@ -7,6 +7,7 @@ import {
   CreateLeadModal, AddCommentModal,
   stageColor,
   assignableAgents, assignableAgentLabel,
+  StatusDropdown,
 } from '../shared';
 import { SearchAutocomplete } from '../components/UserChrome.jsx';
 import ReactCapabilityWorkspace from '../components/ReactCapabilityWorkspace.jsx';
@@ -624,7 +625,18 @@ function OfficeLeadsTable({ data, currentUser, teamsForOffice, agents, setLeadAs
                   <div style={{ fontSize: 11, color: '#848E9C' }}>{lead.phone}</div>
                 </td>
                 <td style={{ fontSize: 12 }}>{getCountryFlag(lead.countryCode, lead.country)} {lead.country}</td>
-                <td><span className={`crm-status-badge ${statusClass(lead.stage)}`}>{normalizeStage(lead.stage)}</span></td>
+                <td onClick={e => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
+                  <StatusDropdown
+                    value={normalizeStage(lead.stage)}
+                    options={LEAD_STATUSES}
+                    onChange={async (newStage) => {
+                      if (updateLead) {
+                        await updateLead(lead.id, { stage: newStage, status: newStage });
+                        showNotification?.(`Status updated to "${newStage}".`);
+                      }
+                    }}
+                  />
+                </td>
                 <td style={{ color: lead.assignedToTeam ? '#EAECEF' : '#F0B90B', fontSize: 12 }}>
                   {lead.assignedToTeam ? getTeamName(lead.assignedToTeam, data.teams) : 'Unassigned'}
                 </td>

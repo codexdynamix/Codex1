@@ -4,7 +4,6 @@ import { listStaff, getStaffCapabilities } from '../adminApi';
 const DEFAULT_CATALOG = {
   lead_upload: 'Lead Upload',
   create_agent: 'Create Agent',
-  registrations: 'Registrations',
   notifications: 'Notifications',
   security: 'Security',
 };
@@ -26,7 +25,7 @@ export default function AgentAccess({ showNotification }) {
     if (!id) return;
     const payload = await getStaffCapabilities(id);
     setCatalog(payload?.catalog || DEFAULT_CATALOG);
-    setCapabilities(payload?.capabilities || { lead_upload: true, create_agent: true, registrations: true, notifications: true, security: true });
+    setCapabilities(payload?.capabilities || { lead_upload: true, create_agent: true, notifications: true, security: true });
     setDirty(false);
     setStatus('');
   };
