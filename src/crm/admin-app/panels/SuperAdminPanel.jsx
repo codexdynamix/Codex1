@@ -1565,9 +1565,45 @@ function AllLeadsTable({ data, currentUser, setData, setLeadAssignment, showNoti
               </div>
             </div>
 
-            {/* Lead Info Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
-              <div style={{ background: '#363B44', borderRadius: 8, padding: 16 }}>
+            {/* Quick Reach Action Bar */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18, flexWrap: 'wrap' }}>
+              {profileLead.email && (
+                <a
+                  href={`mailto:${profileLead.email}`}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 8, background: 'rgba(10, 132, 255, 0.15)', color: '#0A84FF', border: '1px solid rgba(10, 132, 255, 0.3)', textDecoration: 'none', fontSize: 12, fontWeight: 600 }}
+                  title="Send email"
+                >
+                  <i className="fas fa-envelope"></i>
+                  <span>Email: {profileLead.email}</span>
+                </a>
+              )}
+              {profileLead.phone && (
+                <a
+                  href={`tel:${profileLead.phone}`}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 8, background: 'rgba(52, 199, 89, 0.15)', color: '#34C759', border: '1px solid rgba(52, 199, 89, 0.3)', textDecoration: 'none', fontSize: 12, fontWeight: 600 }}
+                  title="Call lead"
+                >
+                  <i className="fas fa-phone"></i>
+                  <span>Call: {profileLead.phone}</span>
+                </a>
+              )}
+              {profileLead.phone && (
+                <a
+                  href={`https://wa.me/${String(profileLead.phone).replace(/[^\d+]/g, '').replace(/^\+/, '')}?text=${encodeURIComponent(`Hi ${profileLead.firstName || profileLead.name}, thank you for contacting Codex Dynamics.`)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 8, background: 'rgba(37, 211, 102, 0.15)', color: '#25D366', border: '1px solid rgba(37, 211, 102, 0.3)', textDecoration: 'none', fontSize: 12, fontWeight: 600 }}
+                  title="WhatsApp chat"
+                >
+                  <i className="fab fa-whatsapp"></i>
+                  <span>WhatsApp Direct</span>
+                </a>
+              )}
+            </div>
+
+            {/* Lead Info Grid - 3 Columns */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, marginBottom: 20 }}>
+              <div style={{ background: '#2B2F38', borderRadius: 8, padding: 16, border: '1px solid #444A55' }}>
                 <div style={{ fontSize: 11, color: '#848E9C', fontWeight: 600, textTransform: 'uppercase', marginBottom: 12 }}>Lead Details</div>
                 {[
                   ['Country', profileLead.country || '-'],
@@ -1585,7 +1621,26 @@ function AllLeadsTable({ data, currentUser, setData, setLeadAssignment, showNoti
                   </div>
                 ))}
               </div>
-              <div style={{ background: '#363B44', borderRadius: 8, padding: 16 }}>
+
+              <div style={{ background: '#2B2F38', borderRadius: 8, padding: 16, border: '1px solid #444A55' }}>
+                <div style={{ fontSize: 11, color: '#0A84FF', fontWeight: 600, textTransform: 'uppercase', marginBottom: 12 }}>Customer Intake & Scope</div>
+                {[
+                  ['Company / Org', profileLead.company || 'Individual / None'],
+                  ['Service Selected', profileLead.service || profileLead.funnel || 'General Inquiry'],
+                  ['Estimated Budget', profileLead.budget || '-'],
+                  ['Target Timeline', profileLead.timeline || 'Flexible'],
+                  ['Entry Origin', profileLead.source === 'website_contact_modal' ? 'Website Modal' : profileLead.source === 'website_contact_form' ? 'Website Form' : (profileLead.source || 'Direct')],
+                ].map(([label, val]) => (
+                  <div key={label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 13 }}>
+                    <span style={{ color: '#848E9C' }}>{label}</span>
+                    <span style={{ color: label === 'Estimated Budget' ? '#34C759' : label === 'Service Selected' ? '#0A84FF' : '#EAECEF', fontWeight: label === 'Estimated Budget' || label === 'Service Selected' ? 600 : 400 }}>
+                      {val}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ background: '#2B2F38', borderRadius: 8, padding: 16, border: '1px solid #444A55' }}>
                 <div style={{ fontSize: 11, color: '#848E9C', fontWeight: 600, textTransform: 'uppercase', marginBottom: 12 }}>Assignment Chain</div>
                 {[
                   ['Office', profileOffice?.name || 'Unassigned (Pool)', !!profileLead.assignedToOffice],
@@ -1600,6 +1655,32 @@ function AllLeadsTable({ data, currentUser, setData, setLeadAssignment, showNoti
                 ))}
               </div>
             </div>
+
+            {/* Customer Submission Message */}
+            {profileLead.message && (
+              <div style={{ background: '#232730', border: '1px solid #444A55', borderRadius: 8, padding: 14, marginBottom: 20 }}>
+                <div style={{ fontSize: 11, color: '#848E9C', fontWeight: 600, textTransform: 'uppercase', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <i className="fas fa-comment-dots" style={{ color: '#0A84FF' }}></i>
+                  <span>Customer Submission Message</span>
+                </div>
+                <div style={{ color: '#FFFFFF', fontSize: 13, lineHeight: 1.6, whiteSpace: 'pre-wrap', fontStyle: 'italic', background: 'rgba(255, 255, 255, 0.03)', padding: 12, borderRadius: 6, border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                  "{profileLead.message}"
+                </div>
+              </div>
+            )}
+
+            {/* Internal Staff Notes */}
+            {profileLead.notes && (
+              <div style={{ background: '#232730', border: '1px solid #444A55', borderRadius: 8, padding: 14, marginBottom: 20 }}>
+                <div style={{ fontSize: 11, color: '#F0B90B', fontWeight: 600, textTransform: 'uppercase', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <i className="fas fa-sticky-note"></i>
+                  <span>Internal Staff Follow-Up Notes</span>
+                </div>
+                <div style={{ color: '#EAECEF', fontSize: 12.5, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+                  {profileLead.notes}
+                </div>
+              </div>
+            )}
 
             {/* Stage & Comment */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 16, marginBottom: 20 }}>
@@ -3054,6 +3135,8 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
                   defaultTab="enquiries"
                   standalone
                   showNotification={showNotification}
+                  onOpenLeadProfile={openProfile}
+                  leads={data.leads}
                 />
               </div>
             ) : activeTab === 'Content' ? (

@@ -218,10 +218,174 @@ const localCrmStore = {
     { id: 'ld_1002', first_name: 'Elena', last_name: 'Rostova', name: 'Elena Rostova', email: 'elena.rostova@techscale.io', phone: '+1 415 555 0198', country: 'United States', country_code: 'US', stage: 'New', status: 'New', assigned_office_id: 'of_london', assigned_team_id: 'tm_alpha', assigned_agent_id: 'adm_ag', funnel: 'Custom Web Application', notes: 'Next-generation analytics dashboard and customer portal.', comment_history: [], status_history: [], created_at: new Date().toISOString() },
     { id: 'ld_1003', first_name: 'Marcus', last_name: 'Vance', name: 'Marcus Vance', email: 'm.vance@vanceholding.com', phone: '+61 2 9876 5432', country: 'Australia', country_code: 'AU', stage: 'Deposit', status: 'Deposit', assigned_office_id: 'of_newyork', assigned_team_id: 'tm_beta', assigned_agent_id: null, funnel: 'Brand Identity', notes: 'Commercial design system and brand identity guidelines.', comment_history: [], status_history: [], created_at: new Date().toISOString() },
     { id: 'ld_1004', first_name: 'Sophia', last_name: 'Chen', name: 'Sophia Chen', email: 'sophia.chen@apexglobal.sg', phone: '+65 6789 0123', country: 'Singapore', country_code: 'SG', stage: 'In Line', status: 'In Line', assigned_office_id: 'of_london', assigned_team_id: 'tm_alpha', assigned_agent_id: 'adm_ag', funnel: 'Performance Marketing', notes: 'Multi-channel paid ads and conversion rate optimization engagement.', comment_history: [], status_history: [], created_at: new Date().toISOString() },
+    {
+      id: 'ld_enq_1789912001',
+      first_name: 'Eleanor',
+      last_name: 'Vance',
+      name: 'Eleanor Vance',
+      email: 'eleanor.vance@vancetech.io',
+      phone: '+1 (415) 890-2341',
+      country: 'United States',
+      country_code: 'US',
+      stage: 'New',
+      status: 'New',
+      assigned_office_id: 'of_london',
+      assigned_team_id: 'tm_alpha',
+      assigned_agent_id: 'adm_ag',
+      company: 'Vance Tech Capital',
+      service: 'High-Performance Website',
+      budget: '$15,000 - $25,000',
+      timeline: 'Within 1 Month',
+      message: 'We need a complete rebuild of our venture fund corporate portal with real-time portfolio performance dashboards and interactive investor LP access.',
+      source: 'website_contact_modal',
+      funnel: 'High-Performance Website',
+      notes: 'High priority lead. Referred through LinkedIn showcase.',
+      registered_date: new Date(Date.now() - 1000 * 60 * 35).toLocaleDateString(),
+      comment_history: [
+        { id: 'c_ev1', by_name: 'Website Intake', text: '[High-Performance Website Inquiry] We need a complete rebuild of our venture fund corporate portal with real-time portfolio performance dashboards and interactive investor LP access.', created_at: new Date(Date.now() - 1000 * 60 * 35).toISOString() },
+      ],
+      status_history: [{ id: 's_ev1', from_stage: 'New', to_stage: 'New', by_name: 'System', created_at: new Date(Date.now() - 1000 * 60 * 35).toISOString() }],
+      created_at: new Date(Date.now() - 1000 * 60 * 35).toISOString(),
+    },
+    {
+      id: 'ld_enq_1789912002',
+      first_name: 'Marcus',
+      last_name: 'Brody',
+      name: 'Marcus Brody',
+      email: 'marcus@brodydesign.co',
+      phone: '+44 20 7946 0912',
+      country: 'United Kingdom',
+      country_code: 'GB',
+      stage: 'In Line',
+      status: 'In Line',
+      assigned_office_id: 'of_london',
+      assigned_team_id: 'tm_alpha',
+      assigned_agent_id: 'adm_ag',
+      company: 'Brody Luxury Goods',
+      service: 'Web Design & UI/UX',
+      budget: '$10,000 - $18,000',
+      timeline: 'Immediate',
+      message: 'Looking for a bespoke e-commerce experience with 3D product previews and ultra-fast mobile checkout similar to Apple storefront aesthetics.',
+      source: 'website_contact_form',
+      funnel: 'Web Design & UI/UX',
+      notes: 'Initial introduction email sent. Waiting for brand asset pack.',
+      registered_date: new Date(Date.now() - 1000 * 60 * 180).toLocaleDateString(),
+      comment_history: [
+        { id: 'c_mb1', by_name: 'Website Intake', text: '[Web Design & UI/UX Inquiry] Looking for a bespoke e-commerce experience with 3D product previews and ultra-fast mobile checkout similar to Apple storefront aesthetics.', created_at: new Date(Date.now() - 1000 * 60 * 180).toISOString() },
+      ],
+      status_history: [{ id: 's_mb1', from_stage: 'New', to_stage: 'In Line', by_name: 'System', created_at: new Date(Date.now() - 1000 * 60 * 180).toISOString() }],
+      created_at: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
+    },
+    {
+      id: 'ld_enq_1789912003',
+      first_name: 'Sarah',
+      last_name: 'Lin',
+      name: 'Dr. Sarah Lin',
+      email: 'slin@biovista.health',
+      phone: '+1 (617) 555-0198',
+      country: 'United States',
+      country_code: 'US',
+      stage: 'New',
+      status: 'New',
+      assigned_office_id: 'of_newyork',
+      assigned_team_id: 'tm_beta',
+      assigned_agent_id: null,
+      company: 'BioVista Health',
+      service: 'Full-Stack Web App',
+      budget: '$30,000+',
+      timeline: '1-3 Months',
+      message: 'Seeking a custom CRM and patient onboarding platform with integrated telephony/VoIP calling and HIPAA-compliant data routing.',
+      source: 'website_contact_form',
+      funnel: 'Full-Stack Web App',
+      notes: '',
+      registered_date: new Date(Date.now() - 1000 * 60 * 540).toLocaleDateString(),
+      comment_history: [
+        { id: 'c_sl1', by_name: 'Website Intake', text: '[Full-Stack Web App Inquiry] Seeking a custom CRM and patient onboarding platform with integrated telephony/VoIP calling and HIPAA-compliant data routing.', created_at: new Date(Date.now() - 1000 * 60 * 540).toISOString() },
+      ],
+      status_history: [{ id: 's_sl1', from_stage: 'New', to_stage: 'New', by_name: 'System', created_at: new Date(Date.now() - 1000 * 60 * 540).toISOString() }],
+      created_at: new Date(Date.now() - 1000 * 60 * 540).toISOString(),
+    },
+    {
+      id: 'ld_enq_1789912004',
+      first_name: 'Julian',
+      last_name: 'Rossi',
+      name: 'Julian Rossi',
+      email: 'j.rossi@rossimotors.it',
+      phone: '+39 02 8765 4321',
+      country: 'Italy',
+      country_code: 'IT',
+      stage: 'Deposit',
+      status: 'Deposit',
+      assigned_office_id: 'of_london',
+      assigned_team_id: 'tm_alpha',
+      assigned_agent_id: 'adm_ag',
+      company: 'Rossi Dynamics',
+      service: 'SEO & Digital Marketing',
+      budget: '$5,000 - $10,000/mo',
+      timeline: 'Ongoing Retainer',
+      message: 'We want to scale our European customer acquisition with Google & Meta Ads performance campaigns and automated retention funnels.',
+      source: 'website_contact_modal',
+      funnel: 'SEO & Digital Marketing',
+      notes: 'Agreement signed. Kickoff scheduled for next Tuesday.',
+      registered_date: new Date(Date.now() - 1000 * 60 * 60 * 28).toLocaleDateString(),
+      comment_history: [
+        { id: 'c_jr1', by_name: 'Website Intake', text: '[SEO & Digital Marketing Inquiry] We want to scale our European customer acquisition with Google & Meta Ads performance campaigns and automated retention funnels.', created_at: new Date(Date.now() - 1000 * 60 * 60 * 28).toISOString() },
+      ],
+      status_history: [{ id: 's_jr1', from_stage: 'New', to_stage: 'Deposit', by_name: 'System', created_at: new Date(Date.now() - 1000 * 60 * 60 * 28).toISOString() }],
+      created_at: new Date(Date.now() - 1000 * 60 * 60 * 28).toISOString(),
+    },
   ],
 };
 
+function syncWebsiteInquiriesIntoLeads() {
+  try {
+    const raw = typeof window !== 'undefined' ? window.localStorage?.getItem('codex-inquiries') : null;
+    if (!raw) return;
+    const items = JSON.parse(raw);
+    if (!Array.isArray(items)) return;
+
+    items.forEach((item, idx) => {
+      const email = (item.email || '').toLowerCase().trim();
+      const existing = localCrmStore.leads.find(
+        (l) => (email && l.email?.toLowerCase().trim() === email) || l.id === `ld_enq_${item.id}`
+      );
+      if (!existing) {
+        const parts = (item.name || 'New Customer').trim().split(/\s+/);
+        const first = parts[0] || 'New';
+        const last = parts.slice(1).join(' ') || 'Lead';
+        localCrmStore.leads.unshift({
+          id: `ld_enq_${item.id || Date.now() + idx}`,
+          first_name: first,
+          last_name: last,
+          name: item.name || `${first} ${last}`,
+          email: item.email || '',
+          phone: item.phone || '',
+          company: item.company || '',
+          service: item.service || 'General Inquiry',
+          budget: item.budget || '',
+          timeline: item.timeline || '',
+          message: item.message || '',
+          source: item.source || 'website_contact_modal',
+          funnel: item.service || 'Website Inquiry',
+          stage: 'New',
+          status: 'New',
+          country: item.country || 'United Kingdom',
+          country_code: item.countryCode || 'GB',
+          notes: item.notes || '',
+          registered_date: new Date(item.at || item.created_at || Date.now()).toLocaleDateString(),
+          created_at: item.at || item.created_at || new Date().toISOString(),
+          comment_history: item.message ? [
+            { id: `c_${Date.now()}_${idx}`, by_name: 'Website Intake', text: `[${item.service || 'Website Inquiry'}] ${item.message}`, created_at: item.at || new Date().toISOString() }
+          ] : [],
+          status_history: [{ id: `s_${Date.now()}_${idx}`, from_stage: 'New', to_stage: 'New', by_name: 'System', created_at: new Date().toISOString() }],
+        });
+      }
+    });
+  } catch (_) {}
+}
+
 function handleLocalMock(path, method, body) {
+  syncWebsiteInquiriesIntoLeads();
   const p = path.split('?')[0];
 
   if (p === '/api/admin/offices') {
@@ -855,6 +1019,14 @@ function mapLeadRow(l) {
     deletedAt:          l.deleted_at || null,
     createdAt:          l.created_at,
     updatedAt:          l.updated_at,
+    company:            l.company || '',
+    service:            l.service || '',
+    budget:             l.budget || '',
+    timeline:           l.timeline || '',
+    message:            l.message || '',
+    source:             l.source || '',
+    notes:              l.notes || '',
+    enquiryId:          l.enquiry_id || l.enquiryId || null,
     // Status + comment timelines, newest first.
     commentHistory:     (l.comment_history || []).map((c) => ({
       id:   c.id,
@@ -895,6 +1067,14 @@ function leadWritePayload(updates) {
     clientPassword:   'client_password',
     comment:          'comment',
     appointments:     'appointments',
+    company:          'company',
+    service:          'service',
+    budget:           'budget',
+    timeline:         'timeline',
+    message:          'message',
+    source:           'source',
+    notes:            'notes',
+    enquiryId:        'enquiry_id',
   };
   const out = {};
   for (const [camel, snake] of Object.entries(map)) {
