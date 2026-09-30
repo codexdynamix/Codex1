@@ -37,7 +37,16 @@ import {
   X,
   Sliders,
   Sparkles,
-  MapPin
+  MapPin,
+  Monitor,
+  Tablet,
+  Smartphone,
+  Maximize2,
+  Minimize2,
+  ZoomIn,
+  ZoomOut,
+  Layers,
+  Compass
 } from 'lucide-react';
 import {
   WhatsAppLogo,
@@ -152,12 +161,15 @@ const SUB_TABS = [
 ];
 
 const COLOR_PRESETS = [
-  { id: 'codex-gold', name: 'Codex Gold (Default)', primary: '#F0B90B', secondary: '#1E2329', accent: '#F0B90B', bg: '#0F1216', card: '#181A20' },
-  { id: 'pacific-blue', name: 'Pacific Blue', primary: '#2979F0', secondary: '#162235', accent: '#2979F0', bg: '#0B111A', card: '#121D2C' },
-  { id: 'emerald-mint', name: 'Emerald Peak', primary: '#0ECB81', secondary: '#132820', accent: '#0ECB81', bg: '#0A1510', card: '#10221A' },
-  { id: 'royal-purple', name: 'Royal Violet', primary: '#8B5CF6', secondary: '#241B3B', accent: '#8B5CF6', bg: '#100C1B', card: '#1A142D' },
-  { id: 'crimson-amber', name: 'Crimson Amber', primary: '#F6465D', secondary: '#2E151B', accent: '#F6465D', bg: '#16090D', card: '#240F15' },
-  { id: 'dark-obsidian', name: 'Dark Obsidian', primary: '#EAECEF', secondary: '#2B313A', accent: '#F0B90B', bg: '#181A20', card: '#21252D' },
+  { id: 'titanium-light', name: 'Titanium Apple Light (Clean)', primary: '#0071E3', secondary: '#F2F2F7', accent: '#0071E3', bg: '#F5F5F7', card: '#FFFFFF', isLight: true },
+  { id: 'pure-minimal', name: 'Pure Minimal Light', primary: '#111113', secondary: '#F7F7F9', accent: '#0071E3', bg: '#FFFFFF', card: '#F7F7F9', isLight: true },
+  { id: 'nordic-sky', name: 'Nordic Sky Light', primary: '#0284C7', secondary: '#F0F9FF', accent: '#0284C7', bg: '#F8FAFC', card: '#FFFFFF', isLight: true },
+  { id: 'codex-gold', name: 'Codex Gold (Dark Default)', primary: '#F0B90B', secondary: '#1E2329', accent: '#F0B90B', bg: '#0F1216', card: '#181A20' },
+  { id: 'pacific-blue', name: 'Pacific Blue (Dark)', primary: '#2979F0', secondary: '#162235', accent: '#2979F0', bg: '#0B111A', card: '#121D2C' },
+  { id: 'emerald-mint', name: 'Emerald Peak (Dark)', primary: '#0ECB81', secondary: '#132820', accent: '#0ECB81', bg: '#0A1510', card: '#10221A' },
+  { id: 'royal-purple', name: 'Royal Violet (Dark)', primary: '#8B5CF6', secondary: '#241B3B', accent: '#8B5CF6', bg: '#100C1B', card: '#1A142D' },
+  { id: 'crimson-amber', name: 'Crimson Amber (Dark)', primary: '#F6465D', secondary: '#2E151B', accent: '#F6465D', bg: '#16090D', card: '#240F15' },
+  { id: 'dark-obsidian', name: 'Dark Obsidian (Stealth)', primary: '#EAECEF', secondary: '#2B313A', accent: '#F0B90B', bg: '#181A20', card: '#21252D' },
 ];
 
 const RADIUS_OPTIONS = [
@@ -175,15 +187,136 @@ const FONT_OPTIONS = [
 ];
 
 const DEFAULT_SECTIONS = [
-  { id: 'hero', name: 'Hero Showcase', desc: 'Main headline, tagline & interactive showreel' },
-  { id: 'highlights', name: 'Key Highlights (Bento)', desc: 'Core agency capabilities & focus metrics' },
-  { id: 'services', name: 'Services & Capabilities', desc: 'Web apps, CRM engineering & marketing cards' },
-  { id: 'portfolio', name: 'Selected Work / Case Studies', desc: 'Interactive portfolio grid & live project preview' },
-  { id: 'results', name: 'Performance Results & KPIs', desc: 'Real-time counters, statistics & benchmark metrics' },
-  { id: 'about', name: 'About Codex Dynamics', desc: 'Engineering principles, studio history & headquarters' },
-  { id: 'blog', name: 'Blog & Technical Insights', desc: 'Latest articles, architectural guides & research' },
-  { id: 'reviews', name: 'Client Testimonials', desc: 'Verified stakeholder reviews & ratings' },
-  { id: 'contact', name: 'Contact & Inquiry Hub', desc: 'Lead consultation form, calendar & channels' },
+  { id: 'hero', name: 'Hero Showcase', category: 'Opening', desc: 'Main headline, tagline & dynamic interactive reel' },
+  { id: 'highlights', name: 'Key Highlights (Bento)', category: 'Capabilities', desc: 'Core agency capabilities & focus metrics' },
+  { id: 'services', name: 'Services & Capabilities', category: 'Offerings', desc: 'Web apps, CRM engineering & marketing services' },
+  { id: 'portfolio', name: 'Selected Work / Case Studies', category: 'Case Studies', desc: 'Interactive portfolio grid & live project preview' },
+  { id: 'results', name: 'Performance Results & KPIs', category: 'Proof', desc: 'Real-time counters, statistics & benchmark metrics' },
+  { id: 'about', name: 'About Codex Dynamics', category: 'Story', desc: 'Engineering principles, studio history & headquarters' },
+  { id: 'blog', name: 'Blog & Technical Insights', category: 'Content', desc: 'Latest articles, architectural guides & research' },
+  { id: 'reviews', name: 'Client Testimonials', category: 'Social Proof', desc: 'Verified stakeholder reviews & ratings' },
+  { id: 'contact', name: 'Contact & Inquiry Hub', category: 'Conversion', desc: 'Lead consultation form, calendar & channels' },
+];
+
+const HERO_LAYOUT_OPTIONS = [
+  { id: 'streamer', label: 'Streamer Video Reel', desc: 'Video background reel with floating live status badge' },
+  { id: 'split', label: 'Split Media (50/50)', desc: 'High-contrast split editorial layout with side-by-side showcase' },
+  { id: 'centered', label: 'Centered Minimal Focus', desc: 'Pure high-impact typography with centered CTA stack' },
+  { id: 'bento', label: 'Bento Interactive Grid', desc: 'Multi-panel bento cards integrated directly into the hero zone' },
+];
+
+const HEADER_OPTIONS = [
+  { id: 'floating', label: 'Floating Island Bar', desc: 'Detached pill navigation with blur backdrop' },
+  { id: 'minimal', label: 'Clean Edge-to-Edge', desc: 'Minimal borderless top navigation bar' },
+  { id: 'sticky', label: 'Sticky Top Header', desc: 'Header pinned to top on scroll with subtle border' },
+];
+
+const TEMPLATE_PRESETS = [
+  {
+    id: 'codex-gold',
+    name: 'Codex Pro Gold',
+    badge: 'Agency Default',
+    desc: 'High-impact dark luxury agency with gold accents and video streamer reel',
+    primary: '#F0B90B',
+    secondary: '#1E2329',
+    accent: '#F0B90B',
+    bg: '#0F1216',
+    card: '#181A20',
+    heroLayout: 'streamer',
+    headerStyle: 'floating',
+    fontFamily: 'system',
+    borderRadius: 'clean',
+  },
+  {
+    id: 'pacific-enterprise',
+    name: 'Pacific Tech Enterprise',
+    badge: 'SaaS & CRM',
+    desc: 'Precision enterprise blueprint with electric cyan-blue and split media showcase',
+    primary: '#2979F0',
+    secondary: '#162235',
+    accent: '#00D2FF',
+    bg: '#0B111A',
+    card: '#121D2C',
+    heroLayout: 'split',
+    headerStyle: 'sticky',
+    fontFamily: 'mono',
+    borderRadius: 'sharp',
+  },
+  {
+    id: 'emerald-mint',
+    name: 'Emerald Peak Studio',
+    badge: 'Creative Atelier',
+    desc: 'Avant-garde digital studio with centered typographic focus and mint accents',
+    primary: '#0ECB81',
+    secondary: '#132820',
+    accent: '#0ECB81',
+    bg: '#0A1510',
+    card: '#10221A',
+    heroLayout: 'centered',
+    headerStyle: 'minimal',
+    fontFamily: 'syne',
+    borderRadius: 'rounded',
+  },
+  {
+    id: 'royal-violet',
+    name: 'Royal Violet Luxury',
+    badge: 'Editorial & Luxury',
+    desc: 'Editorial luxury atelier featuring bento grid layout and refined serif headers',
+    primary: '#8B5CF6',
+    secondary: '#241B3B',
+    accent: '#A78BFA',
+    bg: '#100C1B',
+    card: '#1A142D',
+    heroLayout: 'bento',
+    headerStyle: 'floating',
+    fontFamily: 'playfair',
+    borderRadius: 'modern',
+  },
+  {
+    id: 'crimson-amber',
+    name: 'Crimson Kinetic High-ROAS',
+    badge: 'Performance',
+    desc: 'High-conversion performance marketing with dynamic energetic accents',
+    primary: '#F6465D',
+    secondary: '#2E151B',
+    accent: '#FF6B81',
+    bg: '#16090D',
+    card: '#240F15',
+    heroLayout: 'streamer',
+    headerStyle: 'sticky',
+    fontFamily: 'system',
+    borderRadius: 'clean',
+  },
+  {
+    id: 'dark-obsidian',
+    name: 'Dark Obsidian Stealth',
+    badge: 'Architectural',
+    desc: 'Monochromatic architectural aesthetic with matte obsidian surfaces and platinum accents',
+    primary: '#EAECEF',
+    secondary: '#2B313A',
+    accent: '#F0B90B',
+    bg: '#181A20',
+    card: '#21252D',
+    heroLayout: 'bento',
+    headerStyle: 'minimal',
+    fontFamily: 'mono',
+    borderRadius: 'sharp',
+  },
+  {
+    id: 'titanium-light',
+    name: 'Titanium Apple Light',
+    badge: 'Clean Minimal',
+    desc: 'Crisp architectural light mode with frosted glass cards and Apple-grade precision',
+    primary: '#0071E3',
+    secondary: '#F2F2F7',
+    accent: '#0071E3',
+    bg: '#F5F5F7',
+    card: '#FFFFFF',
+    heroLayout: 'centered',
+    headerStyle: 'floating',
+    fontFamily: 'system',
+    borderRadius: 'rounded',
+  },
 ];
 
 export default function SiteSettingsTab({ showNotification = () => {} }) {
@@ -271,6 +404,7 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
       heroBadge: localCfg.hero?.badge || 'Codex Dynamics',
 
       // Branding
+      activeTheme: localCfg.theme?.activeTheme || 'codex-gold',
       primaryColor: localCfg.colors?.primary || platformSettings?.primaryColor || '#F0B90B',
       secondaryColor: localCfg.colors?.secondary || platformSettings?.secondaryColor || '#1E2329',
       accentColor: localCfg.colors?.accent || platformSettings?.accentColor || '#F0B90B',
@@ -279,6 +413,8 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
       borderRadius: localCfg.theme?.borderRadius || 'clean',
       fontFamily: localCfg.theme?.fontFamily || 'system',
       headerStyle: localCfg.theme?.headerStyle || 'floating',
+      heroLayout: localCfg.theme?.heroLayout || 'streamer',
+      cardStyle: localCfg.theme?.cardStyle || 'glass',
 
       // Contacts list
       socialContacts: Array.isArray(localCfg.socialContacts) && localCfg.socialContacts.length > 0
@@ -363,6 +499,164 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
 
   const fileInputRef = useRef(null);
 
+  // Live Preview Studio State
+  const [viewportMode, setViewportMode] = useState('desktop'); // 'desktop' | 'tablet' | 'mobile'
+  const [zoomLevel, setZoomLevel] = useState(100); // 100 | 85 | 75 | 60
+  const [previewPage, setPreviewPage] = useState('home'); // 'home' | 'services' | 'work' | 'studio' | 'blog' | 'contact'
+  const [isFullscreenPreview, setIsFullscreenPreview] = useState(false);
+  const [previewKey, setPreviewKey] = useState(0);
+  const [previewLoaded, setPreviewLoaded] = useState(false);
+  const [highlightedSection, setHighlightedSection] = useState(null);
+  const previewIframeRef = useRef(null);
+  const fullscreenIframeRef = useRef(null);
+
+  const isDarkColor = (hex) => {
+    if (!hex || typeof hex !== 'string') return true;
+    const clean = hex.replace('#', '').trim();
+    if (clean.length !== 3 && clean.length !== 6) return true;
+    const r = parseInt(clean.length === 3 ? clean[0] + clean[0] : clean.substring(0, 2), 16);
+    const g = parseInt(clean.length === 3 ? clean[1] + clean[1] : clean.substring(2, 4), 16);
+    const b = parseInt(clean.length === 3 ? clean[2] + clean[2] : clean.substring(4, 6), 16);
+    if (isNaN(r) || isNaN(g) || isNaN(b)) return true;
+    const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+    return yiq < 135;
+  };
+
+  const syncToPreview = useCallback((configToSync) => {
+    const isDark = isDarkColor(configToSync.backgroundColor);
+    const fullPreviewConfig = {
+      siteName: configToSync.siteName,
+      copyrightYear: configToSync.copyrightYear,
+      supportEmail: configToSync.supportEmail,
+      formSubmitEmail: configToSync.formSubmitEmail,
+      baseCurrency: configToSync.baseCurrency,
+      hero: {
+        title: configToSync.heroTitle,
+        subtitle: configToSync.heroSubtitle,
+        badge: configToSync.heroBadge
+      },
+      colors: {
+        primary: configToSync.primaryColor,
+        secondary: configToSync.secondaryColor,
+        accent: configToSync.accentColor,
+        background: configToSync.backgroundColor,
+        cardBg: configToSync.cardBg,
+        surface: configToSync.cardBg,
+        textMain: isDark ? '#EAECEF' : '#1D1D1F',
+        textMuted: isDark ? '#848E9C' : '#6E6E73',
+        border: isDark ? '#363B44' : '#D2D2D7',
+        hairline: isDark ? 'rgba(255, 255, 255, 0.10)' : 'rgba(0, 0, 0, 0.08)',
+      },
+      theme: {
+        activeTheme: configToSync.activeTheme || 'codex-pro',
+        borderRadius: configToSync.borderRadius,
+        fontFamily: configToSync.fontFamily,
+        headerStyle: configToSync.headerStyle,
+        heroLayout: configToSync.heroLayout || 'streamer',
+        cardStyle: configToSync.cardStyle || 'glass',
+        sectionsOrder: configToSync.sectionsOrder,
+        sectionsVisibility: configToSync.sectionsVisibility,
+        layout: {
+          sectionsOrder: configToSync.sectionsOrder,
+          sectionVisibility: configToSync.sectionsVisibility,
+          sectionsVisibility: configToSync.sectionsVisibility,
+          heroLayout: configToSync.heroLayout || 'streamer',
+          cardStyle: configToSync.cardStyle || 'glass',
+        }
+      },
+      socialContacts: configToSync.socialContacts,
+      addresses: configToSync.addresses,
+      headerSocials: configToSync.headerSocials,
+      whatsapp: {
+        enabled: configToSync.whatsappDock.enabled,
+        number: configToSync.whatsappDock.number,
+        defaultMessage: configToSync.whatsappDock.defaultMessage,
+        position: configToSync.whatsappDock.position
+      },
+      tidio: {
+        enabled: configToSync.tidioChat.enabled,
+        publicKey: configToSync.tidioChat.publicKey,
+        position: configToSync.tidioChat.position
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.setItem('codex_live_preview_config', JSON.stringify(fullPreviewConfig));
+        sessionStorage.setItem('codex_is_preview', 'true');
+      } catch {}
+    }
+
+    const iframes = [previewIframeRef.current, fullscreenIframeRef.current];
+    iframes.forEach(iframe => {
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage({
+          type: 'CODEX_PREVIEW_UPDATE',
+          config: fullPreviewConfig
+        }, '*');
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    syncToPreview(siteConfig);
+  }, [siteConfig, syncToPreview]);
+
+  useEffect(() => {
+    const handleParentMsg = (e) => {
+      if (e.data && e.data.type === 'CODEX_PREVIEW_READY') {
+        syncToPreview(siteConfig);
+      }
+    };
+    window.addEventListener('message', handleParentMsg);
+    return () => window.removeEventListener('message', handleParentMsg);
+  }, [siteConfig, syncToPreview]);
+
+  const handleJumpToSection = (secId) => {
+    setHighlightedSection(secId);
+    setTimeout(() => setHighlightedSection(null), 2500);
+
+    const iframes = [previewIframeRef.current, fullscreenIframeRef.current];
+    iframes.forEach(iframe => {
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage({
+          type: 'CODEX_PREVIEW_SCROLL_TO',
+          sectionId: secId
+        }, '*');
+      }
+    });
+  };
+
+  const handleApplyTemplatePreset = (preset) => {
+    setSiteConfig(prev => ({
+      ...prev,
+      activeTheme: preset.id,
+      primaryColor: preset.primary,
+      secondaryColor: preset.secondary,
+      accentColor: preset.accent,
+      backgroundColor: preset.bg,
+      cardBg: preset.card,
+      heroLayout: preset.heroLayout,
+      headerStyle: preset.headerStyle,
+      fontFamily: preset.fontFamily,
+      borderRadius: preset.borderRadius
+    }));
+    setHasUnsavedChanges(true);
+    showNotification(`Applied template preset: ${preset.name}`);
+  };
+
+  const handleResetSectionOrder = () => {
+    const defaultIds = DEFAULT_SECTIONS.map(s => s.id);
+    const defaultVis = Object.fromEntries(DEFAULT_SECTIONS.map(s => [s.id, true]));
+    setSiteConfig(prev => ({
+      ...prev,
+      sectionsOrder: defaultIds,
+      sectionsVisibility: defaultVis
+    }));
+    setHasUnsavedChanges(true);
+    showNotification('Restored default section sequence.');
+  };
+
   // Field change helpers
   const updateField = (field, value) => {
     setSiteConfig(prev => ({ ...prev, [field]: value }));
@@ -384,6 +678,7 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
   const handleApplyPreset = (preset) => {
     setSiteConfig(prev => ({
       ...prev,
+      activeTheme: preset.id,
       primaryColor: preset.primary,
       secondaryColor: preset.secondary,
       accentColor: preset.accent,
@@ -391,6 +686,7 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
       cardBg: preset.card
     }));
     setHasUnsavedChanges(true);
+    showNotification(`Applied palette: ${preset.name}`);
   };
 
   // Section order & visibility
@@ -784,10 +1080,12 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
           textMuted: '#848E9C'
         },
         theme: {
-          activeTheme: 'codex-pro',
+          activeTheme: siteConfig.activeTheme || 'codex-pro',
           borderRadius: siteConfig.borderRadius,
           fontFamily: siteConfig.fontFamily,
           headerStyle: siteConfig.headerStyle,
+          heroLayout: siteConfig.heroLayout || 'streamer',
+          cardStyle: siteConfig.cardStyle || 'glass',
           sectionsOrder: siteConfig.sectionsOrder,
           sectionsVisibility: siteConfig.sectionsVisibility
         },
@@ -1058,6 +1356,56 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
                 onChange={e => updateField('heroSubtitle', e.target.value)}
                 placeholder="e.g. High-performance websites, web design..."
               />
+            </div>
+          </div>
+
+          {/* Quick Theme Switcher (Light vs Dark) */}
+          <div className="crm-settings-well" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, background: '#2B313A', border: '1px solid #444A55', padding: '12px 16px', borderRadius: 8, marginTop: 10 }}>
+            <div>
+              <strong style={{ fontSize: 13, color: '#EAECEF', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Palette size={15} color="#F0B90B" /> Global Theme Mode
+              </strong>
+              <p style={{ margin: '2px 0 0 0', fontSize: 11.5, color: '#848E9C' }}>
+                Toggle instantly between Apple-grade Light theme and Luxury Dark Slate aesthetic.
+              </p>
+            </div>
+            <div style={{ display: 'inline-flex', background: '#1E2329', padding: 3, borderRadius: 8, border: '1px solid #363B44', gap: 4 }}>
+              <button
+                type="button"
+                onClick={() => {
+                  handleApplyPreset({
+                    id: 'titanium-light',
+                    name: 'Titanium Apple Light',
+                    primary: '#0071E3',
+                    secondary: '#F2F2F7',
+                    accent: '#0071E3',
+                    bg: '#F5F5F7',
+                    card: '#FFFFFF'
+                  });
+                }}
+                className={`crm-preview-segmented-btn ${!isDarkColor(siteConfig.backgroundColor) ? 'active' : ''}`}
+                style={{ padding: '6px 14px', fontSize: 12, fontWeight: 600 }}
+              >
+                ☀️ Light Theme
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleApplyPreset({
+                    id: 'codex-gold',
+                    name: 'Codex Gold (Dark)',
+                    primary: '#F0B90B',
+                    secondary: '#1E2329',
+                    accent: '#F0B90B',
+                    bg: '#0F1216',
+                    card: '#181A20'
+                  });
+                }}
+                className={`crm-preview-segmented-btn ${isDarkColor(siteConfig.backgroundColor) ? 'active' : ''}`}
+                style={{ padding: '6px 14px', fontSize: 12, fontWeight: 600 }}
+              >
+                🌙 Dark Theme
+              </button>
             </div>
           </div>
 
@@ -1551,119 +1899,502 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
         </div>
       )}
 
-      {/* ── 4. Layout & Modules ────────────────────────────────── */}
+      {/* ── 4. Layout & Modules: WordPress-Style Template Customizer & Live Site Preview Studio ────────────────────────────────── */}
       {activeSubTab === 'layout' && (
-        <div className="crm-settings-panel">
-          <div className="crm-settings-section-head">
+        <div className="crm-layout-studio-wrapper">
+          {/* Top Headline & Quick Actions */}
+          <div className="crm-settings-section-head" style={{ marginBottom: 0 }}>
             <div>
-              <h3><Layout size={16} color="#F0B90B" /> Section Ordering & Conversion Modules</h3>
-              <p>Reorder homepage sequence, toggle feature sections on/off, and manage conversion floating docks.</p>
+              <h3><Layout size={16} color="#F0B90B" /> Template Customizer & Live Site Studio</h3>
+              <p>WordPress-style live website preview, instant theme presets, sequence reordering, and conversion modules.</p>
+            </div>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button
+                type="button"
+                className="crm-preview-action-icon-btn"
+                onClick={() => setIsFullscreenPreview(true)}
+                title="Open immersive full-window customizer"
+              >
+                <Maximize2 size={13} />
+                <span>Fullscreen Studio</span>
+              </button>
+              <a
+                href="/?preview=1"
+                target="_blank"
+                rel="noreferrer"
+                className="crm-preview-action-icon-btn"
+                title="Open live site preview in new browser tab"
+              >
+                <ExternalLink size={13} />
+                <span>New Tab</span>
+              </a>
             </div>
           </div>
 
-          {/* Section Sequence List */}
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: '#EAECEF', marginBottom: 10 }}>
-              Homepage Section Sequence & Visibility
-            </div>
-            {siteConfig.sectionsOrder.map((secId, idx) => {
-              const meta = DEFAULT_SECTIONS.find(s => s.id === secId) || { name: secId, desc: '' };
-              const isVisible = siteConfig.sectionsVisibility[secId] !== false;
+          {/* 2-Column Split Studio Grid */}
+          <div className="crm-layout-studio-grid">
+            {/* ── Left Column: Controls & Presets ── */}
+            <div className="crm-layout-controls-col">
+              {/* 1. WordPress-style Template & Theme Presets */}
+              <div className="crm-studio-card">
+                <div className="crm-studio-card-head">
+                  <div>
+                    <h4><Sparkles size={15} color="#F0B90B" /> Theme & Layout Presets</h4>
+                    <p>Select a curated agency template preset. Applies colors, hero layout, and typography instantly to preview.</p>
+                  </div>
+                </div>
 
-              return (
-                <div key={secId} className="crm-order-item">
-                  <div className="crm-order-title">
-                    <span style={{ fontSize: 11, color: '#848E9C', fontFamily: 'monospace', width: 22 }}>
-                      0{idx + 1}
-                    </span>
-                    <div>
-                      <div style={{ color: isVisible ? '#EAECEF' : '#5E6673', textDecoration: isVisible ? 'none' : 'line-through' }}>
-                        {meta.name}
-                      </div>
-                      <div style={{ fontSize: 11, color: '#707A8A' }}>{meta.desc}</div>
+                <div className="crm-template-presets-grid">
+                  {TEMPLATE_PRESETS.map((preset) => {
+                    const isSelected =
+                      siteConfig.activeTheme === preset.id ||
+                      (siteConfig.primaryColor === preset.primary && siteConfig.backgroundColor === preset.bg);
+
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        className={`crm-template-card ${isSelected ? 'active' : ''}`}
+                        onClick={() => handleApplyTemplatePreset(preset)}
+                      >
+                        <div className="crm-template-palette-dots">
+                          <span className="crm-palette-dot" style={{ background: preset.primary }} title={`Primary: ${preset.primary}`} />
+                          <span className="crm-palette-dot" style={{ background: preset.bg }} title={`Background: ${preset.bg}`} />
+                          <span className="crm-palette-dot" style={{ background: preset.card }} title={`Card Surface: ${preset.card}`} />
+                          <span className="crm-palette-dot" style={{ background: preset.accent }} title={`Accent: ${preset.accent}`} />
+                        </div>
+                        <div className="crm-template-title">{preset.name}</div>
+                        <div className="crm-template-badge">{preset.badge}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 2. Quick Palette & Surface Colors */}
+              <div className="crm-studio-card">
+                <div className="crm-studio-card-head">
+                  <div>
+                    <h4><Palette size={15} color="#F0B90B" /> Live Color Customizer</h4>
+                    <p>Tune core surface colors. Real-time updates reflect in the live preview instantly.</p>
+                  </div>
+                </div>
+
+                <div className="crm-color-swatch-bar">
+                  <div className="crm-color-swatch-item">
+                    <label>Brand Primary</label>
+                    <div className="crm-color-picker-input-wrapper">
+                      <input
+                        type="color"
+                        value={siteConfig.primaryColor}
+                        onChange={(e) => updateField('primaryColor', e.target.value)}
+                      />
+                      <span className="crm-color-picker-hex">{siteConfig.primaryColor}</span>
                     </div>
                   </div>
 
-                  <div className="crm-order-actions">
+                  <div className="crm-color-swatch-item">
+                    <label>Canvas BG</label>
+                    <div className="crm-color-picker-input-wrapper">
+                      <input
+                        type="color"
+                        value={siteConfig.backgroundColor}
+                        onChange={(e) => updateField('backgroundColor', e.target.value)}
+                      />
+                      <span className="crm-color-picker-hex">{siteConfig.backgroundColor}</span>
+                    </div>
+                  </div>
+
+                  <div className="crm-color-swatch-item">
+                    <label>Card Surface</label>
+                    <div className="crm-color-picker-input-wrapper">
+                      <input
+                        type="color"
+                        value={siteConfig.cardBg}
+                        onChange={(e) => updateField('cardBg', e.target.value)}
+                      />
+                      <span className="crm-color-picker-hex">{siteConfig.cardBg}</span>
+                    </div>
+                  </div>
+
+                  <div className="crm-color-swatch-item">
+                    <label>Accent Tone</label>
+                    <div className="crm-color-picker-input-wrapper">
+                      <input
+                        type="color"
+                        value={siteConfig.accentColor}
+                        onChange={(e) => updateField('accentColor', e.target.value)}
+                      />
+                      <span className="crm-color-picker-hex">{siteConfig.accentColor}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Hero Layout & Header Navigation Style */}
+              <div className="crm-studio-card">
+                <div className="crm-studio-card-head">
+                  <div>
+                    <h4><Layers size={15} color="#F0B90B" /> Hero Layout & Header Style</h4>
+                    <p>Choose visual structure for top opening blocks.</p>
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#848E9C', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    Hero Opening Block Style
+                  </div>
+                  <div className="crm-options-pill-grid">
+                    {HERO_LAYOUT_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        className={`crm-options-pill-btn ${(siteConfig.heroLayout || 'streamer') === opt.id ? 'active' : ''}`}
+                        onClick={() => updateField('heroLayout', opt.id)}
+                      >
+                        <span className="crm-options-pill-title">{opt.label}</span>
+                        <span className="crm-options-pill-desc">{opt.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ marginTop: 6 }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#848E9C', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    Header Navigation Style
+                  </div>
+                  <div className="crm-options-pill-grid">
+                    {HEADER_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        className={`crm-options-pill-btn ${(siteConfig.headerStyle || 'floating') === opt.id ? 'active' : ''}`}
+                        onClick={() => updateField('headerStyle', opt.id)}
+                      >
+                        <span className="crm-options-pill-title">{opt.label}</span>
+                        <span className="crm-options-pill-desc">{opt.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* 4. Section Sequence & Visibility Reordering */}
+              <div className="crm-studio-card">
+                <div className="crm-studio-card-head">
+                  <div>
+                    <h4><Compass size={15} color="#F0B90B" /> Homepage Section Sequence</h4>
+                    <p>Reorder sequence, toggle visibility, and click "Inspect" to scroll preview directly to each section.</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="crm-sec-inspect-btn"
+                    onClick={handleResetSectionOrder}
+                    title="Reset to default sequence"
+                  >
+                    <RotateCcw size={11} />
+                    <span>Reset</span>
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {siteConfig.sectionsOrder.map((secId, idx) => {
+                    const meta = DEFAULT_SECTIONS.find((s) => s.id === secId) || { name: secId, desc: '', category: 'Section' };
+                    const isVisible = siteConfig.sectionsVisibility[secId] !== false;
+                    const isHighlighted = highlightedSection === secId;
+
+                    return (
+                      <div
+                        key={secId}
+                        className={`crm-order-item-enhanced ${!isVisible ? 'hidden-sec' : ''}`}
+                        style={{
+                          borderColor: isHighlighted ? '#F0B90B' : undefined,
+                          boxShadow: isHighlighted ? '0 0 10px rgba(240, 185, 11, 0.2)' : undefined,
+                        }}
+                      >
+                        <div className="crm-order-sec-meta" style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                          <span className="crm-order-sec-num">0{idx + 1}</span>
+                          <div style={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                              <span
+                                style={{
+                                  fontSize: 12,
+                                  fontWeight: 600,
+                                  color: isVisible ? '#EAECEF' : '#5E6673',
+                                  textDecoration: isVisible ? 'none' : 'line-through',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                {meta.name}
+                              </span>
+                              <span className="crm-sec-tag">{meta.category}</span>
+                            </div>
+                            <div style={{ fontSize: 10, color: '#707A8A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {meta.desc}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="crm-order-actions" style={{ display: 'flex', gap: 3, alignItems: 'center', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                          {isVisible && (
+                            <button
+                              type="button"
+                              className="crm-sec-inspect-btn"
+                              onClick={() => handleJumpToSection(secId)}
+                              title="Scroll preview to this section"
+                            >
+                              <Eye size={10} />
+                              <span>Inspect</span>
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className="crm-icon-btn"
+                            disabled={idx === 0}
+                            onClick={() => moveSection(idx, -1)}
+                            title="Move section up"
+                          >
+                            <ArrowUp size={12} />
+                          </button>
+                          <button
+                            type="button"
+                            className="crm-icon-btn"
+                            disabled={idx === siteConfig.sectionsOrder.length - 1}
+                            onClick={() => moveSection(idx, 1)}
+                            title="Move section down"
+                          >
+                            <ArrowDown size={12} />
+                          </button>
+                          <button
+                            type="button"
+                            className={`crm-icon-btn ${isVisible ? '' : 'danger'}`}
+                            onClick={() => toggleSectionVisibility(secId)}
+                            title={isVisible ? 'Hide section' : 'Show section'}
+                          >
+                            {isVisible ? <Eye size={12} /> : <EyeOff size={12} />}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 5. Floating WhatsApp Dock & Tidio */}
+              <div className="crm-studio-card">
+                <div className="crm-studio-card-head">
+                  <div>
+                    <h4><MessageCircle size={15} color="#0ECB81" /> Floating Conversion Modules</h4>
+                    <p>Enable persistent floating visitor buttons on the live site.</p>
+                  </div>
+                </div>
+
+                <div className="crm-settings-well" style={{ margin: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <strong style={{ fontSize: 12.5, color: '#EAECEF', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <WhatsAppLogo width={16} height={16} />
+                        Floating WhatsApp Quick-Contact Dock
+                      </strong>
+                      <p style={{ margin: '2px 0 0 0', fontSize: 11, color: '#848E9C' }}>
+                        Persistent bottom contact button with instant chat greeting.
+                      </p>
+                    </div>
+                    <label className="crm-toggle-switch" title="Toggle WhatsApp dock">
+                      <input
+                        type="checkbox"
+                        checked={siteConfig.whatsappDock.enabled}
+                        onChange={() => updateNestedField('whatsappDock', 'enabled', !siteConfig.whatsappDock.enabled)}
+                      />
+                      <span className="crm-toggle-slider" />
+                    </label>
+                  </div>
+
+                  {siteConfig.whatsappDock.enabled && (
+                    <div className="crm-form-grid-2" style={{ paddingTop: 10, marginTop: 10, borderTop: '1px solid #444A55' }}>
+                      <div className="crm-settings-field">
+                        <label>WhatsApp Number</label>
+                        <input
+                          type="text"
+                          className="crm-settings-input"
+                          value={siteConfig.whatsappDock.number}
+                          onChange={(e) => updateNestedField('whatsappDock', 'number', e.target.value)}
+                          placeholder="+380636406783"
+                        />
+                      </div>
+                      <div className="crm-settings-field">
+                        <label>Prefilled Greeting Message</label>
+                        <input
+                          type="text"
+                          className="crm-settings-input"
+                          value={siteConfig.whatsappDock.defaultMessage}
+                          onChange={(e) => updateNestedField('whatsappDock', 'defaultMessage', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* ── Right Column: Live Interactive Site Preview ── */}
+            <div className="crm-layout-preview-col">
+              <div className="crm-preview-studio-card">
+                {/* 1. Browser Chrome Bar */}
+                <div className="crm-preview-chrome-bar">
+                  <div className="crm-preview-url-box">
+                    <Lock size={11} color="#0ECB81" />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      codexdynamics.com/{previewPage !== 'home' ? previewPage : ''}
+                    </span>
+                  </div>
+
+                  {/* Device Switcher */}
+                  <div className="crm-preview-controls-group">
+                    <div className="crm-preview-segmented">
+                      <button
+                        type="button"
+                        className={`crm-preview-segmented-btn ${viewportMode === 'desktop' ? 'active' : ''}`}
+                        onClick={() => setViewportMode('desktop')}
+                        title="Desktop view (100% wide)"
+                      >
+                        <Monitor size={12} />
+                        <span>Desktop</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`crm-preview-segmented-btn ${viewportMode === 'tablet' ? 'active' : ''}`}
+                        onClick={() => setViewportMode('tablet')}
+                        title="Tablet view (768px iPad)"
+                      >
+                        <Tablet size={12} />
+                        <span>Tablet</span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`crm-preview-segmented-btn ${viewportMode === 'mobile' ? 'active' : ''}`}
+                        onClick={() => setViewportMode('mobile')}
+                        title="Mobile view (390px iPhone)"
+                      >
+                        <Smartphone size={12} />
+                        <span>Mobile</span>
+                      </button>
+                    </div>
+
+                    {/* Zoom Switcher */}
+                    <div className="crm-preview-segmented">
+                      {[100, 85, 75, 60].map((z) => (
+                        <button
+                          key={z}
+                          type="button"
+                          className={`crm-preview-segmented-btn ${zoomLevel === z ? 'active' : ''}`}
+                          style={{ padding: '3px 6px', fontSize: 10 }}
+                          onClick={() => setZoomLevel(z)}
+                          title={`Scale zoom to ${z}%`}
+                        >
+                          {z}%
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Action buttons */}
                     <button
                       type="button"
-                      className="crm-icon-btn"
-                      disabled={idx === 0}
-                      onClick={() => moveSection(idx, -1)}
-                      title="Move section up"
+                      className="crm-preview-action-icon-btn"
+                      onClick={() => setPreviewKey((k) => k + 1)}
+                      title="Reload preview iframe"
                     >
-                      <ArrowUp size={13} />
+                      <RefreshCw size={12} />
                     </button>
                     <button
                       type="button"
-                      className="crm-icon-btn"
-                      disabled={idx === siteConfig.sectionsOrder.length - 1}
-                      onClick={() => moveSection(idx, 1)}
-                      title="Move section down"
+                      className="crm-preview-action-icon-btn"
+                      onClick={() => setIsFullscreenPreview(true)}
+                      title="Expand to Fullscreen Preview Studio"
                     >
-                      <ArrowDown size={13} />
-                    </button>
-                    <button
-                      type="button"
-                      className={`crm-icon-btn ${isVisible ? '' : 'danger'}`}
-                      onClick={() => toggleSectionVisibility(secId)}
-                      title={isVisible ? 'Hide section' : 'Show section'}
-                    >
-                      {isVisible ? <Eye size={13} /> : <EyeOff size={13} />}
+                      <Maximize2 size={12} />
                     </button>
                   </div>
                 </div>
-              );
-            })}
-          </div>
 
-          {/* Floating WhatsApp Dock */}
-          <div className="crm-settings-well">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <strong style={{ fontSize: 13, color: '#EAECEF', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <MessageCircle size={15} color="#0ECB81" />
-                  Floating WhatsApp Dock
-                </strong>
-                <p style={{ margin: '2px 0 0 0', fontSize: 11.5, color: '#848E9C' }}>
-                  A persistent floating contact button for instant visitor conversations.
-                </p>
+                {/* 2. Secondary Subnav Bar: Page Switcher & Section Jumper */}
+                <div className="crm-preview-subnav-bar">
+                  <div className="crm-preview-page-tabs">
+                    {[
+                      { id: 'home', label: 'Homepage' },
+                      { id: 'services', label: 'Services' },
+                      { id: 'work', label: 'Case Studies' },
+                      { id: 'studio', label: 'Kyiv Studio' },
+                      { id: 'blog', label: 'Insights' },
+                      { id: 'contact', label: 'Contact' },
+                    ].map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        className={`crm-preview-page-tab ${previewPage === p.id ? 'active' : ''}`}
+                        onClick={() => setPreviewPage(p.id)}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <select
+                      className="crm-preview-jump-select"
+                      onChange={(e) => {
+                        if (e.target.value) handleJumpToSection(e.target.value);
+                      }}
+                      defaultValue=""
+                    >
+                      <option value="" disabled>Jump to section...</option>
+                      {siteConfig.sectionsOrder.map((secId) => {
+                        const meta = DEFAULT_SECTIONS.find((s) => s.id === secId);
+                        const isVisible = siteConfig.sectionsVisibility[secId] !== false;
+                        if (!isVisible) return null;
+                        return (
+                          <option key={secId} value={secId}>
+                            {meta?.name || secId}
+                          </option>
+                        );
+                      })}
+                    </select>
+
+                    <div className="crm-status-pill saved" style={{ padding: '3px 8px', fontSize: 10.5 }}>
+                      <span className="crm-status-pulse" />
+                      <span>LIVE PREVIEW</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Viewport Stage & Device Frame */}
+                <div className="crm-preview-stage">
+                  <div
+                    className={`crm-device-shell ${viewportMode}`}
+                    style={{
+                      transform: zoomLevel !== 100 ? `scale(${zoomLevel / 100})` : undefined,
+                      transformOrigin: 'top center',
+                      marginBottom: zoomLevel < 100 ? `-${(100 - zoomLevel) * 6}px` : undefined,
+                    }}
+                  >
+                    {viewportMode === 'mobile' && <div className="crm-device-notch" />}
+                    <iframe
+                      key={previewKey}
+                      ref={previewIframeRef}
+                      src={`/?preview=1${previewPage !== 'home' ? `&page=${previewPage}` : ''}`}
+                      className="crm-preview-iframe"
+                      onLoad={() => {
+                        setPreviewLoaded(true);
+                        syncToPreview(siteConfig);
+                      }}
+                      title="Codex Dynamics Real-Time Site Preview"
+                    />
+                  </div>
+                </div>
               </div>
-
-              {/* Standard Toggle Switch */}
-              <label className="crm-toggle-switch" title="Toggle WhatsApp dock">
-                <input
-                  type="checkbox"
-                  checked={siteConfig.whatsappDock.enabled}
-                  onChange={() => updateNestedField('whatsappDock', 'enabled', !siteConfig.whatsappDock.enabled)}
-                />
-                <span className="crm-toggle-slider" />
-              </label>
             </div>
-
-            {siteConfig.whatsappDock.enabled && (
-              <div className="crm-form-grid-2" style={{ paddingTop: 10, borderTop: '1px solid #444A55' }}>
-                <div className="crm-settings-field">
-                  <label>WhatsApp Number (international format)</label>
-                  <input
-                    type="text"
-                    className="crm-settings-input"
-                    value={siteConfig.whatsappDock.number}
-                    onChange={e => updateNestedField('whatsappDock', 'number', e.target.value)}
-                    placeholder="+380636406783"
-                  />
-                </div>
-                <div className="crm-settings-field">
-                  <label>Prefilled Greeting Message</label>
-                  <input
-                    type="text"
-                    className="crm-settings-input"
-                    value={siteConfig.whatsappDock.defaultMessage}
-                    onChange={e => updateNestedField('whatsappDock', 'defaultMessage', e.target.value)}
-                  />
-                </div>
-              </div>
-            )}
           </div>
         </div>
       )}
@@ -2250,6 +2981,384 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
                 </div>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Fullscreen WordPress-Style Customizer Modal ── */}
+      {isFullscreenPreview && (
+        <div className="crm-customizer-fullscreen-overlay">
+          {/* Top Bar */}
+          <div className="crm-fullscreen-topbar">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Layout size={18} color="#F0B90B" />
+                <span style={{ fontSize: 14, fontWeight: 700, color: '#EAECEF' }}>
+                  WordPress-Style Live Site Customizer
+                </span>
+              </div>
+              <div className="crm-status-pill saved" style={{ padding: '3px 8px', fontSize: 10.5 }}>
+                <span className="crm-status-pulse" />
+                <span>LIVE PREVIEW</span>
+              </div>
+              <div className="crm-preview-url-box" style={{ maxWidth: 300 }}>
+                <Lock size={11} color="#0ECB81" />
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  codexdynamics.com/{previewPage !== 'home' ? previewPage : ''}
+                </span>
+              </div>
+            </div>
+
+            {/* Center: Device & Zoom Switchers */}
+            <div className="crm-preview-controls-group">
+              <div className="crm-preview-segmented">
+                <button
+                  type="button"
+                  className={`crm-preview-segmented-btn ${viewportMode === 'desktop' ? 'active' : ''}`}
+                  onClick={() => setViewportMode('desktop')}
+                  title="Desktop View (100% wide)"
+                >
+                  <Monitor size={12} />
+                  <span>Desktop</span>
+                </button>
+                <button
+                  type="button"
+                  className={`crm-preview-segmented-btn ${viewportMode === 'tablet' ? 'active' : ''}`}
+                  onClick={() => setViewportMode('tablet')}
+                  title="Tablet View (768px iPad)"
+                >
+                  <Tablet size={12} />
+                  <span>Tablet</span>
+                </button>
+                <button
+                  type="button"
+                  className={`crm-preview-segmented-btn ${viewportMode === 'mobile' ? 'active' : ''}`}
+                  onClick={() => setViewportMode('mobile')}
+                  title="Mobile View (390px iPhone)"
+                >
+                  <Smartphone size={12} />
+                  <span>Mobile</span>
+                </button>
+              </div>
+
+              <div className="crm-preview-segmented">
+                {[100, 85, 75, 60].map((z) => (
+                  <button
+                    key={z}
+                    type="button"
+                    className={`crm-preview-segmented-btn ${zoomLevel === z ? 'active' : ''}`}
+                    style={{ padding: '3px 6px', fontSize: 10 }}
+                    onClick={() => setZoomLevel(z)}
+                    title={`Scale to ${z}%`}
+                  >
+                    {z}%
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                className="crm-preview-action-icon-btn"
+                onClick={() => setPreviewKey((k) => k + 1)}
+                title="Reload preview"
+              >
+                <RefreshCw size={12} />
+              </button>
+
+              <a
+                href={`/?preview=1${previewPage !== 'home' ? `&page=${previewPage}` : ''}`}
+                target="_blank"
+                rel="noreferrer"
+                className="crm-preview-action-icon-btn"
+                title="Open in new browser tab"
+              >
+                <ExternalLink size={12} />
+              </a>
+            </div>
+
+            {/* Right: Save & Close buttons */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <button
+                type="button"
+                className="crm-btn-primary"
+                style={{
+                  padding: '6px 16px',
+                  borderRadius: 6,
+                  background: '#0ECB81',
+                  color: '#0B111A',
+                  fontWeight: 700,
+                  fontSize: 12,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  border: 'none',
+                  cursor: 'pointer'
+                }}
+                onClick={handleSaveAll}
+                disabled={saving}
+              >
+                <Check size={14} />
+                <span>{saving ? 'Publishing...' : 'Save & Publish'}</span>
+              </button>
+
+              <button
+                type="button"
+                className="crm-preview-action-icon-btn"
+                style={{ padding: '6px 12px', fontSize: 12, color: '#EAECEF', background: '#363B44' }}
+                onClick={() => setIsFullscreenPreview(false)}
+                title="Exit fullscreen customizer"
+              >
+                <X size={14} />
+                <span>Exit Fullscreen</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Fullscreen Body: Split Sidebar & Stage */}
+          <div className="crm-fullscreen-body">
+            <div className="crm-fullscreen-sidebar">
+              {/* Page navigation */}
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#848E9C', marginBottom: 8, textTransform: 'uppercase' }}>
+                  Preview Page
+                </div>
+                <div className="crm-preview-page-tabs" style={{ flexWrap: 'wrap' }}>
+                  {[
+                    { id: 'home', label: 'Homepage' },
+                    { id: 'services', label: 'Services' },
+                    { id: 'work', label: 'Case Studies' },
+                    { id: 'studio', label: 'Kyiv Studio' },
+                    { id: 'blog', label: 'Insights' },
+                    { id: 'contact', label: 'Contact' },
+                  ].map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      className={`crm-preview-page-tab ${previewPage === p.id ? 'active' : ''}`}
+                      onClick={() => setPreviewPage(p.id)}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Template Presets */}
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#848E9C', marginBottom: 8, textTransform: 'uppercase' }}>
+                  Theme & Template Presets
+                </div>
+                <div className="crm-template-presets-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+                  {TEMPLATE_PRESETS.map((preset) => {
+                    const isSelected =
+                      siteConfig.activeTheme === preset.id ||
+                      (siteConfig.primaryColor === preset.primary && siteConfig.backgroundColor === preset.bg);
+
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        className={`crm-template-card ${isSelected ? 'active' : ''}`}
+                        onClick={() => handleApplyTemplatePreset(preset)}
+                      >
+                        <div className="crm-template-palette-dots">
+                          <span className="crm-palette-dot" style={{ background: preset.primary }} />
+                          <span className="crm-palette-dot" style={{ background: preset.bg }} />
+                          <span className="crm-palette-dot" style={{ background: preset.card }} />
+                          <span className="crm-palette-dot" style={{ background: preset.accent }} />
+                        </div>
+                        <div className="crm-template-title">{preset.name}</div>
+                        <div className="crm-template-badge">{preset.badge}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Color Customizer */}
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#848E9C', marginBottom: 8, textTransform: 'uppercase' }}>
+                  Live Color Swatches
+                </div>
+                <div className="crm-color-swatch-bar">
+                  <div className="crm-color-swatch-item">
+                    <label>Primary</label>
+                    <div className="crm-color-picker-input-wrapper">
+                      <input
+                        type="color"
+                        value={siteConfig.primaryColor}
+                        onChange={(e) => updateField('primaryColor', e.target.value)}
+                      />
+                      <span className="crm-color-picker-hex">{siteConfig.primaryColor}</span>
+                    </div>
+                  </div>
+                  <div className="crm-color-swatch-item">
+                    <label>Canvas BG</label>
+                    <div className="crm-color-picker-input-wrapper">
+                      <input
+                        type="color"
+                        value={siteConfig.backgroundColor}
+                        onChange={(e) => updateField('backgroundColor', e.target.value)}
+                      />
+                      <span className="crm-color-picker-hex">{siteConfig.backgroundColor}</span>
+                    </div>
+                  </div>
+                  <div className="crm-color-swatch-item">
+                    <label>Card BG</label>
+                    <div className="crm-color-picker-input-wrapper">
+                      <input
+                        type="color"
+                        value={siteConfig.cardBg}
+                        onChange={(e) => updateField('cardBg', e.target.value)}
+                      />
+                      <span className="crm-color-picker-hex">{siteConfig.cardBg}</span>
+                    </div>
+                  </div>
+                  <div className="crm-color-swatch-item">
+                    <label>Accent</label>
+                    <div className="crm-color-picker-input-wrapper">
+                      <input
+                        type="color"
+                        value={siteConfig.accentColor}
+                        onChange={(e) => updateField('accentColor', e.target.value)}
+                      />
+                      <span className="crm-color-picker-hex">{siteConfig.accentColor}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Hero & Navigation Layout */}
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#848E9C', marginBottom: 6, textTransform: 'uppercase' }}>
+                  Hero Opening Block
+                </div>
+                <div className="crm-options-pill-grid">
+                  {HERO_LAYOUT_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      className={`crm-options-pill-btn ${(siteConfig.heroLayout || 'streamer') === opt.id ? 'active' : ''}`}
+                      onClick={() => updateField('heroLayout', opt.id)}
+                    >
+                      <span className="crm-options-pill-title">{opt.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Section Sequence & Visibility */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#848E9C', textTransform: 'uppercase' }}>
+                    Section Sequence & Visibility
+                  </div>
+                  <button
+                    type="button"
+                    className="crm-sec-inspect-btn"
+                    onClick={handleResetSectionOrder}
+                    title="Reset to default sequence"
+                  >
+                    <RotateCcw size={11} />
+                    <span>Reset</span>
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {siteConfig.sectionsOrder.map((secId, idx) => {
+                    const meta = DEFAULT_SECTIONS.find((s) => s.id === secId) || { name: secId, desc: '', category: 'Section' };
+                    const isVisible = siteConfig.sectionsVisibility[secId] !== false;
+
+                    return (
+                      <div
+                        key={secId}
+                        className={`crm-order-item-enhanced ${!isVisible ? 'hidden-sec' : ''}`}
+                        style={{ padding: '6px 8px' }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, flex: 1 }}>
+                          <span className="crm-order-sec-num" style={{ fontSize: 10 }}>0{idx + 1}</span>
+                          <span
+                            style={{
+                              fontSize: 11.5,
+                              fontWeight: 600,
+                              color: isVisible ? '#EAECEF' : '#5E6673',
+                              textDecoration: isVisible ? 'none' : 'line-through',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            {meta.name}
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: 3, alignItems: 'center', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                          {isVisible && (
+                            <button
+                              type="button"
+                              className="crm-sec-inspect-btn"
+                              style={{ padding: '2px 5px', fontSize: 10 }}
+                              onClick={() => handleJumpToSection(secId)}
+                              title="Scroll preview to this section"
+                            >
+                              <Eye size={10} />
+                              <span>Inspect</span>
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className="crm-icon-btn"
+                            disabled={idx === 0}
+                            onClick={() => moveSection(idx, -1)}
+                            style={{ padding: 3 }}
+                          >
+                            <ArrowUp size={11} />
+                          </button>
+                          <button
+                            type="button"
+                            className="crm-icon-btn"
+                            disabled={idx === siteConfig.sectionsOrder.length - 1}
+                            onClick={() => moveSection(idx, 1)}
+                            style={{ padding: 3 }}
+                          >
+                            <ArrowDown size={11} />
+                          </button>
+                          <button
+                            type="button"
+                            className={`crm-icon-btn ${isVisible ? '' : 'danger'}`}
+                            onClick={() => toggleSectionVisibility(secId)}
+                            style={{ padding: 3 }}
+                          >
+                            {isVisible ? <Eye size={11} /> : <EyeOff size={11} />}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Fullscreen Stage */}
+            <div className="crm-fullscreen-stage">
+              <div
+                className={`crm-device-shell ${viewportMode}`}
+                style={{
+                  transform: zoomLevel !== 100 ? `scale(${zoomLevel / 100})` : undefined,
+                  transformOrigin: 'top center',
+                }}
+              >
+                {viewportMode === 'mobile' && <div className="crm-device-notch" />}
+                <iframe
+                  key={`fs-${previewKey}`}
+                  ref={fullscreenIframeRef}
+                  src={`/?preview=1${previewPage !== 'home' ? `&page=${previewPage}` : ''}`}
+                  className="crm-preview-iframe"
+                  onLoad={() => syncToPreview(siteConfig)}
+                  title="Codex Dynamics Fullscreen Preview"
+                />
+              </div>
+            </div>
           </div>
         </div>
       )}

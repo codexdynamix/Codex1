@@ -592,6 +592,47 @@
   --color-prose-code-text: #0071e3;
 }
 
+[data-theme="dark"],
+.dark {
+  --color-background: #0f1216;
+  --color-foreground: #eaecef;
+  --color-card: #181a20;
+  --color-card-foreground: #eaecef;
+  --color-popover: #181a20;
+  --color-popover-foreground: #eaecef;
+  --color-paper: #ffffff;
+  --color-ink: #000000;
+  --color-fill: #14171a;
+  --color-fill-elevated: #1e2329;
+  --color-label: #eaecef;
+  --color-subtle: #848e9c;
+  --color-muted: #232830;
+  --color-muted-foreground: #848e9c;
+  --color-border: #363b44;
+  --color-input: #23272e;
+  --color-hairline: rgba(255, 255, 255, 0.12);
+  --color-hairline-on-dark: rgba(255, 255, 255, 0.16);
+  --color-prose-body: #b8c0cc;
+  --color-prose-heading: #ffffff;
+  --color-prose-code-bg: #1e2329;
+  --color-prose-code-text: #f0b90b;
+}
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.theme-toggle-btn:active {
+  transform: scale(0.94);
+}
+
 /* Blog Article Prose Typography */
 .article-prose {
   font-family: var(--font-sans);

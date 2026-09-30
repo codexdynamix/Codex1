@@ -59,13 +59,11 @@ export default function StaffProfileModal({
     return (data?.users || []).find((u) => u.id === staff.id) || staff;
   }, [data?.users, staff]);
 
-  if (!liveStaff) return null;
-
-  const isVirtual = Boolean(liveStaff.isOfficeOnly || liveStaff.isTeamOnly);
-  const isBlocked = liveStaff.status === 'Suspended' || liveStaff.status === 'Disabled';
+  const isVirtual = Boolean(liveStaff?.isOfficeOnly || liveStaff?.isTeamOnly);
+  const isBlocked = liveStaff?.status === 'Suspended' || liveStaff?.status === 'Disabled';
 
   const officeObj = useMemo(() => {
-    if (!data?.offices) return null;
+    if (!data?.offices || !liveStaff) return null;
     if (liveStaff.officeId) {
       return data.offices.find((o) => o.id === liveStaff.officeId) || null;
     }
@@ -73,15 +71,15 @@ export default function StaffProfileModal({
   }, [data?.offices, liveStaff]);
 
   const teamObj = useMemo(() => {
-    if (!data?.teams) return null;
+    if (!data?.teams || !liveStaff) return null;
     if (liveStaff.teamId) {
       return data.teams.find((t) => t.id === liveStaff.teamId) || null;
     }
     return data.teams.find((t) => t.leaderId === liveStaff.id) || null;
   }, [data?.teams, liveStaff]);
 
-  const resolvedOfficeId = officeObj?.id || liveStaff.officeId || teamObj?.officeId || '';
-  const resolvedTeamId = teamObj?.id || liveStaff.teamId || '';
+  const resolvedOfficeId = officeObj?.id || liveStaff?.officeId || teamObj?.officeId || '';
+  const resolvedTeamId = teamObj?.id || liveStaff?.teamId || '';
 
   const officeName = getOfficeName(resolvedOfficeId, data?.offices || []);
   const teamName = getTeamName(resolvedTeamId, data?.teams || []);
@@ -106,6 +104,7 @@ export default function StaffProfileModal({
   }, [data?.users, resolvedTeamId]);
 
   const staffLeads = useMemo(() => {
+    if (!liveStaff) return [];
     const allLeads = data?.leads || [];
     if (liveStaff.role === ROLE.OFFICE_MANAGER) {
       return allLeads.filter((l) => l.assignedToOffice === resolvedOfficeId);
@@ -122,6 +121,8 @@ export default function StaffProfileModal({
   );
   const conversionRate =
     staffLeads.length > 0 ? ((depositsCount / staffLeads.length) * 100).toFixed(1) : '0.0';
+
+  if (!liveStaff) return null;
 
   const panelPath =
     liveStaff.role === ROLE.OFFICE_MANAGER

@@ -20,7 +20,8 @@ import { cn } from "@/lib/utils";
 import { useSiteConfig } from "@/context/SiteConfigContext";
 import { useContactModal } from "@/context/ContactModalContext";
 import { usePreviewMode } from "@/context/PreviewModeContext";
-import { hrefToPreviewPage } from "@/lib/theme-engine";
+import { hrefToPreviewPage, isDarkHex } from "@/lib/theme-engine";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 function Mark({ letter, logoUrl }: { letter?: string; logoUrl?: string }) {
   if (logoUrl) {
@@ -181,10 +182,16 @@ export function Nav() {
       const hero = document.getElementById("hero");
       const heroLayout = config.theme?.heroLayout || config.theme?.layout?.heroLayout || "streamer";
       const isDarkHero = heroLayout === "streamer";
-      if (hero) {
-        setOverLight(!isDarkHero || hero.getBoundingClientRect().bottom < 88);
+      const isSiteDark = isDarkHex(config.colors?.background);
+
+      if (isSiteDark) {
+        setOverLight(false);
       } else {
-        setOverLight(true);
+        if (hero) {
+          setOverLight(!isDarkHero || hero.getBoundingClientRect().bottom < 88);
+        } else {
+          setOverLight(true);
+        }
       }
       const doc = document.documentElement;
       const max = doc.scrollHeight - doc.clientHeight;
@@ -194,7 +201,7 @@ export function Nav() {
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [config.theme?.heroLayout, config.theme?.layout?.heroLayout]);
+  }, [config.theme?.heroLayout, config.theme?.layout?.heroLayout, config.colors?.background]);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -233,10 +240,11 @@ export function Nav() {
                 {item.label}
               </a>
             ))}
+            <ThemeToggle variant="icon" className="mx-1" />
             <button
               type="button"
               onClick={() => openContactModal()}
-              className="ml-2 rounded-full bg-label px-3.5 py-1.5 text-[12px] font-semibold text-paper"
+              className="ml-1 rounded-full bg-label px-3.5 py-1.5 text-[12px] font-semibold text-paper"
             >
               Talk to us
             </button>
@@ -271,6 +279,7 @@ export function Nav() {
             ))}
           </div>
           <div className="flex items-center gap-2">
+            <ThemeToggle variant="icon" />
             <Button
               type="button"
               size="sm"
@@ -325,13 +334,16 @@ export function Nav() {
               </a>
             ))}
           </div>
-          <button
-            type="button"
-            onClick={() => openContactModal()}
-            className="text-[12px] font-semibold text-primary"
-          >
-            Contact
-          </button>
+          <div className="flex items-center gap-3">
+            <ThemeToggle variant="icon" />
+            <button
+              type="button"
+              onClick={() => openContactModal()}
+              className="text-[12px] font-semibold text-primary"
+            >
+              Contact
+            </button>
+          </div>
         </nav>
         <div className="h-px w-full bg-hairline" />
       </header>
@@ -394,6 +406,7 @@ export function Nav() {
                 github: githubHref,
               }}
             />
+            <ThemeToggle variant="icon" />
             <Button
               type="button"
               size="sm"
@@ -546,6 +559,9 @@ export function Nav() {
                   <span className="mx-2 text-paper/30">·</span>
                   {currentAddress.street}, {currentAddress.city}
                 </p>
+                <div className="py-2">
+                  <ThemeToggle variant="pill" showLabel className="w-full justify-center py-2.5" />
+                </div>
                 <Button
                   type="button"
                   size="lg"
