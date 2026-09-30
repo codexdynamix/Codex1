@@ -64,7 +64,11 @@ function OrderedHome() {
         const gate = componentGate[id];
         if (gate && !isComponentEnabled(config, gate)) return null;
         const render = SECTION_MAP[id];
-        return render ? <div key={id}>{render()}</div> : null;
+        return render ? (
+          <div key={id} id={id} data-section-id={id} className="transition-all duration-300">
+            {render()}
+          </div>
+        ) : null;
       })}
     </>
   );
@@ -77,7 +81,11 @@ export function SitePageBody({ page = "home" }: { page?: PreviewPage }) {
       <>
         {ids.map((id) => {
           const render = SECTION_MAP[id];
-          return render ? <div key={id}>{render()}</div> : null;
+          return render ? (
+            <div key={id} id={id} data-section-id={id} className="transition-all duration-300">
+              {render()}
+            </div>
+          ) : null;
         })}
       </>
     );

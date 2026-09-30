@@ -65,8 +65,16 @@ export function isDefaultThemeId(id?: string | null) {
   return !id || id === DEFAULT_THEME_ID;
 }
 
-export function isDarkHex(_hex?: string) {
-  return false;
+export function isDarkHex(hex?: string): boolean {
+  if (!hex || typeof hex !== "string") return false;
+  const clean = hex.replace("#", "").trim();
+  if (clean.length !== 3 && clean.length !== 6) return false;
+  const r = parseInt(clean.length === 3 ? clean[0] + clean[0] : clean.substring(0, 2), 16);
+  const g = parseInt(clean.length === 3 ? clean[1] + clean[1] : clean.substring(2, 4), 16);
+  const b = parseInt(clean.length === 3 ? clean[2] + clean[2] : clean.substring(4, 6), 16);
+  if (isNaN(r) || isNaN(g) || isNaN(b)) return false;
+  const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+  return yiq < 135;
 }
 
 export function normalizeComponentIds(active: ThemeSettings["activeComponents"] | undefined): string[] {
@@ -173,7 +181,10 @@ export function resolveSectionsOrder(theme?: ThemeSettings): string[] {
 }
 
 export function resolveSectionVisibility(theme?: ThemeSettings): Record<string, boolean> {
-  const vis = theme?.layout?.sectionVisibility;
+  const vis =
+    theme?.layout?.sectionVisibility ||
+    (theme as any)?.sectionsVisibility ||
+    (theme as any)?.sectionVisibility;
   if (vis) return vis;
   return Object.fromEntries(DEFAULT_HOME_SEQUENCE.map((id) => [id, true]));
 }
@@ -181,6 +192,7 @@ export function resolveSectionVisibility(theme?: ThemeSettings): Record<string, 
 export function buildThemeStyle(config: SiteConfig): CSSProperties {
   const c = config.colors || ({} as SiteColors);
   const t = config.theme;
+  const isDark = isDarkHex(c.background);
   const fonts = resolveFontPair(t?.fontFamily);
   const radius = radiusTokens(t?.borderRadius);
   const scale = t?.fontSizeScale || t?.layout?.fontSizeScale;
@@ -188,33 +200,60 @@ export function buildThemeStyle(config: SiteConfig): CSSProperties {
   const cw = t?.containerWidth || "1280px";
   const primaryFg = "#ffffff";
 
+  // Strict contrast resolution:
+  // If background is dark, text MUST be light. If background is light, text MUST be dark.
+  const hasDarkTextMain = c.textMain ? isDarkHex(c.textMain) : false;
+  const textMain = isDark
+    ? (hasDarkTextMain || !c.textMain ? "#eaecef" : c.textMain)
+    : (!hasDarkTextMain || !c.textMain ? "#1d1d1f" : c.textMain);
+
+  const textMuted = isDark ? "#848e9c" : "#6e6e73";
+  const border = isDark ? "#363b44" : "#d2d2d7";
+  const hairline = isDark ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.08)";
+  const hairlineOnDark = "rgba(255, 255, 255, 0.16)";
+  const cardBg = isDark
+    ? (c.cardBg && isDarkHex(c.cardBg) ? c.cardBg : "#181a20")
+    : (c.cardBg && !isDarkHex(c.cardBg) ? c.cardBg : "#ffffff");
+  const bg = isDark
+    ? (c.background && isDarkHex(c.background) ? c.background : "#0f1216")
+    : (c.background && !isDarkHex(c.background) ? c.background : "#f5f5f7");
+  const fill = isDark ? "#14171a" : "#f2f2f7";
+  const fillElevated = isDark ? "#1e2329" : "#fafafc";
+  const mutedBg = isDark ? "#232830" : "#e8e8ed";
+
   const style: Record<string, string> = {
-    "--color-primary": c.primary || "#0071e3",
+    "--color-primary": c.primary || (isDark ? "#f0b90b" : "#0071e3"),
     "--color-primary-foreground": primaryFg,
     "--color-blue": c.primary || "#0071e3",
     "--color-blue-hover": c.highlight || c.accent || c.primary || "#0077ed",
-    "--color-brand": c.primary || "#0071e3",
+    "--color-brand": c.primary || (isDark ? "#f0b90b" : "#0071e3"),
     "--color-ring": c.ring || c.primary || "#0071e3",
     "--color-accent": c.accent || c.primary || "#0071e3",
     "--color-accent-foreground": primaryFg,
-    "--color-background": c.background || "#f5f5f7",
-    "--color-site-bg": c.background || "#f5f5f7",
-    "--color-fill": c.background || "#f5f5f7",
-    "--color-fill-elevated": c.secondary || c.background || "#fbfbfd",
-    "--color-secondary": c.secondary || c.background || "#f5f5f7",
-    "--color-card": c.cardBg || "#ffffff",
-    "--color-site-card": c.cardBg || "#ffffff",
+    "--color-background": bg,
+    "--color-site-bg": bg,
+    "--color-fill": c.secondary || fill,
+    "--color-fill-elevated": c.surface || fillElevated,
+    "--color-secondary": c.secondary || fill,
+    "--color-card": cardBg,
+    "--color-site-card": cardBg,
     "--color-paper": "#ffffff",
-    "--color-surface": c.surface || c.cardBg || "#ffffff",
-    "--color-foreground": c.textMain || "#1d1d1f",
-    "--color-label": c.textMain || "#1d1d1f",
-    "--color-card-foreground": c.textMain || "#1d1d1f",
-    "--color-muted-foreground": c.textMuted || "#6e6e73",
-    "--color-subtle": c.textMuted || "#6e6e73",
-    "--color-border": c.border || "#d2d2d7",
-    "--color-hairline": c.border || "rgba(0,0,0,0.08)",
+    "--color-ink": "#000000",
+    "--color-surface": c.surface || cardBg,
+    "--color-foreground": textMain,
+    "--color-label": textMain,
+    "--color-card-foreground": textMain,
+    "--color-popover": cardBg,
+    "--color-popover-foreground": textMain,
+    "--color-muted": mutedBg,
+    "--color-muted-foreground": textMuted,
+    "--color-subtle": textMuted,
+    "--color-border": border,
+    "--color-input": isDark ? "#23272e" : "#e8e8ed",
+    "--color-hairline": hairline,
+    "--color-hairline-on-dark": hairlineOnDark,
     "--color-highlight": c.highlight || c.accent || c.primary || "#0071e3",
-    "--color-inverse": c.inverse || "#1d1d1f",
+    "--color-inverse": isDark ? "#ffffff" : "#1d1d1f",
     "--font-display": fonts.display,
     "--font-sans": fonts.sans,
     "--radius-sm": radius.sm,

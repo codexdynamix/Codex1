@@ -1,7 +1,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { useSiteConfig } from "@/context/SiteConfigContext";
-import { buildThemeStyle } from "@/lib/theme-engine";
+import { buildThemeStyle, isDarkHex } from "@/lib/theme-engine";
 
 function CustomCodeContainer({
   html,
@@ -74,6 +74,7 @@ export function SiteCanvas({
   const hero = theme?.heroLayout || theme?.layout?.heroLayout || "streamer";
   const cards = theme?.cardStyle || theme?.layout?.cardStyle || "glass";
   const scale = theme?.fontSizeScale || theme?.layout?.fontSizeScale || "normal";
+  const isDark = isDarkHex(config.colors?.background);
 
   return (
     <div
@@ -87,7 +88,7 @@ export function SiteCanvas({
       data-card-style={cards}
       data-type-scale={scale}
       data-preview={preview ? "true" : undefined}
-      data-theme="light"
+      data-theme={isDark ? "dark" : "light"}
       style={buildThemeStyle(config)}
     >
       {theme?.customCss ? <style data-theme-css>{theme.customCss}</style> : null}

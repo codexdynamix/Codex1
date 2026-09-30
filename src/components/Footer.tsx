@@ -15,6 +15,7 @@ import { useSiteConfig } from "@/context/SiteConfigContext";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { useContactModal } from "@/context/ContactModalContext";
 import { MessageSquare } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function Footer() {
   const {
@@ -283,6 +284,7 @@ export function Footer() {
           </p>
 
           <div className="flex items-center gap-4">
+            <ThemeToggle variant="pill" showLabel />
             <button
               type="button"
               onClick={() => openContactModal()}

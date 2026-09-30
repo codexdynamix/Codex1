@@ -260,35 +260,20 @@ export default function StaffProfilePage({
     };
   }, [staff?.id, staff?.isOfficeOnly, staff?.isTeamOnly]);
 
-  if (!staff) {
-    return (
-      <div className="crm-card crm-agent-profile-full">
-        <div className="crm-panel-header">
-          <button className="crm-small-btn" onClick={() => navigate(workspacePath)}>
-            ← Back to Staff
-          </button>
-        </div>
-        <div style={{ padding: 24, color: '#848E9C' }}>
-          Staff member not found or has been removed.
-        </div>
-      </div>
-    );
-  }
-
-  const isVirtual = Boolean(staff.isOfficeOnly || staff.isTeamOnly);
-  const isBlocked = staff.status === 'Suspended' || staff.status === 'Disabled';
-  const loginLink = !isVirtual ? staff.loginLink || makeLoginLink(staff.id, staff.role) : '';
-  const resolvedOfficeId = officeObj?.id || staff.officeId || teamObj?.officeId || '';
-  const resolvedTeamId = teamObj?.id || staff.teamId || '';
+  const isVirtual = Boolean(staff?.isOfficeOnly || staff?.isTeamOnly);
+  const isBlocked = staff?.status === 'Suspended' || staff?.status === 'Disabled';
+  const loginLink = !isVirtual && staff ? staff.loginLink || makeLoginLink(staff.id, staff.role) : '';
+  const resolvedOfficeId = officeObj?.id || staff?.officeId || teamObj?.officeId || '';
+  const resolvedTeamId = teamObj?.id || staff?.teamId || '';
   const officeName = getOfficeName(resolvedOfficeId, data?.offices || []);
   const teamName = getTeamName(resolvedTeamId, data?.teams || []);
 
   const panelPath =
-    staff.role === ROLE.OFFICE_MANAGER
+    staff?.role === ROLE.OFFICE_MANAGER
       ? `/admin/office-manager/${staff.id}`
-      : staff.role === ROLE.TEAM_LEADER
+      : staff?.role === ROLE.TEAM_LEADER
       ? `/admin/team-leader/${staff.id}`
-      : `/admin/agent/${staff.id}`;
+      : staff ? `/admin/agent/${staff.id}` : '';
 
   // Office Teams & Agents (for Office Managers) and Team Agents (for Team Leaders)
   const officeTeams = useMemo(() => {
@@ -311,6 +296,7 @@ export default function StaffProfilePage({
   }, [data?.users, resolvedTeamId]);
 
   const staffLeads = useMemo(() => {
+    if (!staff) return [];
     const allLeads = data?.leads || [];
     if (staff.role === ROLE.OFFICE_MANAGER) {
       return allLeads.filter((l) => l.assignedToOffice === resolvedOfficeId);
@@ -345,6 +331,7 @@ export default function StaffProfilePage({
     staffLeads.length > 0 ? ((depositsCount / staffLeads.length) * 100).toFixed(1) : '0.0';
 
   const staffComments = useMemo(() => {
+    if (!staff?.name) return [];
     const allLeads = data?.leads || [];
     const list = [];
     allLeads.forEach((lead) => {
@@ -360,7 +347,22 @@ export default function StaffProfilePage({
       });
     });
     return list.slice(-40).reverse();
-  }, [data?.leads, staff.name]);
+  }, [data?.leads, staff?.name]);
+
+  if (!staff) {
+    return (
+      <div className="crm-card crm-agent-profile-full">
+        <div className="crm-panel-header">
+          <button className="crm-small-btn" onClick={() => navigate(workspacePath)}>
+            ← Back to Staff
+          </button>
+        </div>
+        <div style={{ padding: 24, color: '#848E9C' }}>
+          Staff member not found or has been removed.
+        </div>
+      </div>
+    );
+  }
 
   const copyText = async (val, msg = 'Copied to clipboard') => {
     if (!val) return;

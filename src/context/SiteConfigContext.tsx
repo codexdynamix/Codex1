@@ -52,7 +52,31 @@ function safeMergeConfig(base: SiteConfig, override: Partial<SiteConfig>): SiteC
     results: { ...base.results, ...(override.results || {}) },
     contact: { ...base.contact, ...(override.contact || {}) },
     footer: { ...base.footer, ...(override.footer || {}) },
-    theme: { ...base.theme, ...(override.theme || {}) } as any,
+    theme: {
+      ...base.theme,
+      ...(override.theme || {}),
+      layout: {
+        ...base.theme?.layout,
+        ...(override.theme?.layout || {}),
+        sectionVisibility:
+          override.theme?.layout?.sectionVisibility ||
+          override.theme?.sectionsVisibility ||
+          (override.theme as any)?.sectionVisibility ||
+          base.theme?.layout?.sectionVisibility,
+        sectionsOrder:
+          override.theme?.layout?.sectionsOrder ||
+          override.theme?.sectionsOrder ||
+          base.theme?.layout?.sectionsOrder,
+      },
+      sectionsOrder:
+        override.theme?.sectionsOrder ||
+        override.theme?.layout?.sectionsOrder ||
+        base.theme?.sectionsOrder,
+      sectionsVisibility:
+        override.theme?.sectionsVisibility ||
+        override.theme?.layout?.sectionVisibility ||
+        base.theme?.sectionsVisibility,
+    } as any,
     tidio: { ...base.tidio, ...(override.tidio || {}) } as any,
     headerSocials: {
       ...base.headerSocials,
@@ -97,7 +121,17 @@ export function SiteConfigProvider({ children }: { children: React.ReactNode }) 
     try {
       setIsLoading(true);
       if (typeof window !== "undefined") {
-        const raw = localStorage.getItem("codex_site_config");
+        const isPreview =
+          window.self !== window.top ||
+          window.location.search.includes("preview=1") ||
+          sessionStorage.getItem("codex_is_preview") === "true";
+
+        const liveRaw = isPreview
+          ? sessionStorage.getItem("codex_live_preview_config") ||
+            localStorage.getItem("codex_live_preview_config")
+          : null;
+
+        const raw = liveRaw || localStorage.getItem("codex_site_config");
         if (raw) {
           const parsed = JSON.parse(raw);
           setConfig((prev) => safeMergeConfig(prev || DEFAULT_SITE_CONFIG, parsed));
@@ -112,6 +146,35 @@ export function SiteConfigProvider({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     fetchConfig();
+
+    const handleMessage = (e: MessageEvent) => {
+      if (e.data && e.data.type === "CODEX_PREVIEW_UPDATE" && e.data.config) {
+        setConfig((prev) => safeMergeConfig(prev || DEFAULT_SITE_CONFIG, e.data.config));
+      }
+      if (e.data && e.data.type === "CODEX_PREVIEW_SCROLL_TO" && e.data.sectionId) {
+        const targetId = e.data.sectionId;
+        const el =
+          document.getElementById(targetId) ||
+          document.querySelector(`[data-section-id="${targetId}"]`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+          el.classList.add("ring-2", "ring-amber-400", "ring-offset-4", "ring-offset-black");
+          setTimeout(() => {
+            el.classList.remove("ring-2", "ring-amber-400", "ring-offset-4", "ring-offset-black");
+          }, 2400);
+        }
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+
+    if (typeof window !== "undefined" && window.self !== window.top) {
+      window.parent.postMessage({ type: "CODEX_PREVIEW_READY" }, "*");
+    }
+
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
   }, [fetchConfig]);
 
   const updateLocalConfig = useCallback((updated: SiteConfig) => {
