@@ -30,7 +30,6 @@ import {
   Eye,
   EyeOff,
   Globe,
-  Lock,
   MessageCircle,
   HelpCircle,
   CheckCircle2,
@@ -50,7 +49,7 @@ import {
   Sun,
   Moon,
   Dices,
-  Unlock,
+  KeyRound,
   LayoutGrid,
   Crown,
   Building2,
@@ -77,6 +76,52 @@ import {
   GitHubLogo,
   MapsLogo
 } from '../../../../components/BrandMarks';
+
+export function hexToRgb(hex) {
+  if (!hex || typeof hex !== 'string') return null;
+  const cleaned = hex.replace('#', '').trim();
+  if (cleaned.length === 3) {
+    return {
+      r: parseInt(cleaned[0] + cleaned[0], 16),
+      g: parseInt(cleaned[1] + cleaned[1], 16),
+      b: parseInt(cleaned[2] + cleaned[2], 16),
+    };
+  }
+  if (cleaned.length === 6) {
+    return {
+      r: parseInt(cleaned.slice(0, 2), 16),
+      g: parseInt(cleaned.slice(2, 4), 16),
+      b: parseInt(cleaned.slice(4, 6), 16),
+    };
+  }
+  return null;
+}
+
+export function getLuminance(hex) {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return 0;
+  const [r, g, b] = [rgb.r, rgb.g, rgb.b].map((c) => {
+    const v = c / 255;
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+export function calcContrastRatio(hex1, hex2) {
+  const lum1 = getLuminance(hex1);
+  const lum2 = getLuminance(hex2);
+  const brightest = Math.max(lum1, lum2);
+  const darkest = Math.min(lum1, lum2);
+  const ratio = (brightest + 0.05) / (darkest + 0.05);
+  return Number(ratio.toFixed(1));
+}
+
+export function getWcagLevel(ratio) {
+  if (ratio >= 7.0) return { level: 'AAA', label: 'WCAG AAA (Enhanced)' };
+  if (ratio >= 4.5) return { level: 'AA', label: 'WCAG AA (Standard)' };
+  if (ratio >= 3.0) return { level: 'AA Large', label: 'WCAG AA (Large Text)' };
+  return { level: 'Fail', label: 'Low Contrast' };
+}
 
 export const PROTOCOL_OPTIONS = [
   { id: 'whatsapp', name: 'WhatsApp', Logo: WhatsAppLogo, placeholder: '+44 7911 123456', hint: 'WhatsApp phone with country code', color: '#25D366' },
@@ -264,6 +309,7 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
     conversion: true,
   });
   const [activeNavSection, setActiveNavSection] = useState('identity');
+  const [studioLayoutMode, setStudioLayoutMode] = useState('split'); // 'split' | 'editor' | 'preview'
 
   // Track active section as user scrolls through the left column
   useEffect(() => {
@@ -731,14 +777,6 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
     }
 
     showNotification(`🎲 Generated Coolors Palette: ${newPal.name}`);
-  };
-
-  const handleTogglePillarLock = (index) => {
-    setCoolorsStage(prev => {
-      const nextColors = [...prev.colors];
-      nextColors[index] = { ...nextColors[index], locked: !nextColors[index].locked };
-      return { ...prev, colors: nextColors };
-    });
   };
 
   const handleCopyPillarHex = (hex, index) => {
@@ -1347,6 +1385,41 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
     showNotification('Settings reverted to defaults. Click "Save All Changes" to publish.');
   };
 
+  // Dynamic WCAG 2.1 Contrast Calculations (computed after siteConfig is initialized)
+  const wcagTextMetrics = useMemo(() => {
+    const bgHex = siteConfig?.backgroundColor || '#0F1216';
+    const textHex = isDarkColor(bgHex) ? '#EAECEF' : '#14171A';
+    const ratio = calcContrastRatio(textHex, bgHex);
+    return { ratio, ...getWcagLevel(ratio) };
+  }, [siteConfig?.backgroundColor]);
+
+  const wcagAccentMetrics = useMemo(() => {
+    const bgHex = siteConfig?.backgroundColor || '#0F1216';
+    const accentHex = siteConfig?.primaryColor || '#F0B90B';
+    const ratio = calcContrastRatio(accentHex, bgHex);
+    return { ratio, ...getWcagLevel(ratio) };
+  }, [siteConfig?.backgroundColor, siteConfig?.primaryColor]);
+
+  // Global Keyboard Shortcuts (⌘S / Ctrl+S to save, '/' to search)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        handleSaveAll();
+      }
+      if (e.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) {
+        e.preventDefault();
+        const searchInput = document.querySelector('.crm-studio-search-input');
+        if (searchInput) {
+          searchInput.focus();
+          searchInput.select?.();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleSaveAll]);
+
   return (
     <div className="crm-site-settings-root">
       {/* ── Page Header ────────────────────────────────────────── */}
@@ -1401,6 +1474,13 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
         {SUB_TABS.map(tab => {
           const Icon = tab.icon;
           const isActive = activeSubTab === tab.id;
+          let badgeText = '';
+          if (tab.id === 'layout') badgeText = '6 Modules';
+          if (tab.id === 'contacts') badgeText = `${siteConfig.socialContacts?.length || 0}`;
+          if (tab.id === 'socials') badgeText = `${Object.values(siteConfig.headerSocials || {}).filter(s => s.enabled).length} Active`;
+          if (tab.id === 'seo') badgeText = 'SERP Ready';
+          if (tab.id === 'security') badgeText = siteConfig.security?.twoFactorAuthEnabled ? '2FA Active' : 'RBAC';
+
           return (
             <button
               key={tab.id}
@@ -1410,6 +1490,11 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
             >
               <Icon size={14} />
               <span>{tab.label}</span>
+              {badgeText && (
+                <span className={`crm-tab-count-pill ${isActive ? 'active' : ''}`}>
+                  {badgeText}
+                </span>
+              )}
             </button>
           );
         })}
@@ -1811,7 +1896,37 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
               <h3><Layout size={16} color="#F0B90B" /> Template Customizer & Live Site Studio</h3>
               <p>WordPress-style live website preview, instant theme presets, sequence reordering, and conversion modules.</p>
             </div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              <div className="crm-studio-segmented-tabs" style={{ padding: 3 }}>
+                <button
+                  type="button"
+                  className={`crm-studio-tab-btn ${studioLayoutMode === 'split' ? 'active' : ''}`}
+                  onClick={() => setStudioLayoutMode('split')}
+                  title="Split view (Controls & Live Preview side by side)"
+                >
+                  <LayoutGrid size={11} />
+                  <span>Split</span>
+                </button>
+                <button
+                  type="button"
+                  className={`crm-studio-tab-btn ${studioLayoutMode === 'editor' ? 'active' : ''}`}
+                  onClick={() => setStudioLayoutMode('editor')}
+                  title="Full width editor (Controls only)"
+                >
+                  <Sliders size={11} />
+                  <span>Full Editor</span>
+                </button>
+                <button
+                  type="button"
+                  className={`crm-studio-tab-btn ${studioLayoutMode === 'preview' ? 'active' : ''}`}
+                  onClick={() => setStudioLayoutMode('preview')}
+                  title="Live preview only"
+                >
+                  <Eye size={11} />
+                  <span>Preview Only</span>
+                </button>
+              </div>
+
               <button
                 type="button"
                 className="crm-preview-action-icon-btn"
@@ -1835,9 +1950,10 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
           </div>
 
           {/* 2-Column Split Studio Grid */}
-          <div className="crm-layout-studio-grid">
+          <div className={`crm-layout-studio-grid mode-${studioLayoutMode}`}>
             {/* ── Left Column: Controls & Presets ── */}
-            <div className="crm-layout-controls-col">
+            {studioLayoutMode !== 'preview' && (
+              <div className="crm-layout-controls-col">
               {/* Quick Navigation & Section Jumper Bar */}
               <div className="crm-layout-controls-sticky-bar">
                 <div className="crm-layout-controls-nav-chips">
@@ -1926,8 +2042,27 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
                     </div>
                   </div>
                   <div className="crm-ios-card-head-right">
-                    <span className="crm-status-pill saved" style={{ fontSize: 10.5, padding: '3px 8px', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={`${siteConfig.siteName || 'Codex'} · ${siteConfig.fontFamily}`}>
-                      {siteConfig.siteName || 'Codex'} · {siteConfig.fontFamily}
+                    <span
+                      className="crm-status-pill saved crm-system-tag-pill"
+                      style={{
+                        fontSize: 11,
+                        padding: '4px 11px',
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0,
+                        maxWidth: 'none',
+                        width: 'auto',
+                        overflow: 'visible',
+                        textOverflow: 'unset',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6
+                      }}
+                      title={`${siteConfig.siteName || 'Codex Dynamics'} · ${siteConfig.fontFamily === 'system' ? 'System' : siteConfig.fontFamily}`}
+                    >
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#0ECB81', flexShrink: 0 }} />
+                      <span style={{ whiteSpace: 'nowrap', flexShrink: 0 }}>
+                        {siteConfig.siteName || 'Codex Dynamics'} · {siteConfig.fontFamily === 'system' ? 'System' : siteConfig.fontFamily}
+                      </span>
                     </span>
                     <div className="crm-ios-card-collapse-btn">
                       {expandedSections.identity ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
@@ -2147,20 +2282,21 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
                           </button>
                         </div>
 
-                        <div className="crm-studio-search-wrapper">
-                          <Search size={13} color="#848E9C" />
+                        <div className="crm-studio-search-wrapper" style={{ minWidth: 200, position: 'relative', display: 'flex', alignItems: 'center' }}>
+                          <Search size={13} color="#848E9C" style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 3 }} />
                           <input
                             type="text"
                             className="crm-studio-search-input"
                             placeholder="Search themes, styles, fonts..."
                             value={themeSearchQuery}
                             onChange={(e) => setThemeSearchQuery(e.target.value)}
+                            style={{ paddingLeft: '34px', minHeight: '34px', height: '34px', fontSize: '12px' }}
                           />
                           {themeSearchQuery && (
                             <button
                               type="button"
                               onClick={() => setThemeSearchQuery('')}
-                              style={{ position: 'absolute', right: 8, background: 'none', border: 'none', color: '#848E9C', cursor: 'pointer' }}
+                              style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#848E9C', cursor: 'pointer', zIndex: 3 }}
                             >
                               <X size={12} />
                             </button>
@@ -2338,10 +2474,22 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
                             Click 'Generate Colors' to shuffle the harmony live, or tap any swatch to copy HEX.
                           </div>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span className="crm-status-pill saved" style={{ fontSize: 10.5, padding: '2px 8px' }}>
-                            {coolorsStage.contrastRating} · {coolorsStage.contrastRatio}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          <span
+                            className={`crm-wcag-matrix-pill ${wcagTextMetrics.level === 'AAA' ? 'aaa' : wcagTextMetrics.level.startsWith('AA') ? 'aa' : 'fail'}`}
+                            title={`WCAG 2.1 Contrast: Text (${isDarkColor(siteConfig.backgroundColor) ? '#EAECEF' : '#14171A'}) vs Background (${siteConfig.backgroundColor}) is ${wcagTextMetrics.ratio}:1`}
+                          >
+                            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor' }} />
+                            <span>WCAG {wcagTextMetrics.level} · {wcagTextMetrics.ratio}:1</span>
                           </span>
+
+                          <span
+                            className={`crm-wcag-matrix-pill ${wcagAccentMetrics.level === 'AAA' ? 'aaa' : wcagAccentMetrics.level.startsWith('AA') ? 'aa' : 'fail'}`}
+                            title={`WCAG 2.1 Contrast: Primary Accent (${siteConfig.primaryColor}) vs Background (${siteConfig.backgroundColor}) is ${wcagAccentMetrics.ratio}:1`}
+                          >
+                            <span>Accent · {wcagAccentMetrics.ratio}:1</span>
+                          </span>
+
                           <div className="crm-studio-segmented-tabs" style={{ padding: 2 }}>
                             <button
                               type="button"
@@ -2448,20 +2596,21 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
                           })}
                         </div>
 
-                        <div className="crm-studio-search-wrapper" style={{ minWidth: 140 }}>
-                          <Search size={12} color="#848E9C" />
+                        <div className="crm-studio-search-wrapper" style={{ minWidth: 200, position: 'relative', display: 'flex', alignItems: 'center' }}>
+                          <Search size={13} color="#848E9C" style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', zIndex: 3 }} />
                           <input
                             type="text"
                             className="crm-studio-search-input"
                             placeholder="Search colors or hex..."
                             value={paletteSearchQuery}
                             onChange={(e) => setPaletteSearchQuery(e.target.value)}
+                            style={{ paddingLeft: '34px', minHeight: '34px', height: '34px', fontSize: '12px' }}
                           />
                           {paletteSearchQuery && (
                             <button
                               type="button"
                               onClick={() => setPaletteSearchQuery('')}
-                              style={{ position: 'absolute', right: 8, background: 'none', border: 'none', color: '#848E9C', cursor: 'pointer' }}
+                              style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#848E9C', cursor: 'pointer', zIndex: 3 }}
                             >
                               <X size={11} />
                             </button>
@@ -2901,14 +3050,19 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
                 )}
               </div>
             </div>
+            )}
 
             {/* ── Right Column: Live Interactive Site Preview ── */}
-            <div className="crm-layout-preview-col">
+            {studioLayoutMode !== 'editor' && (
+              <div className="crm-layout-preview-col">
               <div className="crm-preview-studio-card">
                 {/* 1. Browser Chrome Bar */}
                 <div className="crm-preview-chrome-bar">
                   <div className="crm-preview-url-box">
-                    <Lock size={11} color="#0ECB81" />
+                    <span className="crm-preview-ssl-badge">
+                      <span className="crm-preview-ssl-dot" />
+                      <span className="crm-preview-https">https://</span>
+                    </span>
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       codexdynamics.com/{previewPage !== 'home' ? previewPage : ''}
                     </span>
@@ -3004,7 +3158,7 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
                     ))}
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                     <select
                       className="crm-preview-jump-select"
                       onChange={(e) => {
@@ -3025,9 +3179,25 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
                       })}
                     </select>
 
-                    <div className="crm-status-pill saved" style={{ padding: '3px 8px', fontSize: 10.5 }}>
-                      <span className="crm-status-pulse" />
-                      <span>LIVE PREVIEW</span>
+                    <div
+                      className="crm-live-preview-pill"
+                      style={{
+                        padding: '3px 9px',
+                        fontSize: 10.5,
+                        fontWeight: 700,
+                        letterSpacing: '0.04em',
+                        flexShrink: 0,
+                        whiteSpace: 'nowrap',
+                        maxWidth: 'none',
+                        width: 'auto',
+                        overflow: 'visible',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6
+                      }}
+                    >
+                      <span className="crm-status-pulse" style={{ flexShrink: 0 }} />
+                      <span style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>LIVE PREVIEW</span>
                     </div>
                   </div>
                 </div>
@@ -3058,6 +3228,7 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
                 </div>
               </div>
             </div>
+            )}
           </div>
         </div>
       )}
@@ -3260,7 +3431,7 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
           <div className="crm-settings-group-block">
             <div className="crm-settings-group-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Lock size={15} color="#0ECB81" />
+                <Shield size={16} color="#0ECB81" />
                 <span className="crm-settings-group-title">Authentication & Staff Access Controls</span>
               </div>
               <span className="crm-status-pill saved" style={{ fontSize: 10.5, padding: '2px 8px' }}>
@@ -3418,7 +3589,7 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
           <div className="crm-settings-group-block">
             <div className="crm-settings-group-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                <Lock size={15} color="#F0B90B" />
+                <KeyRound size={16} color="#F0B90B" />
                 <span className="crm-settings-group-title">Super Admin Credentials</span>
               </div>
               <span style={{ fontSize: 11, color: '#848E9C' }}>Minimum 6 characters</span>
@@ -3817,12 +3988,31 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
                   WordPress-Style Live Site Customizer
                 </span>
               </div>
-              <div className="crm-status-pill saved" style={{ padding: '3px 8px', fontSize: 10.5 }}>
-                <span className="crm-status-pulse" />
-                <span>LIVE PREVIEW</span>
+              <div
+                className="crm-live-preview-pill"
+                style={{
+                  padding: '3px 9px',
+                  fontSize: 10.5,
+                  fontWeight: 700,
+                  letterSpacing: '0.04em',
+                  flexShrink: 0,
+                  whiteSpace: 'nowrap',
+                  maxWidth: 'none',
+                  width: 'auto',
+                  overflow: 'visible',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6
+                }}
+              >
+                <span className="crm-status-pulse" style={{ flexShrink: 0 }} />
+                <span style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>LIVE PREVIEW</span>
               </div>
               <div className="crm-preview-url-box" style={{ maxWidth: 300 }}>
-                <Lock size={11} color="#0ECB81" />
+                <span className="crm-preview-ssl-badge">
+                  <span className="crm-preview-ssl-dot" />
+                  <span className="crm-preview-https">https://</span>
+                </span>
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   codexdynamics.com/{previewPage !== 'home' ? previewPage : ''}
                 </span>
@@ -4181,6 +4371,59 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── Apple Cupertino Floating Action Capsule (Bottom Dock) ── */}
+      <div className={`crm-floating-action-capsule ${hasUnsavedChanges ? 'active' : 'idle'}`}>
+        <div className="crm-floating-capsule-inner">
+          {hasUnsavedChanges ? (
+            <>
+              <div className="crm-floating-status">
+                <span className="crm-status-pulse" />
+                <span className="crm-floating-status-text">Unsaved Changes</span>
+              </div>
+              <div className="crm-floating-divider" />
+              <button
+                type="button"
+                className="crm-floating-btn secondary"
+                onClick={handleResetToDefaults}
+                title="Discard unsaved changes and revert form"
+              >
+                <RotateCcw size={12} />
+                <span>Revert</span>
+              </button>
+              <button
+                type="button"
+                className="crm-floating-btn primary"
+                onClick={handleSaveAll}
+                disabled={saving}
+                title="Publish changes (Keyboard shortcut: ⌘S or Ctrl+S)"
+              >
+                <Save size={13} />
+                <span>{saving ? 'Publishing...' : 'Save Changes'}</span>
+                <kbd className="crm-kbd">⌘S</kbd>
+              </button>
+            </>
+          ) : (
+            <div className="crm-floating-synced-status">
+              <Check size={13} color="#0ECB81" strokeWidth={2.5} />
+              <span>All Configurations Synced & Live</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Floating Quick Preview Trigger (When in Full Editor mode) */}
+      {activeSubTab === 'layout' && studioLayoutMode === 'editor' && (
+        <button
+          type="button"
+          className="crm-floating-preview-trigger"
+          onClick={() => setStudioLayoutMode('split')}
+          title="Return to split view with Live Preview"
+        >
+          <Eye size={13} color="#F0B90B" />
+          <span>Show Live Preview</span>
+        </button>
       )}
     </div>
   );

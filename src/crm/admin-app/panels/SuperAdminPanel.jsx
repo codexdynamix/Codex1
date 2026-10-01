@@ -10,6 +10,7 @@ import {
 import { useConfirmDialog } from '../components/ConfirmModal/ConfirmModal';
 import Dashboard from '../components/Dashboard/Dashboard.jsx';
 import SiteSettingsTab from '../components/SiteSettings/SiteSettingsTab.jsx';
+import ProjectsTab from '../components/Projects/ProjectsTab.jsx';
 import SiteCrmWorkspace from '../components/SiteCrmWorkspace.jsx';
 import LeadProfileModal from '../components/LeadProfileModal.jsx';
 import StaffProfileModal from '../components/StaffProfileModal.jsx';
@@ -26,7 +27,7 @@ import { COUNTRY_LIST } from '../countryData';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faBell, faBuilding, faCog, faHistory, faIdCard, faTachometerAlt, faTrash, faUser, faUserPlus, faUsers,
-  faArrowDown, faArrowUp, faKey, faGlobe, faComments,
+  faArrowDown, faArrowUp, faKey, faGlobe, faComments, faBriefcase,
 } from '@fortawesome/free-solid-svg-icons';
 import {
   getAdminToken, getUserProfileHistoryApi,
@@ -2530,6 +2531,7 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
     { name: 'Sessions', icon: faUsers },
     { name: 'Recycle Bin', icon: faTrash },
     { name: 'Site Settings', icon: faCog },
+    { name: 'Projects', icon: faBriefcase },
     { name: 'Audit Log', icon: faHistory },
     { name: 'Agent Access', icon: faKey },
   ];
@@ -3627,6 +3629,8 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
               <Dashboard offices={data.offices} teams={data.teams} staffUsers={data.users} />
             ) : activeTab === 'Site Settings' ? (
               <SiteSettingsTab showNotification={showNotification} />
+            ) : activeTab === 'Projects' ? (
+              <ProjectsTab showNotification={showNotification} />
             ) : activeTab === 'Audit Log' ? (
               <AuditLog />
             ) : activeTab === 'Recycle Bin' ? (

@@ -2514,34 +2514,51 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-.crm-admin-app .crm-studio-search-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  flex: 1;
-  min-width: 140px;
+.crm-admin-app .crm-studio-search-wrapper,
+.crm-admin-app.crm-admin-app .crm-studio-search-wrapper {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  flex: 1 !important;
+  min-width: 180px !important;
 }
 
-.crm-admin-app .crm-studio-search-wrapper svg {
-  position: absolute;
-  left: 8px;
-  pointer-events: none;
+.crm-admin-app .crm-studio-search-wrapper svg:first-child,
+.crm-admin-app.crm-admin-app .crm-studio-search-wrapper svg:first-child {
+  position: absolute !important;
+  left: 11px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  pointer-events: none !important;
+  z-index: 3 !important;
 }
 
-.crm-admin-app .crm-studio-search-input {
-  width: 100%;
-  background: #21252D;
-  border: 1px solid #444A55;
-  border-radius: 5px;
-  padding: 5px 8px 5px 26px;
-  font-size: 11.5px;
-  color: #EAECEF;
-  outline: none;
-  transition: border-color 0.15s ease;
+.crm-admin-app .crm-studio-search-input,
+.crm-admin-app.crm-admin-app .crm-studio-search-input,
+.crm-admin-app input[type="text"].crm-studio-search-input,
+.crm-admin-app.crm-admin-app input[type="text"].crm-studio-search-input {
+  width: 100% !important;
+  background: #21252D !important;
+  border: 1px solid #444A55 !important;
+  border-radius: 6px !important;
+  padding: 6px 12px 6px 36px !important;
+  padding-left: 36px !important;
+  font-size: 11.5px !important;
+  min-height: 34px !important;
+  height: 34px !important;
+  line-height: normal !important;
+  color: #EAECEF !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
 }
 
-.crm-admin-app .crm-studio-search-input:focus {
-  border-color: #F0B90B;
+.crm-admin-app .crm-studio-search-input:focus,
+.crm-admin-app.crm-admin-app .crm-studio-search-input:focus,
+.crm-admin-app input[type="text"].crm-studio-search-input:focus,
+.crm-admin-app.crm-admin-app input[type="text"].crm-studio-search-input:focus {
+  border-color: #F0B90B !important;
+  box-shadow: 0 0 0 2px rgba(240, 185, 11, 0.18) !important;
 }
 
 .crm-admin-app .crm-template-presets-grid {
@@ -3167,15 +3184,17 @@
 }
 
 /* Secondary Preview Bar for Page and Section Jumping */
-.crm-admin-app .crm-preview-subnav-bar {
-  background: #181C22;
-  border-bottom: 1px solid #2B313A;
-  padding: 6px 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
+.crm-admin-app .crm-preview-subnav-bar,
+.crm-admin-app.crm-admin-app .crm-preview-subnav-bar {
+  background: #181C22 !important;
+  border-bottom: 1px solid #2B313A !important;
+  padding: 6px 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
 }
 
 .crm-admin-app .crm-preview-page-tabs {
@@ -4044,12 +4063,953 @@
 
 /* ── Apple-Grade Modal Polish ─────────────────────────────────────────── */
 .crm-admin-app .crm-settings-modal-backdrop {
-  backdrop-filter: blur(8px) saturate(180%);
-  background: rgba(11, 14, 17, 0.75);
+  backdrop-filter: blur(12px) saturate(190%);
+  background: rgba(18, 20, 24, 0.78);
 }
 
 .crm-admin-app .crm-settings-modal-card {
-  border-radius: 16px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  background: #363B44 !important;
+  border: 1px solid #444A55 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
 }
+
+/* ============================================================================
+   APPLE / iOS COMPREHENSIVE DESIGN OVERHAUL (LEADS CRM COLOR PARITY)
+   ============================================================================ */
+
+/* ── Universal Container & Root ────────────────────────────────────────────── */
+.crm-admin-app .crm-site-settings-root {
+  background: #2A2E36;
+  color: #EAECEF;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', 'Segoe UI', sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* ── Top Header Bar (Apple Elevated Toolbar) ───────────────────────────────── */
+.crm-admin-app .crm-site-settings-header {
+  background: #363B44 !important;
+  border: 1px solid #444A55 !important;
+  border-radius: 12px !important;
+  padding: 16px 20px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
+}
+
+.crm-admin-app .crm-site-settings-title-group h2 {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: #EAECEF !important;
+  letter-spacing: -0.015em !important;
+}
+
+.crm-admin-app .crm-site-settings-title-group p {
+  font-size: 12px !important;
+  color: #848E9C !important;
+}
+
+/* ── Apple Standard Buttons (Primary / Secondary / Danger) ─────────────────── */
+.crm-admin-app .crm-btn-primary {
+  background: #F0B90B !important;
+  color: #121418 !important;
+  font-weight: 600 !important;
+  font-size: 12.5px !important;
+  border: none !important;
+  border-radius: 8px !important;
+  height: 36px !important;
+  padding: 0 16px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  cursor: pointer !important;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: 0 2px 8px rgba(240, 185, 11, 0.3) !important;
+}
+
+.crm-admin-app .crm-btn-primary:hover:not(:disabled) {
+  background: #FCD535 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 14px rgba(240, 185, 11, 0.45) !important;
+}
+
+.crm-admin-app .crm-btn-primary:active:not(:disabled) {
+  transform: scale(0.98) !important;
+}
+
+.crm-admin-app .crm-btn-secondary {
+  background: #2B313A !important;
+  border: 1px solid #444A55 !important;
+  color: #EAECEF !important;
+  font-weight: 500 !important;
+  font-size: 12.5px !important;
+  border-radius: 8px !important;
+  height: 36px !important;
+  padding: 0 14px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  cursor: pointer !important;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.crm-admin-app .crm-btn-secondary:hover:not(:disabled) {
+  background: #363B44 !important;
+  border-color: #6E7682 !important;
+  color: #FFFFFF !important;
+  transform: translateY(-1px) !important;
+}
+
+.crm-admin-app .crm-btn-secondary:active:not(:disabled) {
+  transform: scale(0.98) !important;
+}
+
+/* ── Apple Segmented Tab Bar ───────────────────────────────────────────────── */
+.crm-admin-app .crm-settings-tab-bar {
+  background: #2B313A !important;
+  border: 1px solid #444A55 !important;
+  border-radius: 10px !important;
+  padding: 4px !important;
+  gap: 3px !important;
+}
+
+.crm-admin-app .crm-settings-tab-btn {
+  border-radius: 7px !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  color: #848E9C !important;
+  height: 36px !important;
+  padding: 0 16px !important;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.crm-admin-app .crm-settings-tab-btn:hover {
+  color: #EAECEF !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.crm-admin-app .crm-settings-tab-btn.active {
+  background: #363B44 !important;
+  color: #F0B90B !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid #444A55 !important;
+}
+
+/* ── Apple Content Panels & Inset Cards ────────────────────────────────────── */
+.crm-admin-app .crm-settings-panel {
+  background: #363B44 !important;
+  border: 1px solid #444A55 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16) !important;
+}
+
+.crm-admin-app .crm-ios-card {
+  background: #363B44 !important;
+  border: 1px solid #444A55 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+  overflow: hidden !important;
+}
+
+.crm-admin-app .crm-ios-card-head {
+  padding: 14px 18px !important;
+  background: #363B44 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  transition: background 0.15s ease !important;
+}
+
+.crm-admin-app .crm-ios-card-head:hover {
+  background: #3B414C !important;
+}
+
+.crm-admin-app .crm-ios-card-head.collapsed {
+  border-bottom: none !important;
+}
+
+.crm-admin-app .crm-ios-card-body {
+  padding: 16px 18px !important;
+  background: #363B44 !important;
+}
+
+.crm-admin-app .crm-ios-inset-box {
+  background: #2B313A !important;
+  border: 1px solid #444A55 !important;
+  border-radius: 10px !important;
+  padding: 14px 16px !important;
+  margin-bottom: 12px !important;
+}
+
+/* ── Apple Standard Inputs, Selects, Textareas ────────────────────────────── */
+.crm-admin-app .crm-settings-input,
+.crm-admin-app .crm-settings-textarea,
+.crm-admin-app .crm-settings-select {
+  background: #2B313A !important;
+  border: 1px solid #444A55 !important;
+  border-radius: 8px !important;
+  color: #EAECEF !important;
+  font-size: 13px !important;
+  padding: 8px 12px !important;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease !important;
+}
+
+.crm-admin-app .crm-settings-input:focus,
+.crm-admin-app .crm-settings-textarea:focus,
+.crm-admin-app .crm-settings-select:focus {
+  border-color: #F0B90B !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(240, 185, 11, 0.2) !important;
+  background: #303742 !important;
+}
+
+.crm-admin-app .crm-settings-input::placeholder,
+.crm-admin-app .crm-settings-textarea::placeholder {
+  color: #707A8A !important;
+}
+
+.crm-admin-app .crm-settings-field label {
+  font-size: 11.5px !important;
+  font-weight: 500 !important;
+  color: #848E9C !important;
+  margin-bottom: 6px !important;
+  letter-spacing: -0.01em !important;
+}
+
+/* ── Apple Authentic iOS Toggle Switches ──────────────────────────────────── */
+.crm-admin-app .crm-toggle-switch {
+  width: 42px !important;
+  height: 24px !important;
+}
+
+.crm-admin-app .crm-toggle-slider {
+  background-color: #21252D !important;
+  border: 1.5px solid #444A55 !important;
+  border-radius: 24px !important;
+  transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.crm-admin-app .crm-toggle-slider:before {
+  height: 16px !important;
+  width: 16px !important;
+  left: 2.5px !important;
+  bottom: 2.5px !important;
+  background-color: #FFFFFF !important;
+  border-radius: 50% !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+  transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.crm-admin-app .crm-toggle-switch input:checked + .crm-toggle-slider {
+  background-color: #0ECB81 !important;
+  border-color: #0ECB81 !important;
+}
+
+.crm-admin-app .crm-toggle-switch input:checked + .crm-toggle-slider:before {
+  transform: translateX(18px) !important;
+  background-color: #FFFFFF !important;
+}
+
+.crm-admin-app .crm-toggle-card {
+  background: #2B313A !important;
+  border: 1px solid #444A55 !important;
+  border-radius: 10px !important;
+  padding: 14px 16px !important;
+  transition: border-color 0.16s ease, background 0.16s ease !important;
+}
+
+.crm-admin-app .crm-toggle-card:hover {
+  background: #303742 !important;
+  border-color: #6E7682 !important;
+}
+
+/* ── Coolors Interactive Color Studio (Clean Apple Minimalism, No Diamond Locks) ── */
+.crm-admin-app .crm-coolors-interactive-stage {
+  background: #2B313A !important;
+  border: 1px solid #444A55 !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
+  gap: 14px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
+}
+
+.crm-admin-app .crm-coolors-pillars-grid {
+  height: 96px !important;
+  border-radius: 10px !important;
+  border: 1px solid #444A55 !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
+  overflow: hidden !important;
+}
+
+.crm-admin-app .crm-coolors-pillar {
+  padding: 8px 6px !important;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.crm-admin-app .crm-coolors-pillar:hover {
+  filter: brightness(1.1) !important;
+  transform: scale(1.02) !important;
+  z-index: 5 !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45) !important;
+}
+
+.crm-admin-app .crm-coolors-pillar:active {
+  transform: scale(0.98) !important;
+}
+
+.crm-admin-app .crm-coolors-pillar-label {
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  color: #FFFFFF !important;
+  background: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(8px) !important;
+  padding: 2.5px 8px !important;
+  border-radius: 4px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+}
+
+.crm-admin-app .crm-coolors-pillar-hex {
+  font-family: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  color: #FFFFFF !important;
+  background: rgba(0, 0, 0, 0.72) !important;
+  backdrop-filter: blur(8px) !important;
+  padding: 3px 8px !important;
+  border-radius: 5px !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35) !important;
+}
+
+.crm-admin-app .crm-coolors-palette-card {
+  background: #2B313A !important;
+  border: 1px solid #444A55 !important;
+  border-radius: 10px !important;
+  padding: 12px 14px !important;
+  transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.crm-admin-app .crm-coolors-palette-card:hover {
+  background: #303742 !important;
+  border-color: #F0B90B !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+}
+
+.crm-admin-app .crm-coolors-palette-card.active {
+  background: rgba(240, 185, 11, 0.08) !important;
+  border-color: #F0B90B !important;
+  box-shadow: 0 0 0 1.5px #F0B90B !important;
+}
+
+.crm-admin-app .crm-coolors-swatch-strip {
+  border-radius: 7px !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+.crm-admin-app .crm-coolors-apply-btn {
+  background: #363B44 !important;
+  border: 1px solid #444A55 !important;
+  color: #EAECEF !important;
+  border-radius: 6px !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  padding: 4px 10px !important;
+  transition: all 0.15s ease !important;
+}
+
+.crm-admin-app .crm-coolors-apply-btn:hover {
+  background: #F0B90B !important;
+  color: #121418 !important;
+  border-color: #F0B90B !important;
+}
+
+/* ── Live Preview Chrome Bar & Apple SSL Indicator ────────────────────────── */
+.crm-admin-app .crm-preview-chrome-bar {
+  background: #2B313A !important;
+  border-bottom: 1px solid #444A55 !important;
+  padding: 8px 12px !important;
+}
+
+.crm-admin-app .crm-preview-url-box {
+  background: #1F2228 !important;
+  border: 1px solid #444A55 !important;
+  border-radius: 7px !important;
+  color: #848E9C !important;
+  font-size: 11px !important;
+  padding: 4px 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+}
+
+.crm-admin-app .crm-preview-ssl-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  flex-shrink: 0 !important;
+}
+
+.crm-admin-app .crm-preview-ssl-dot {
+  width: 6px !important;
+  height: 6px !important;
+  border-radius: 50% !important;
+  background: #0ECB81 !important;
+  box-shadow: 0 0 6px rgba(14, 203, 129, 0.7) !important;
+}
+
+.crm-admin-app .crm-preview-https {
+  color: #0ECB81 !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  font-family: 'JetBrains Mono', 'SF Mono', monospace !important;
+}
+
+.crm-admin-app .crm-preview-segmented {
+  background: #1F2228 !important;
+  border: 1px solid #444A55 !important;
+  border-radius: 7px !important;
+  padding: 2px !important;
+  gap: 2px !important;
+}
+
+.crm-admin-app .crm-preview-segmented-btn {
+  border-radius: 5px !important;
+  font-size: 11px !important;
+  padding: 3px 8px !important;
+  color: #848E9C !important;
+}
+
+.crm-admin-app .crm-preview-segmented-btn.active {
+  background: #363B44 !important;
+  color: #F0B90B !important;
+  font-weight: 600 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* ── Contact Channels & Headquarter Locations (Table Parity) ──────────────── */
+.crm-admin-app .crm-channel-title {
+  color: #EAECEF !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+.crm-admin-app .crm-channel-sub {
+  color: #707A8A !important;
+  font-size: 11px !important;
+  font-family: 'JetBrains Mono', 'SF Mono', monospace !important;
+}
+
+.crm-admin-app .crm-endpoint-val-text {
+  color: #EAECEF !important;
+  font-family: 'JetBrains Mono', 'SF Mono', monospace !important;
+  font-size: 12.5px !important;
+}
+
+.crm-admin-app .crm-endpoint-copy-icon-btn {
+  background: #2B313A !important;
+  border: 1px solid #444A55 !important;
+  border-radius: 5px !important;
+  color: #848E9C !important;
+  width: 24px !important;
+  height: 24px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.crm-admin-app .crm-endpoint-copy-icon-btn:hover {
+  background: #363B44 !important;
+  color: #F0B90B !important;
+  border-color: #F0B90B !important;
+}
+
+.crm-admin-app .crm-action-btn.crm-action-change {
+  background: #2B313A !important;
+  border: 1px solid #444A55 !important;
+  color: #EAECEF !important;
+  border-radius: 6px !important;
+  font-size: 11.5px !important;
+  height: 28px !important;
+  padding: 0 10px !important;
+  gap: 5px !important;
+  transition: all 0.15s ease !important;
+}
+
+.crm-admin-app .crm-action-btn.crm-action-change:hover {
+  background: #363B44 !important;
+  color: #F0B90B !important;
+  border-color: #F0B90B !important;
+}
+
+.crm-admin-app .crm-action-btn.crm-action-delete {
+  background: rgba(246, 70, 93, 0.1) !important;
+  border: 1px solid rgba(246, 70, 93, 0.28) !important;
+  color: #F6465D !important;
+  border-radius: 6px !important;
+  font-size: 11.5px !important;
+  height: 28px !important;
+  padding: 0 10px !important;
+  gap: 5px !important;
+  transition: all 0.15s ease !important;
+}
+
+.crm-admin-app .crm-action-btn.crm-action-delete:hover {
+  background: #F6465D !important;
+  color: #FFFFFF !important;
+  border-color: #F6465D !important;
+}
+
+/* ── Header Socials ────────────────────────────────────────────────────────── */
+.crm-admin-app .crm-social-card {
+  background: #2B313A !important;
+  border: 1px solid #444A55 !important;
+  border-radius: 12px !important;
+  padding: 16px 18px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+  transition: border-color 0.16s ease, background 0.16s ease !important;
+}
+
+.crm-admin-app .crm-social-card:hover {
+  background: #303742 !important;
+  border-color: #6E7682 !important;
+}
+
+.crm-admin-app .crm-social-card-avatar {
+  background: #363B44 !important;
+  border: 1px solid #444A55 !important;
+  border-radius: 50% !important;
+  width: 40px !important;
+  height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.crm-admin-app .crm-social-card-title {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: #EAECEF !important;
+}
+
+.crm-admin-app .crm-social-card-desc {
+  font-size: 12px !important;
+  color: #848E9C !important;
+}
+
+/* ── SEO & Search Simulations ─────────────────────────────────────────────── */
+.crm-admin-app .crm-seo-sim-card {
+  background: #2B313A !important;
+  border: 1px solid #444A55 !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+.crm-admin-app .crm-google-preview {
+  background: #1F2228 !important;
+  border: 1px solid #363B44 !important;
+  border-radius: 8px !important;
+  padding: 14px 16px !important;
+}
+
+.crm-admin-app .crm-google-title {
+  color: #8AB4F8 !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+}
+
+.crm-admin-app .crm-google-desc {
+  color: #BDC1C6 !important;
+  font-size: 12.5px !important;
+  line-height: 1.5 !important;
+}
+
+.crm-admin-app .crm-og-social-card-box {
+  background: #1F2228 !important;
+  border: 1px solid #363B44 !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+}
+
+.crm-admin-app .crm-og-social-title {
+  color: #EAECEF !important;
+  font-size: 13.5px !important;
+  font-weight: 600 !important;
+}
+
+.crm-admin-app .crm-og-social-desc {
+  color: #848E9C !important;
+  font-size: 12px !important;
+}
+
+/* ── Security & System ─────────────────────────────────────────────────────── */
+.crm-admin-app .crm-settings-group-block {
+  background: #2B313A !important;
+  border: 1px solid #444A55 !important;
+  border-radius: 12px !important;
+  padding: 18px 20px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+.crm-admin-app .crm-settings-group-title {
+  color: #EAECEF !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+.crm-admin-app .crm-char-counter-pill {
+  font-size: 10.5px !important;
+  padding: 2px 7px !important;
+  border-radius: 5px !important;
+}
+
+.crm-admin-app .crm-char-counter-pill.good {
+  background: rgba(14, 203, 129, 0.12) !important;
+  color: #0ECB81 !important;
+  border: 1px solid rgba(14, 203, 129, 0.25) !important;
+}
+
+.crm-admin-app .crm-char-counter-pill.warn {
+  background: rgba(240, 185, 11, 0.12) !important;
+  color: #F0B90B !important;
+  border: 1px solid rgba(240, 185, 11, 0.3) !important;
+}
+
+.crm-admin-app .crm-char-counter-pill.danger {
+  background: rgba(246, 70, 93, 0.12) !important;
+  color: #F6465D !important;
+  border: 1px solid rgba(246, 70, 93, 0.3) !important;
+}
+
+/* ── Live Preview Badges & System Tags (Non-Truncating & Full Width) ──────── */
+.crm-admin-app .crm-live-preview-pill,
+.crm-admin-app.crm-admin-app .crm-live-preview-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 3px 9px !important;
+  border-radius: 999px !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  line-height: normal !important;
+  background: rgba(14, 203, 129, 0.14) !important;
+  color: #0ECB81 !important;
+  border: 1px solid rgba(14, 203, 129, 0.3) !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  max-width: none !important;
+  width: auto !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+  text-transform: uppercase !important;
+  user-select: none !important;
+}
+
+.crm-admin-app .crm-live-preview-pill::before,
+.crm-admin-app.crm-admin-app .crm-live-preview-pill::before {
+  display: none !important;
+}
+
+.crm-admin-app .crm-system-tag-pill,
+.crm-admin-app.crm-admin-app .crm-system-tag-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 4px 11px !important;
+  border-radius: 999px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em !important;
+  line-height: normal !important;
+  background: rgba(14, 203, 129, 0.12) !important;
+  color: #0ECB81 !important;
+  border: 1px solid rgba(14, 203, 129, 0.28) !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  max-width: none !important;
+  width: auto !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+  user-select: none !important;
+}
+
+.crm-admin-app .crm-system-tag-pill::before,
+.crm-admin-app.crm-admin-app .crm-system-tag-pill::before {
+  display: none !important;
+}
+
+/* Ensure no status pills in Site & Platform settings clip their contents */
+.crm-site-settings-view .crm-status-pill,
+.crm-admin-app.crm-admin-app .crm-site-settings-view .crm-status-pill,
+.crm-admin-app.crm-admin-app .crm-ios-card-head-right .crm-status-pill,
+.crm-admin-app.crm-admin-app .crm-preview-subnav-bar .crm-status-pill,
+.crm-admin-app.crm-admin-app .crm-fullscreen-topbar .crm-status-pill {
+  max-width: none !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+}
+
+/* ── Apple Cupertino Floating Action Capsule (Bottom Dock) ────────────────── */
+.crm-admin-app .crm-floating-action-capsule,
+.crm-admin-app.crm-admin-app .crm-floating-action-capsule {
+  position: fixed !important;
+  bottom: 24px !important;
+  left: 50% !important;
+  transform: translateX(-50%) translateY(0) !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  align-items: center !important;
+  pointer-events: auto !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.crm-admin-app .crm-floating-action-capsule.idle {
+  opacity: 0.88 !important;
+}
+
+.crm-admin-app .crm-floating-action-capsule.idle:hover {
+  opacity: 1 !important;
+  transform: translateX(-50%) translateY(-2px) !important;
+}
+
+.crm-admin-app .crm-floating-action-capsule.active {
+  opacity: 1 !important;
+  transform: translateX(-50%) translateY(0) !important;
+  animation: crm-capsule-bounce 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+@keyframes crm-capsule-bounce {
+  0% { transform: translateX(-50%) translateY(12px) scale(0.96); opacity: 0; }
+  100% { transform: translateX(-50%) translateY(0) scale(1); opacity: 1; }
+}
+
+.crm-admin-app .crm-floating-capsule-inner,
+.crm-admin-app.crm-admin-app .crm-floating-capsule-inner {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 8px 14px 8px 16px !important;
+  background: rgba(33, 37, 45, 0.94) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  border-radius: 999px !important;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+}
+
+.crm-admin-app .crm-floating-status {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #F0B90B !important;
+  white-space: nowrap !important;
+}
+
+.crm-admin-app .crm-floating-status-text {
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em !important;
+}
+
+.crm-admin-app .crm-floating-divider {
+  width: 1px !important;
+  height: 20px !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+  margin: 0 2px !important;
+}
+
+.crm-admin-app .crm-floating-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 6px 14px !important;
+  border-radius: 999px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  border: none !important;
+  transition: all 0.16s ease !important;
+  white-space: nowrap !important;
+}
+
+.crm-admin-app .crm-floating-btn.secondary {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #EAECEF !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+.crm-admin-app .crm-floating-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+  color: #FFFFFF !important;
+}
+
+.crm-admin-app .crm-floating-btn.primary {
+  background: #F0B90B !important;
+  color: #121418 !important;
+  box-shadow: 0 2px 8px rgba(240, 185, 11, 0.35) !important;
+}
+
+.crm-admin-app .crm-floating-btn.primary:hover:not(:disabled) {
+  background: #FCD535 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 14px rgba(240, 185, 11, 0.45) !important;
+}
+
+.crm-admin-app .crm-floating-synced-status {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  color: #0ECB81 !important;
+  padding: 2px 6px !important;
+  white-space: nowrap !important;
+}
+
+.crm-admin-app .crm-kbd {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 1px 5px !important;
+  font-size: 10px !important;
+  font-family: inherit !important;
+  font-weight: 700 !important;
+  background: rgba(0, 0, 0, 0.22) !important;
+  border-radius: 4px !important;
+  margin-left: 2px !important;
+  letter-spacing: 0.02em !important;
+}
+
+/* ── Layout Studio Modes (Split / Full Editor / Preview Only) ─────────────── */
+.crm-admin-app .crm-layout-studio-grid.mode-editor,
+.crm-admin-app.crm-admin-app .crm-layout-studio-grid.mode-editor {
+  grid-template-columns: 1fr !important;
+}
+
+.crm-admin-app .crm-layout-studio-grid.mode-editor .crm-layout-preview-col {
+  display: none !important;
+}
+
+.crm-admin-app .crm-layout-studio-grid.mode-preview,
+.crm-admin-app.crm-admin-app .crm-layout-studio-grid.mode-preview {
+  grid-template-columns: 1fr !important;
+}
+
+.crm-admin-app .crm-layout-studio-grid.mode-preview .crm-layout-controls-col {
+  display: none !important;
+}
+
+.crm-admin-app .crm-layout-studio-grid.mode-split,
+.crm-admin-app.crm-admin-app .crm-layout-studio-grid.mode-split {
+  grid-template-columns: minmax(380px, 500px) minmax(0, 1fr) !important;
+}
+
+@media (min-width: 1600px) {
+  .crm-admin-app .crm-layout-studio-grid.mode-split,
+  .crm-admin-app.crm-admin-app .crm-layout-studio-grid.mode-split {
+    grid-template-columns: minmax(460px, 580px) minmax(0, 1fr) !important;
+  }
+}
+
+.crm-admin-app .crm-floating-preview-trigger {
+  position: fixed !important;
+  bottom: 24px !important;
+  right: 24px !important;
+  z-index: 9990 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 9px 18px !important;
+  border-radius: 999px !important;
+  background: rgba(43, 49, 58, 0.95) !important;
+  backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  color: #EAECEF !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45) !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.crm-admin-app .crm-floating-preview-trigger:hover {
+  background: #3B414C !important;
+  color: #F0B90B !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55) !important;
+}
+
+/* ── Dynamic WCAG 2.1 Contrast Matrix Badges in Coolors Studio ───────────── */
+.crm-admin-app .crm-wcag-matrix-pill,
+.crm-admin-app.crm-admin-app .crm-wcag-matrix-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 3px 9px !important;
+  border-radius: 999px !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.02em !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  line-height: normal !important;
+}
+
+.crm-admin-app .crm-wcag-matrix-pill.aaa {
+  background: rgba(14, 203, 129, 0.16) !important;
+  color: #0ECB81 !important;
+  border: 1px solid rgba(14, 203, 129, 0.32) !important;
+}
+
+.crm-admin-app .crm-wcag-matrix-pill.aa {
+  background: rgba(240, 185, 11, 0.16) !important;
+  color: #F0B90B !important;
+  border: 1px solid rgba(240, 185, 11, 0.32) !important;
+}
+
+.crm-admin-app .crm-wcag-matrix-pill.fail {
+  background: rgba(246, 70, 93, 0.16) !important;
+  color: #F6465D !important;
+  border: 1px solid rgba(246, 70, 93, 0.32) !important;
+}
+
+/* ── Sub-Tabs Count Badges ────────────────────────────────────────────────── */
+.crm-admin-app .crm-tab-count-pill,
+.crm-admin-app.crm-admin-app .crm-tab-count-pill {
+  font-size: 10px !important;
+  padding: 1px 6px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #848E9C !important;
+  font-weight: 600 !important;
+  margin-left: 5px !important;
+  letter-spacing: 0.02em !important;
+  transition: all 0.15s ease !important;
+}
+
+.crm-admin-app .crm-tab-count-pill.active {
+  background: rgba(240, 185, 11, 0.18) !important;
+  color: #F0B90B !important;
+}
+
+/* ── Apple Spring Transitions & iOS Inset Polish ─────────────────────────── */
+.crm-admin-app .crm-ios-card,
+.crm-admin-app .crm-settings-group-block {
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.crm-admin-app .crm-ios-card-collapse-btn svg {
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.crm-admin-app .crm-toggle-switch input:checked + .crm-toggle-slider {
+  background: #30D158 !important; /* Authentic Apple iOS Green */
+}
+
 

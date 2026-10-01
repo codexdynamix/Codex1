@@ -14,7 +14,7 @@ import {
   Smartphone,
   ExternalLink,
   RefreshCw,
-  Lock,
+  Shield,
   Layers,
 } from "lucide-react";
 import type { SiteConfig, ThemeSettings } from "@/types/site-editor";
@@ -649,7 +649,7 @@ export function LayoutSettingsSection({ config, onChange }: LayoutSettingsSectio
             {/* 1. Chrome Bar */}
             <div className="bg-[#14171A] border-b border-[#2B313A] px-3 py-2 flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-2 bg-[#0B0E11] border border-[#2B313A] rounded-lg px-2.5 py-1 text-[11px] font-mono text-[#848E9C] flex-1 max-w-[280px]">
-                <Lock className="size-3 text-emerald-400" />
+                <Shield className="size-3 text-emerald-400" />
                 <span className="truncate">codexdynamics.com/{previewPage !== "home" ? previewPage : ""}</span>
               </div>
 
@@ -744,10 +744,10 @@ export function LayoutSettingsSection({ config, onChange }: LayoutSettingsSectio
                 ))}
               </div>
 
-              <div className="flex items-center gap-2">
-                <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  LIVE PREVIEW
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0 whitespace-nowrap">
+                  <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                  <span className="shrink-0 whitespace-nowrap">LIVE PREVIEW</span>
                 </span>
               </div>
             </div>
