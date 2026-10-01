@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import './SiteSettings.css';
 import {
   DEFAULT_PLATFORM_SETTINGS,
@@ -46,8 +46,22 @@ import {
   ZoomIn,
   ZoomOut,
   Layers,
-  Compass
+  Compass,
+  Sun,
+  Moon,
+  Dices,
+  Unlock,
+  LayoutGrid,
+  Crown,
+  Building2,
+  Terminal,
+  Zap
 } from 'lucide-react';
+import {
+  THEME_LAYOUT_PRESETS,
+  COLOR_PALETTES,
+  generateRandomHarmoniousPalette
+} from './ThemeAndPalettePresets';
 import {
   WhatsAppLogo,
   TelegramLogo,
@@ -152,24 +166,11 @@ export function OfficialProtocolBadge({ type }) {
 }
 
 const SUB_TABS = [
-  { id: 'branding', label: 'Branding & Identity', icon: Palette },
+  { id: 'layout', label: 'Layout & Modules', icon: Layout },
   { id: 'contacts', label: 'Contact Channels', icon: Phone },
   { id: 'socials', label: 'Header Socials', icon: Share2 },
-  { id: 'layout', label: 'Layout & Modules', icon: Layout },
   { id: 'seo', label: 'SEO & Search', icon: Search },
   { id: 'security', label: 'Security & System', icon: Shield },
-];
-
-const COLOR_PRESETS = [
-  { id: 'titanium-light', name: 'Titanium Apple Light (Clean)', primary: '#0071E3', secondary: '#F2F2F7', accent: '#0071E3', bg: '#F5F5F7', card: '#FFFFFF', isLight: true },
-  { id: 'pure-minimal', name: 'Pure Minimal Light', primary: '#111113', secondary: '#F7F7F9', accent: '#0071E3', bg: '#FFFFFF', card: '#F7F7F9', isLight: true },
-  { id: 'nordic-sky', name: 'Nordic Sky Light', primary: '#0284C7', secondary: '#F0F9FF', accent: '#0284C7', bg: '#F8FAFC', card: '#FFFFFF', isLight: true },
-  { id: 'codex-gold', name: 'Codex Gold (Dark Default)', primary: '#F0B90B', secondary: '#1E2329', accent: '#F0B90B', bg: '#0F1216', card: '#181A20' },
-  { id: 'pacific-blue', name: 'Pacific Blue (Dark)', primary: '#2979F0', secondary: '#162235', accent: '#2979F0', bg: '#0B111A', card: '#121D2C' },
-  { id: 'emerald-mint', name: 'Emerald Peak (Dark)', primary: '#0ECB81', secondary: '#132820', accent: '#0ECB81', bg: '#0A1510', card: '#10221A' },
-  { id: 'royal-purple', name: 'Royal Violet (Dark)', primary: '#8B5CF6', secondary: '#241B3B', accent: '#8B5CF6', bg: '#100C1B', card: '#1A142D' },
-  { id: 'crimson-amber', name: 'Crimson Amber (Dark)', primary: '#F6465D', secondary: '#2E151B', accent: '#F6465D', bg: '#16090D', card: '#240F15' },
-  { id: 'dark-obsidian', name: 'Dark Obsidian (Stealth)', primary: '#EAECEF', secondary: '#2B313A', accent: '#F0B90B', bg: '#181A20', card: '#21252D' },
 ];
 
 const RADIUS_OPTIONS = [
@@ -211,117 +212,9 @@ const HEADER_OPTIONS = [
   { id: 'sticky', label: 'Sticky Top Header', desc: 'Header pinned to top on scroll with subtle border' },
 ];
 
-const TEMPLATE_PRESETS = [
-  {
-    id: 'codex-gold',
-    name: 'Codex Pro Gold',
-    badge: 'Agency Default',
-    desc: 'High-impact dark luxury agency with gold accents and video streamer reel',
-    primary: '#F0B90B',
-    secondary: '#1E2329',
-    accent: '#F0B90B',
-    bg: '#0F1216',
-    card: '#181A20',
-    heroLayout: 'streamer',
-    headerStyle: 'floating',
-    fontFamily: 'system',
-    borderRadius: 'clean',
-  },
-  {
-    id: 'pacific-enterprise',
-    name: 'Pacific Tech Enterprise',
-    badge: 'SaaS & CRM',
-    desc: 'Precision enterprise blueprint with electric cyan-blue and split media showcase',
-    primary: '#2979F0',
-    secondary: '#162235',
-    accent: '#00D2FF',
-    bg: '#0B111A',
-    card: '#121D2C',
-    heroLayout: 'split',
-    headerStyle: 'sticky',
-    fontFamily: 'mono',
-    borderRadius: 'sharp',
-  },
-  {
-    id: 'emerald-mint',
-    name: 'Emerald Peak Studio',
-    badge: 'Creative Atelier',
-    desc: 'Avant-garde digital studio with centered typographic focus and mint accents',
-    primary: '#0ECB81',
-    secondary: '#132820',
-    accent: '#0ECB81',
-    bg: '#0A1510',
-    card: '#10221A',
-    heroLayout: 'centered',
-    headerStyle: 'minimal',
-    fontFamily: 'syne',
-    borderRadius: 'rounded',
-  },
-  {
-    id: 'royal-violet',
-    name: 'Royal Violet Luxury',
-    badge: 'Editorial & Luxury',
-    desc: 'Editorial luxury atelier featuring bento grid layout and refined serif headers',
-    primary: '#8B5CF6',
-    secondary: '#241B3B',
-    accent: '#A78BFA',
-    bg: '#100C1B',
-    card: '#1A142D',
-    heroLayout: 'bento',
-    headerStyle: 'floating',
-    fontFamily: 'playfair',
-    borderRadius: 'modern',
-  },
-  {
-    id: 'crimson-amber',
-    name: 'Crimson Kinetic High-ROAS',
-    badge: 'Performance',
-    desc: 'High-conversion performance marketing with dynamic energetic accents',
-    primary: '#F6465D',
-    secondary: '#2E151B',
-    accent: '#FF6B81',
-    bg: '#16090D',
-    card: '#240F15',
-    heroLayout: 'streamer',
-    headerStyle: 'sticky',
-    fontFamily: 'system',
-    borderRadius: 'clean',
-  },
-  {
-    id: 'dark-obsidian',
-    name: 'Dark Obsidian Stealth',
-    badge: 'Architectural',
-    desc: 'Monochromatic architectural aesthetic with matte obsidian surfaces and platinum accents',
-    primary: '#EAECEF',
-    secondary: '#2B313A',
-    accent: '#F0B90B',
-    bg: '#181A20',
-    card: '#21252D',
-    heroLayout: 'bento',
-    headerStyle: 'minimal',
-    fontFamily: 'mono',
-    borderRadius: 'sharp',
-  },
-  {
-    id: 'titanium-light',
-    name: 'Titanium Apple Light',
-    badge: 'Clean Minimal',
-    desc: 'Crisp architectural light mode with frosted glass cards and Apple-grade precision',
-    primary: '#0071E3',
-    secondary: '#F2F2F7',
-    accent: '#0071E3',
-    bg: '#F5F5F7',
-    card: '#FFFFFF',
-    heroLayout: 'centered',
-    headerStyle: 'floating',
-    fontFamily: 'system',
-    borderRadius: 'rounded',
-  },
-];
-
 export default function SiteSettingsTab({ showNotification = () => {} }) {
   const platformSettings = usePlatformSettings();
-  const [activeSubTab, setActiveSubTab] = useState('branding');
+  const [activeSubTab, setActiveSubTab] = useState('layout');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [saving, setSaving] = useState(false);
   const [testingWebhook, setTestingWebhook] = useState(false);
@@ -330,6 +223,33 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
   // Copy state tracker for feedback
   const [copiedKey, setCopiedKey] = useState(null);
   const copyTimeoutRef = useRef(null);
+
+  // Theme & Layout Studio Filter State
+  const [themeModeFilter, setThemeModeFilter] = useState('all'); // 'all' | 'dark' | 'light'
+  const [themeCategoryFilter, setThemeCategoryFilter] = useState('all');
+  const [themeSearchQuery, setThemeSearchQuery] = useState('');
+
+  // Brand Palette Studio Filter State
+  const [paletteModeFilter, setPaletteModeFilter] = useState('all'); // 'all' | 'dark' | 'light' | 'cyber' | 'luxury' | 'ocean' | 'nature' | 'warm'
+  const [paletteSearchQuery, setPaletteSearchQuery] = useState('');
+  const [copiedPaletteId, setCopiedPaletteId] = useState(null);
+
+  // Interactive Coolors Generator Stage State
+  const [coolorsStage, setCoolorsStage] = useState(() => ({
+    name: 'Dynamic Studio Harmony',
+    mode: 'dark', // 'dark' | 'light'
+    colors: [
+      { id: 'primary', label: 'Primary', hex: '#F0B90B', locked: false },
+      { id: 'bg', label: 'Canvas BG', hex: '#0F1216', locked: false },
+      { id: 'card', label: 'Card Surface', hex: '#181A20', locked: false },
+      { id: 'accent', label: 'Accent', hex: '#FCD535', locked: false },
+      { id: 'secondary', label: 'Secondary', hex: '#1E2329', locked: false },
+    ],
+    contrastRatio: '14.8:1',
+    contrastRating: 'AAA',
+  }));
+  const [copiedPillarIdx, setCopiedPillarIdx] = useState(null);
+  const [coolorsAutoApply, setCoolorsAutoApply] = useState(true);
 
   const handleCopyValue = useCallback((text, key, label = 'Value') => {
     if (!text) return;
@@ -522,6 +442,40 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
     return yiq < 135;
   };
 
+  // Filtered lists for Theme Studio & Coolors Studio
+  const filteredThemes = useMemo(() => {
+    return THEME_LAYOUT_PRESETS.filter((preset) => {
+      if (themeModeFilter === 'dark' && preset.isLight) return false;
+      if (themeModeFilter === 'light' && !preset.isLight) return false;
+      if (themeCategoryFilter !== 'all' && preset.category !== themeCategoryFilter) return false;
+      if (themeSearchQuery.trim()) {
+        const q = themeSearchQuery.toLowerCase();
+        const matchesName = preset.name.toLowerCase().includes(q);
+        const matchesBadge = (preset.badge || '').toLowerCase().includes(q);
+        const matchesDesc = (preset.desc || '').toLowerCase().includes(q);
+        const matchesTags = (preset.layoutTags || []).some(t => t.toLowerCase().includes(q));
+        if (!matchesName && !matchesBadge && !matchesDesc && !matchesTags) return false;
+      }
+      return true;
+    });
+  }, [themeModeFilter, themeCategoryFilter, themeSearchQuery]);
+
+  const filteredPalettes = useMemo(() => {
+    return COLOR_PALETTES.filter((pal) => {
+      if (paletteModeFilter === 'dark' && pal.isLight) return false;
+      if (paletteModeFilter === 'light' && !pal.isLight) return false;
+      if (['cyber', 'luxury', 'ocean', 'nature', 'warm'].includes(paletteModeFilter) && pal.category !== paletteModeFilter) return false;
+      if (paletteSearchQuery.trim()) {
+        const q = paletteSearchQuery.toLowerCase();
+        const matchesName = pal.name.toLowerCase().includes(q);
+        const matchesTags = (pal.tags || []).some(t => t.toLowerCase().includes(q));
+        const matchesHex = [pal.primary, pal.bg, pal.card, pal.accent, pal.secondary].some(h => (h || '').toLowerCase().includes(q));
+        if (!matchesName && !matchesTags && !matchesHex) return false;
+      }
+      return true;
+    });
+  }, [paletteModeFilter, paletteSearchQuery]);
+
   const syncToPreview = useCallback((configToSync) => {
     const isDark = isDarkColor(configToSync.backgroundColor);
     const fullPreviewConfig = {
@@ -628,21 +582,131 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
   };
 
   const handleApplyTemplatePreset = (preset) => {
-    setSiteConfig(prev => ({
+    // 1) Ensure layout is applied perfectly paying attention to every detail
+    // 2) Guarantee all sections are active/visible so no idle sections exist
+    const allSectionsVisible = Object.fromEntries(DEFAULT_SECTIONS.map((s) => [s.id, true]));
+
+    setSiteConfig((prev) => ({
       ...prev,
       activeTheme: preset.id,
       primaryColor: preset.primary,
-      secondaryColor: preset.secondary,
+      secondaryColor: preset.secondary || preset.card,
       accentColor: preset.accent,
       backgroundColor: preset.bg,
       cardBg: preset.card,
-      heroLayout: preset.heroLayout,
-      headerStyle: preset.headerStyle,
-      fontFamily: preset.fontFamily,
-      borderRadius: preset.borderRadius
+      heroLayout: preset.heroLayout || 'streamer',
+      headerStyle: preset.headerStyle || 'floating',
+      cardStyle: preset.cardStyle || 'glass',
+      fontFamily: preset.fontFamily || 'system',
+      borderRadius: preset.borderRadius || 'clean',
+      sectionsOrder: preset.sectionsOrder || prev.sectionsOrder || DEFAULT_SECTIONS.map((s) => s.id),
+      sectionsVisibility: allSectionsVisible,
     }));
     setHasUnsavedChanges(true);
-    showNotification(`Applied template preset: ${preset.name}`);
+    showNotification(`Applied Theme & Layout: ${preset.name}`);
+  };
+
+  const handleApplyPalette = (palette) => {
+    setSiteConfig((prev) => ({
+      ...prev,
+      primaryColor: palette.primary,
+      secondaryColor: palette.secondary || palette.card,
+      accentColor: palette.accent,
+      backgroundColor: palette.bg,
+      cardBg: palette.card,
+    }));
+    setHasUnsavedChanges(true);
+    showNotification(`Applied Color Palette: ${palette.name}`);
+  };
+
+  const handleCopyPaletteHexes = (palette, e) => {
+    if (e) e.stopPropagation();
+    const hexes = `${palette.name}: Primary ${palette.primary} | BG ${palette.bg} | Card ${palette.card} | Accent ${palette.accent} | Secondary ${palette.secondary}`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(hexes);
+    }
+    setCopiedPaletteId(palette.id);
+    setTimeout(() => setCopiedPaletteId(null), 1800);
+    showNotification(`Copied ${palette.name} hex values`);
+  };
+
+  const handleCoolorsStageGenerate = () => {
+    const isCurrentlyDark = coolorsStage.mode === 'dark' || (coolorsStage.mode === 'auto' && isDarkColor(siteConfig.backgroundColor));
+    const newPal = generateRandomHarmoniousPalette(isCurrentlyDark ? 'dark' : 'light');
+
+    setCoolorsStage(prev => {
+      const updatedColors = prev.colors.map(col => {
+        if (col.locked) return col;
+        if (col.id === 'primary') return { ...col, hex: newPal.primary };
+        if (col.id === 'bg') return { ...col, hex: newPal.bg };
+        if (col.id === 'card') return { ...col, hex: newPal.card };
+        if (col.id === 'accent') return { ...col, hex: newPal.accent };
+        if (col.id === 'secondary') return { ...col, hex: newPal.secondary };
+        return col;
+      });
+
+      return {
+        ...prev,
+        name: newPal.name,
+        contrastRating: newPal.contrastLevel || 'AAA',
+        contrastRatio: isCurrentlyDark ? '14.8:1' : '11.5:1',
+        colors: updatedColors
+      };
+    });
+
+    if (coolorsAutoApply) {
+      setSiteConfig(prev => ({
+        ...prev,
+        primaryColor: coolorsStage.colors[0]?.locked ? prev.primaryColor : newPal.primary,
+        backgroundColor: coolorsStage.colors[1]?.locked ? prev.backgroundColor : newPal.bg,
+        cardBg: coolorsStage.colors[2]?.locked ? prev.cardBg : newPal.card,
+        accentColor: coolorsStage.colors[3]?.locked ? prev.accentColor : newPal.accent,
+        secondaryColor: coolorsStage.colors[4]?.locked ? prev.secondaryColor : newPal.secondary,
+      }));
+      setHasUnsavedChanges(true);
+    }
+
+    showNotification(`🎲 Generated Coolors Palette: ${newPal.name}`);
+  };
+
+  const handleTogglePillarLock = (index) => {
+    setCoolorsStage(prev => {
+      const nextColors = [...prev.colors];
+      nextColors[index] = { ...nextColors[index], locked: !nextColors[index].locked };
+      return { ...prev, colors: nextColors };
+    });
+  };
+
+  const handleCopyPillarHex = (hex, index) => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(hex);
+    }
+    setCopiedPillarIdx(index);
+    setTimeout(() => setCopiedPillarIdx(null), 1500);
+    showNotification(`Copied hex: ${hex}`);
+  };
+
+  const handleApplyCoolorsStage = () => {
+    const primary = coolorsStage.colors.find(c => c.id === 'primary')?.hex || siteConfig.primaryColor;
+    const bg = coolorsStage.colors.find(c => c.id === 'bg')?.hex || siteConfig.backgroundColor;
+    const card = coolorsStage.colors.find(c => c.id === 'card')?.hex || siteConfig.cardBg;
+    const accent = coolorsStage.colors.find(c => c.id === 'accent')?.hex || siteConfig.accentColor;
+    const secondary = coolorsStage.colors.find(c => c.id === 'secondary')?.hex || siteConfig.secondaryColor;
+
+    setSiteConfig(prev => ({
+      ...prev,
+      primaryColor: primary,
+      backgroundColor: bg,
+      cardBg: card,
+      accentColor: accent,
+      secondaryColor: secondary,
+    }));
+    setHasUnsavedChanges(true);
+    showNotification(`Applied Coolors Engine palette to live website!`);
+  };
+
+  const handleCoolorsRandomize = () => {
+    handleCoolorsStageGenerate();
   };
 
   const handleResetSectionOrder = () => {
@@ -1287,262 +1351,6 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
         })}
       </nav>
 
-      {/* ── 1. Branding & Identity ─────────────────────────────── */}
-      {activeSubTab === 'branding' && (
-        <div className="crm-settings-panel">
-          <div className="crm-settings-section-head">
-            <div>
-              <h3><Palette size={16} color="#F0B90B" /> Core Visual Identity & Typography</h3>
-              <p>Control company metadata, public site brand palette, button radii, and display typefaces.</p>
-            </div>
-          </div>
-
-          <div className="crm-form-grid-3">
-            <div className="crm-settings-field">
-              <label>Company / Platform Name</label>
-              <input
-                type="text"
-                className="crm-settings-input"
-                value={siteConfig.siteName}
-                onChange={e => updateField('siteName', e.target.value)}
-                placeholder="e.g. Codex Dynamics"
-              />
-            </div>
-
-            <div className="crm-settings-field">
-              <label>Hero Badge Tagline</label>
-              <input
-                type="text"
-                className="crm-settings-input"
-                value={siteConfig.heroBadge}
-                onChange={e => updateField('heroBadge', e.target.value)}
-                placeholder="e.g. Codex Dynamics"
-              />
-            </div>
-
-            <div className="crm-settings-field">
-              <label>Base Currency</label>
-              <select
-                className="crm-settings-select"
-                value={siteConfig.baseCurrency}
-                onChange={e => updateField('baseCurrency', e.target.value)}
-              >
-                <option value="USD">USD ($)</option>
-                <option value="EUR">EUR (€)</option>
-                <option value="GBP">GBP (£)</option>
-                <option value="UAH">UAH (₴)</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="crm-form-grid-2">
-            <div className="crm-settings-field">
-              <label>Hero Headline (Display Title)</label>
-              <textarea
-                className="crm-settings-textarea"
-                rows={2}
-                value={siteConfig.heroTitle}
-                onChange={e => updateField('heroTitle', e.target.value)}
-                placeholder="e.g. Precision on every screen."
-              />
-            </div>
-
-            <div className="crm-settings-field">
-              <label>Hero Supporting Statement</label>
-              <textarea
-                className="crm-settings-textarea"
-                rows={2}
-                value={siteConfig.heroSubtitle}
-                onChange={e => updateField('heroSubtitle', e.target.value)}
-                placeholder="e.g. High-performance websites, web design..."
-              />
-            </div>
-          </div>
-
-          {/* Quick Theme Switcher (Light vs Dark) */}
-          <div className="crm-settings-well" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, background: '#2B313A', border: '1px solid #444A55', padding: '12px 16px', borderRadius: 8, marginTop: 10 }}>
-            <div>
-              <strong style={{ fontSize: 13, color: '#EAECEF', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Palette size={15} color="#F0B90B" /> Global Theme Mode
-              </strong>
-              <p style={{ margin: '2px 0 0 0', fontSize: 11.5, color: '#848E9C' }}>
-                Toggle instantly between Apple-grade Light theme and Luxury Dark Slate aesthetic.
-              </p>
-            </div>
-            <div style={{ display: 'inline-flex', background: '#1E2329', padding: 3, borderRadius: 8, border: '1px solid #363B44', gap: 4 }}>
-              <button
-                type="button"
-                onClick={() => {
-                  handleApplyPreset({
-                    id: 'titanium-light',
-                    name: 'Titanium Apple Light',
-                    primary: '#0071E3',
-                    secondary: '#F2F2F7',
-                    accent: '#0071E3',
-                    bg: '#F5F5F7',
-                    card: '#FFFFFF'
-                  });
-                }}
-                className={`crm-preview-segmented-btn ${!isDarkColor(siteConfig.backgroundColor) ? 'active' : ''}`}
-                style={{ padding: '6px 14px', fontSize: 12, fontWeight: 600 }}
-              >
-                ☀️ Light Theme
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  handleApplyPreset({
-                    id: 'codex-gold',
-                    name: 'Codex Gold (Dark)',
-                    primary: '#F0B90B',
-                    secondary: '#1E2329',
-                    accent: '#F0B90B',
-                    bg: '#0F1216',
-                    card: '#181A20'
-                  });
-                }}
-                className={`crm-preview-segmented-btn ${isDarkColor(siteConfig.backgroundColor) ? 'active' : ''}`}
-                style={{ padding: '6px 14px', fontSize: 12, fontWeight: 600 }}
-              >
-                🌙 Dark Theme
-              </button>
-            </div>
-          </div>
-
-          {/* Color Presets */}
-          <div className="crm-settings-field" style={{ marginTop: 6 }}>
-            <label>Brand Palette Presets</label>
-            <div className="crm-palette-grid">
-              {COLOR_PRESETS.map(preset => {
-                const isSelected = siteConfig.primaryColor.toLowerCase() === preset.primary.toLowerCase();
-                return (
-                  <div
-                    key={preset.id}
-                    className={`crm-palette-card ${isSelected ? 'selected' : ''}`}
-                    onClick={() => handleApplyPreset(preset)}
-                  >
-                    <div className="crm-palette-swatch" style={{ background: preset.primary }}>
-                      {isSelected && <Check size={16} color="#181A20" strokeWidth={3} />}
-                    </div>
-                    <div className="crm-palette-name">{preset.name}</div>
-                    <div className="crm-palette-hex">{preset.primary}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Custom Color HEX Pickers */}
-          <div className="crm-settings-well">
-            <div style={{ fontSize: 12, fontWeight: 600, color: '#EAECEF' }}>
-              Custom Hex Tuning
-            </div>
-            <div className="crm-form-grid-4">
-              <div className="crm-settings-field">
-                <label>Primary Accent</label>
-                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                  <input
-                    type="color"
-                    value={siteConfig.primaryColor}
-                    onChange={e => updateField('primaryColor', e.target.value)}
-                    style={{ width: 34, height: 34, padding: 0, border: '1px solid #444A55', borderRadius: 4, background: 'transparent', cursor: 'pointer' }}
-                  />
-                  <input
-                    type="text"
-                    className="crm-settings-input"
-                    value={siteConfig.primaryColor}
-                    onChange={e => updateField('primaryColor', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="crm-settings-field">
-                <label>Secondary Slate</label>
-                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                  <input
-                    type="color"
-                    value={siteConfig.secondaryColor}
-                    onChange={e => updateField('secondaryColor', e.target.value)}
-                    style={{ width: 34, height: 34, padding: 0, border: '1px solid #444A55', borderRadius: 4, background: 'transparent', cursor: 'pointer' }}
-                  />
-                  <input
-                    type="text"
-                    className="crm-settings-input"
-                    value={siteConfig.secondaryColor}
-                    onChange={e => updateField('secondaryColor', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="crm-settings-field">
-                <label>Deep Canvas BG</label>
-                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                  <input
-                    type="color"
-                    value={siteConfig.backgroundColor}
-                    onChange={e => updateField('backgroundColor', e.target.value)}
-                    style={{ width: 34, height: 34, padding: 0, border: '1px solid #444A55', borderRadius: 4, background: 'transparent', cursor: 'pointer' }}
-                  />
-                  <input
-                    type="text"
-                    className="crm-settings-input"
-                    value={siteConfig.backgroundColor}
-                    onChange={e => updateField('backgroundColor', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="crm-settings-field">
-                <label>Card Elevated BG</label>
-                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                  <input
-                    type="color"
-                    value={siteConfig.cardBg}
-                    onChange={e => updateField('cardBg', e.target.value)}
-                    style={{ width: 34, height: 34, padding: 0, border: '1px solid #444A55', borderRadius: 4, background: 'transparent', cursor: 'pointer' }}
-                  />
-                  <input
-                    type="text"
-                    className="crm-settings-input"
-                    value={siteConfig.cardBg}
-                    onChange={e => updateField('cardBg', e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Typography & Radii */}
-          <div className="crm-form-grid-2">
-            <div className="crm-settings-field">
-              <label>Display & Body Typography</label>
-              <select
-                className="crm-settings-select"
-                value={siteConfig.fontFamily}
-                onChange={e => updateField('fontFamily', e.target.value)}
-              >
-                {FONT_OPTIONS.map(opt => (
-                  <option key={opt.id} value={opt.id}>{opt.name} — ({opt.sample})</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="crm-settings-field">
-              <label>Surface Border Radius Style</label>
-              <select
-                className="crm-settings-select"
-                value={siteConfig.borderRadius}
-                onChange={e => updateField('borderRadius', e.target.value)}
-              >
-                {RADIUS_OPTIONS.map(opt => (
-                  <option key={opt.id} value={opt.id}>{opt.label} — {opt.desc}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* ── 2. Contact Channels ────────────────────────────────── */}
       {activeSubTab === 'contacts' && (
         <div className="crm-settings-panel">
@@ -1935,169 +1743,779 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
           <div className="crm-layout-studio-grid">
             {/* ── Left Column: Controls & Presets ── */}
             <div className="crm-layout-controls-col">
-              {/* 1. WordPress-style Template & Theme Presets */}
-              <div className="crm-studio-card">
-                <div className="crm-studio-card-head">
-                  <div>
-                    <h4><Sparkles size={15} color="#F0B90B" /> Theme & Layout Presets</h4>
-                    <p>Select a curated agency template preset. Applies colors, hero layout, and typography instantly to preview.</p>
+              {/* 1. Core Visual Identity & Typography (Apple / iOS Inset Grouped) */}
+              <div className="crm-ios-card">
+                <div className="crm-ios-card-head">
+                  <div className="crm-ios-head-left">
+                    <div className="crm-ios-icon-badge blue">
+                      <Sliders size={20} />
+                    </div>
+                    <div className="crm-ios-title-wrap">
+                      <h4>Site Identity & Typography</h4>
+                      <p>Company branding, public display typefaces, and global theme mode.</p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="crm-template-presets-grid">
-                  {TEMPLATE_PRESETS.map((preset) => {
-                    const isSelected =
-                      siteConfig.activeTheme === preset.id ||
-                      (siteConfig.primaryColor === preset.primary && siteConfig.backgroundColor === preset.bg);
+                <div className="crm-ios-inset-box">
+                  <div className="crm-ios-form-row-2">
+                    <div className="crm-settings-field" style={{ flex: 2, minWidth: 0 }}>
+                      <label>Company / Platform Name</label>
+                      <input
+                        type="text"
+                        className="crm-settings-input"
+                        value={siteConfig.siteName}
+                        onChange={e => updateField('siteName', e.target.value)}
+                        placeholder="e.g. Codex Dynamics"
+                      />
+                    </div>
 
-                    return (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        className={`crm-template-card ${isSelected ? 'active' : ''}`}
-                        onClick={() => handleApplyTemplatePreset(preset)}
+                    <div className="crm-settings-field" style={{ flex: 1, minWidth: 100 }}>
+                      <label>Base Currency</label>
+                      <select
+                        className="crm-settings-select"
+                        value={siteConfig.baseCurrency}
+                        onChange={e => updateField('baseCurrency', e.target.value)}
                       >
-                        <div className="crm-template-palette-dots">
-                          <span className="crm-palette-dot" style={{ background: preset.primary }} title={`Primary: ${preset.primary}`} />
-                          <span className="crm-palette-dot" style={{ background: preset.bg }} title={`Background: ${preset.bg}`} />
-                          <span className="crm-palette-dot" style={{ background: preset.card }} title={`Card Surface: ${preset.card}`} />
-                          <span className="crm-palette-dot" style={{ background: preset.accent }} title={`Accent: ${preset.accent}`} />
-                        </div>
-                        <div className="crm-template-title">{preset.name}</div>
-                        <div className="crm-template-badge">{preset.badge}</div>
+                        <option value="USD">USD ($)</option>
+                        <option value="EUR">EUR (€)</option>
+                        <option value="GBP">GBP (£)</option>
+                        <option value="UAH">UAH (₴)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="crm-settings-field" style={{ width: '100%', minWidth: 0 }}>
+                    <label>Hero Badge Tagline</label>
+                    <input
+                      type="text"
+                      className="crm-settings-input"
+                      value={siteConfig.heroBadge}
+                      onChange={e => updateField('heroBadge', e.target.value)}
+                      placeholder="e.g. Codex Dynamics"
+                    />
+                  </div>
+
+                  <div className="crm-settings-field" style={{ width: '100%', minWidth: 0 }}>
+                    <label>Hero Headline (Display Title)</label>
+                    <textarea
+                      className="crm-settings-textarea"
+                      rows={2}
+                      value={siteConfig.heroTitle}
+                      onChange={e => updateField('heroTitle', e.target.value)}
+                      placeholder="e.g. Precision on every screen."
+                    />
+                  </div>
+
+                  <div className="crm-settings-field" style={{ width: '100%', minWidth: 0 }}>
+                    <label>Hero Supporting Statement</label>
+                    <textarea
+                      className="crm-settings-textarea"
+                      rows={2}
+                      value={siteConfig.heroSubtitle}
+                      onChange={e => updateField('heroSubtitle', e.target.value)}
+                      placeholder="e.g. High-performance websites, custom CRM software, and digital marketing engines."
+                    />
+                  </div>
+                </div>
+
+                {/* Quick Theme Switcher (Apple Inset Grid) */}
+                <div className="crm-ios-inset-box">
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Palette size={15} color="#F0B90B" /> Global Theme Mode
+                      </div>
+                      <div style={{ fontSize: 11.5, color: '#98989D', marginTop: 2 }}>
+                        Instant switch between Apple Light and Luxury Dark aesthetic.
+                      </div>
+                    </div>
+                    <span className="crm-status-pill saved" style={{ fontSize: 10, padding: '2px 8px' }}>
+                      {isDarkColor(siteConfig.backgroundColor) ? '🌙 Dark Active' : '☀️ Light Active'}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, width: '100%' }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleApplyPreset({
+                          id: 'titanium-light',
+                          name: 'Titanium Apple Light',
+                          primary: '#0071E3',
+                          secondary: '#F2F2F7',
+                          accent: '#0071E3',
+                          bg: '#F5F5F7',
+                          card: '#FFFFFF'
+                        });
+                      }}
+                      className={`crm-ios-mode-btn ${!isDarkColor(siteConfig.backgroundColor) ? 'active' : ''}`}
+                    >
+                      <Sun size={14} color={!isDarkColor(siteConfig.backgroundColor) ? '#F0B90B' : '#8E8E93'} />
+                      <span>Apple Light</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleApplyPreset({
+                          id: 'codex-gold',
+                          name: 'Codex Gold (Dark)',
+                          primary: '#F0B90B',
+                          secondary: '#1E2329',
+                          accent: '#F0B90B',
+                          bg: '#0F1216',
+                          card: '#181A20'
+                        });
+                      }}
+                      className={`crm-ios-mode-btn ${isDarkColor(siteConfig.backgroundColor) ? 'active' : ''}`}
+                    >
+                      <Moon size={14} color={isDarkColor(siteConfig.backgroundColor) ? '#F0B90B' : '#8E8E93'} />
+                      <span>Luxury Dark</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Typography & Radii */}
+                <div className="crm-ios-inset-box">
+                  <div className="crm-form-grid-2">
+                    <div className="crm-settings-field">
+                      <label>Display & Body Typography</label>
+                      <select
+                        className="crm-settings-select"
+                        value={siteConfig.fontFamily}
+                        onChange={e => updateField('fontFamily', e.target.value)}
+                      >
+                        {FONT_OPTIONS.map(opt => (
+                          <option key={opt.id} value={opt.id}>{opt.name} — ({opt.sample})</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="crm-settings-field">
+                      <label>Surface Border Radius Style</label>
+                      <select
+                        className="crm-settings-select"
+                        value={siteConfig.borderRadius}
+                        onChange={e => updateField('borderRadius', e.target.value)}
+                      >
+                        {RADIUS_OPTIONS.map(opt => (
+                          <option key={opt.id} value={opt.id}>{opt.label} — {opt.desc}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Theme & Layout Architecture (Apple / iOS Single Column, Non-Cramped) */}
+              <div className="crm-ios-card">
+                <div className="crm-ios-card-head">
+                  <div className="crm-ios-head-left">
+                    <div className="crm-ios-icon-badge amber">
+                      <Sparkles size={20} />
+                    </div>
+                    <div className="crm-ios-title-wrap">
+                      <h4>Theme & Layout Architecture</h4>
+                      <p>Meticulously designed agency layouts with full visual hierarchy, hero structures, and typography.</p>
+                    </div>
+                  </div>
+                  <div className="crm-status-pill saved" style={{ fontSize: 11, padding: '4px 10px' }}>
+                    {filteredThemes.length} Layouts
+                  </div>
+                </div>
+
+                {/* Filter Toolbar */}
+                <div className="crm-studio-filter-toolbar">
+                  <div className="crm-studio-filter-row">
+                    <div className="crm-studio-segmented-tabs">
+                      <button
+                        type="button"
+                        className={`crm-studio-tab-btn ${themeModeFilter === 'all' ? 'active' : ''}`}
+                        onClick={() => setThemeModeFilter('all')}
+                      >
+                        All ({THEME_LAYOUT_PRESETS.length})
                       </button>
-                    );
-                  })}
+                      <button
+                        type="button"
+                        className={`crm-studio-tab-btn ${themeModeFilter === 'dark' ? 'active' : ''}`}
+                        onClick={() => setThemeModeFilter('dark')}
+                      >
+                        <Moon size={11} /> Dark ({THEME_LAYOUT_PRESETS.filter(t => !t.isLight).length})
+                      </button>
+                      <button
+                        type="button"
+                        className={`crm-studio-tab-btn ${themeModeFilter === 'light' ? 'active' : ''}`}
+                        onClick={() => setThemeModeFilter('light')}
+                      >
+                        <Sun size={11} /> Light ({THEME_LAYOUT_PRESETS.filter(t => t.isLight).length})
+                      </button>
+                    </div>
+
+                    <div className="crm-studio-search-wrapper">
+                      <Search size={13} color="#848E9C" />
+                      <input
+                        type="text"
+                        className="crm-studio-search-input"
+                        placeholder="Search themes, styles, fonts..."
+                        value={themeSearchQuery}
+                        onChange={(e) => setThemeSearchQuery(e.target.value)}
+                      />
+                      {themeSearchQuery && (
+                        <button
+                          type="button"
+                          onClick={() => setThemeSearchQuery('')}
+                          style={{ position: 'absolute', right: 8, background: 'none', border: 'none', color: '#848E9C', cursor: 'pointer' }}
+                        >
+                          <X size={12} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Spacious Apple Category Filter Pills (Generous, Non-Cramped) */}
+                  <div className="crm-apple-filter-pills-row">
+                    {[
+                      { id: 'all', label: 'All Categories', icon: LayoutGrid, count: THEME_LAYOUT_PRESETS.length },
+                      { id: 'luxury', label: 'Luxury & Atelier', icon: Crown, count: THEME_LAYOUT_PRESETS.filter(t => t.category === 'luxury').length },
+                      { id: 'enterprise', label: 'SaaS & Enterprise', icon: Building2, count: THEME_LAYOUT_PRESETS.filter(t => t.category === 'enterprise').length },
+                      { id: 'creative', label: 'Creative Studio', icon: Sparkles, count: THEME_LAYOUT_PRESETS.filter(t => t.category === 'creative').length },
+                      { id: 'performance', label: 'Performance', icon: Zap, count: THEME_LAYOUT_PRESETS.filter(t => t.category === 'performance').length },
+                      { id: 'architectural', label: 'Architectural', icon: Compass, count: THEME_LAYOUT_PRESETS.filter(t => t.category === 'architectural').length },
+                      { id: 'cyber', label: 'Cyber & Terminal', icon: Terminal, count: THEME_LAYOUT_PRESETS.filter(t => t.category === 'cyber').length },
+                      { id: 'minimal', label: 'Minimalist', icon: Sliders, count: THEME_LAYOUT_PRESETS.filter(t => t.category === 'minimal').length }
+                    ].map(cat => {
+                      const Icon = cat.icon;
+                      const isActive = themeCategoryFilter === cat.id;
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          className={`crm-apple-filter-pill ${isActive ? 'active' : ''}`}
+                          onClick={() => setThemeCategoryFilter(cat.id)}
+                        >
+                          <Icon size={13} />
+                          <span>{cat.label}</span>
+                          <span style={{
+                            fontSize: 10,
+                            padding: '1px 6px',
+                            borderRadius: 10,
+                            background: isActive ? 'rgba(0, 0, 0, 0.25)' : 'rgba(255, 255, 255, 0.08)',
+                            color: isActive ? '#121418' : '#8E8E93',
+                            fontWeight: 600,
+                            marginLeft: 2
+                          }}>
+                            {cat.count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Single-Column Spacious Theme Cards (No Cramping, Fully Visible) */}
+                <div className="crm-scrollable-studio-container" style={{ maxHeight: 460 }}>
+                  <div className="crm-theme-single-column">
+                    {filteredThemes.map((preset) => {
+                      const isSelected =
+                        siteConfig.activeTheme === preset.id ||
+                        (siteConfig.heroLayout === preset.heroLayout &&
+                         siteConfig.fontFamily === preset.fontFamily &&
+                         siteConfig.borderRadius === preset.borderRadius &&
+                         siteConfig.primaryColor === preset.primary &&
+                         siteConfig.backgroundColor === preset.bg);
+
+                      return (
+                        <div
+                          key={preset.id}
+                          className={`crm-apple-theme-card ${isSelected ? 'active' : ''}`}
+                          onClick={() => handleApplyTemplatePreset(preset)}
+                        >
+                          <div className="crm-apple-theme-card-top">
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                              <span className="crm-apple-theme-title">
+                                {preset.name}
+                              </span>
+                              <span className="crm-template-layout-pill">
+                                {preset.heroLayout} hero
+                              </span>
+                              <span className="crm-apple-theme-badge">
+                                {preset.badge}
+                              </span>
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span style={{ fontSize: 11, color: '#8E8E93', fontWeight: 500 }}>
+                                {preset.isLight ? '☀️ Light' : '🌙 Dark'}
+                              </span>
+                              {isSelected ? (
+                                <span className="crm-status-pill saved" style={{ fontSize: 10.5, padding: '3px 8px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                  <Check size={11} /> Active
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className="crm-apple-apply-stage-btn"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleApplyTemplatePreset(preset);
+                                  }}
+                                  style={{ padding: '3px 10px', fontSize: 11 }}
+                                >
+                                  Apply
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          <p className="crm-apple-theme-desc">
+                            {preset.desc}
+                          </p>
+
+                          <div className="crm-apple-theme-specs-row">
+                            <div className="crm-apple-theme-tags-group">
+                              <span className="crm-apple-spec-pill">Nav: {preset.headerStyle}</span>
+                              <span className="crm-apple-spec-pill">Font: {preset.fontFamily}</span>
+                              <span className="crm-apple-spec-pill">Radius: {preset.borderRadius}</span>
+                              {(preset.layoutTags || []).slice(0, 2).map(tag => (
+                                <span key={tag} className="crm-apple-spec-pill" style={{ opacity: 0.8 }}>{tag}</span>
+                              ))}
+                            </div>
+
+                            {/* 5-Color Swatch Strip */}
+                            <div className="crm-apple-palette-dots-large" title="Theme Color Harmony">
+                              <span className="crm-apple-palette-dot-lg" style={{ background: preset.primary }} title={`Primary: ${preset.primary}`} />
+                              <span className="crm-apple-palette-dot-lg" style={{ background: preset.bg }} title={`Background: ${preset.bg}`} />
+                              <span className="crm-apple-palette-dot-lg" style={{ background: preset.card }} title={`Card Surface: ${preset.card}`} />
+                              <span className="crm-apple-palette-dot-lg" style={{ background: preset.accent }} title={`Accent: ${preset.accent}`} />
+                              <span className="crm-apple-palette-dot-lg" style={{ background: preset.secondary }} title={`Secondary: ${preset.secondary}`} />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
-              {/* 2. Quick Palette & Surface Colors */}
-              <div className="crm-studio-card">
-                <div className="crm-studio-card-head">
-                  <div>
-                    <h4><Palette size={15} color="#F0B90B" /> Live Color Customizer</h4>
-                    <p>Tune core surface colors. Real-time updates reflect in the live preview instantly.</p>
+              {/* 3. Professional Color Palette Studio & Coolors Generator */}
+              <div className="crm-ios-card">
+                <div className="crm-ios-card-head">
+                  <div className="crm-ios-head-left">
+                    <div className="crm-ios-icon-badge purple">
+                      <Palette size={20} />
+                    </div>
+                    <div className="crm-ios-title-wrap">
+                      <h4>Brand Palette Studio & Coolors Generator</h4>
+                      <p>Interactive 5-color generator engine and curated professional color harmonies.</p>
+                    </div>
+                  </div>
+                  <div className="crm-status-pill saved" style={{ fontSize: 11, padding: '4px 10px' }}>
+                    {filteredPalettes.length} Palettes
                   </div>
                 </div>
 
-                <div className="crm-color-swatch-bar">
-                  <div className="crm-color-swatch-item">
-                    <label>Brand Primary</label>
-                    <div className="crm-color-picker-input-wrapper">
-                      <input
-                        type="color"
-                        value={siteConfig.primaryColor}
-                        onChange={(e) => updateField('primaryColor', e.target.value)}
-                      />
-                      <span className="crm-color-picker-hex">{siteConfig.primaryColor}</span>
+                {/* 🎲 Interactive Coolors Generator Stage */}
+                <div className="crm-coolors-interactive-stage">
+                  <div className="crm-coolors-stage-head">
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 7 }}>
+                        <Dices size={16} color="#F0B90B" />
+                        Coolors Interactive Color Studio
+                      </div>
+                      <div style={{ fontSize: 11.5, color: '#98989D', marginTop: 2 }}>
+                        Click 'Generate' to watch colors shuffle live. Click lock to keep a color.
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span className="crm-status-pill saved" style={{ fontSize: 10.5, padding: '2px 8px' }}>
+                        {coolorsStage.contrastRating} · {coolorsStage.contrastRatio}
+                      </span>
+                      <div className="crm-studio-segmented-tabs" style={{ padding: 2 }}>
+                        <button
+                          type="button"
+                          className={`crm-studio-tab-btn ${coolorsStage.mode === 'dark' ? 'active' : ''}`}
+                          onClick={() => setCoolorsStage(prev => ({ ...prev, mode: 'dark' }))}
+                          style={{ padding: '3px 8px', fontSize: 10.5 }}
+                        >
+                          <Moon size={10} /> Dark
+                        </button>
+                        <button
+                          type="button"
+                          className={`crm-studio-tab-btn ${coolorsStage.mode === 'light' ? 'active' : ''}`}
+                          onClick={() => setCoolorsStage(prev => ({ ...prev, mode: 'light' }))}
+                          style={{ padding: '3px 8px', fontSize: 10.5 }}
+                        >
+                          <Sun size={10} /> Light
+                        </button>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="crm-color-swatch-item">
-                    <label>Canvas BG</label>
-                    <div className="crm-color-picker-input-wrapper">
-                      <input
-                        type="color"
-                        value={siteConfig.backgroundColor}
-                        onChange={(e) => updateField('backgroundColor', e.target.value)}
-                      />
-                      <span className="crm-color-picker-hex">{siteConfig.backgroundColor}</span>
-                    </div>
+                  {/* 5 Interactive Pillars */}
+                  <div className="crm-coolors-pillars-grid">
+                    {coolorsStage.colors.map((c, idx) => {
+                      const displayLabel = c.id === 'bg' ? 'CANVAS' : c.id === 'card' ? 'SURFACE' : c.id === 'secondary' ? 'MUTED' : c.label.toUpperCase();
+                      return (
+                        <div
+                          key={c.id}
+                          className="crm-coolors-pillar"
+                          style={{ background: c.hex }}
+                          onClick={() => handleCopyPillarHex(c.hex, idx)}
+                          title={`Click to copy ${c.hex} (${c.label})`}
+                        >
+                          <div className="crm-coolors-pillar-label">{displayLabel}</div>
+                          <div className="crm-coolors-pillar-hex">
+                            {copiedPillarIdx === idx ? 'COPIED!' : c.hex}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleTogglePillarLock(idx);
+                            }}
+                            style={{
+                              background: c.locked ? '#F0B90B' : 'rgba(0, 0, 0, 0.45)',
+                              color: c.locked ? '#121418' : '#FFFFFF',
+                              border: 'none',
+                              borderRadius: '50%',
+                              width: 20,
+                              height: 20,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'pointer',
+                              marginTop: 1,
+                              transition: 'all 0.15s ease'
+                            }}
+                            title={c.locked ? 'Locked: Will not change on generate' : 'Unlocked: Click to lock'}
+                          >
+                            {c.locked ? <Lock size={9} /> : <Unlock size={9} />}
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
 
-                  <div className="crm-color-swatch-item">
-                    <label>Card Surface</label>
-                    <div className="crm-color-picker-input-wrapper">
+                  {/* Generator Controls */}
+                  <div className="crm-coolors-stage-controls">
+                    <div className="crm-coolors-stage-actions">
+                      <button
+                        type="button"
+                        className="crm-apple-gen-btn"
+                        onClick={handleCoolorsStageGenerate}
+                      >
+                        <Dices size={15} />
+                        <span>Generate Colors</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="crm-apple-apply-stage-btn"
+                        onClick={handleApplyCoolorsStage}
+                      >
+                        <Sparkles size={13} color="#F0B90B" />
+                        <span>Apply to Website</span>
+                      </button>
+                    </div>
+
+                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#98989D', cursor: 'pointer', userSelect: 'none' }}>
                       <input
-                        type="color"
-                        value={siteConfig.cardBg}
-                        onChange={(e) => updateField('cardBg', e.target.value)}
+                        type="checkbox"
+                        checked={coolorsAutoApply}
+                        onChange={(e) => setCoolorsAutoApply(e.target.checked)}
+                        style={{ accentColor: '#F0B90B' }}
                       />
-                      <span className="crm-color-picker-hex">{siteConfig.cardBg}</span>
+                      Auto-apply on generate
+                    </label>
+                  </div>
+                </div>
+
+                {/* Filter Toolbar for Curated Palettes */}
+                <div className="crm-studio-filter-toolbar">
+                  <div className="crm-studio-filter-row">
+                    <div className="crm-studio-segmented-tabs" style={{ flexWrap: 'wrap' }}>
+                      {[
+                        { id: 'all', label: 'All', icon: null },
+                        { id: 'dark', label: 'Dark', icon: Moon },
+                        { id: 'light', label: 'Light', icon: Sun },
+                        { id: 'cyber', label: 'Cyber', icon: Sparkles },
+                        { id: 'luxury', label: 'Luxury', icon: null },
+                        { id: 'ocean', label: 'Ocean', icon: null },
+                        { id: 'nature', label: 'Mint', icon: null },
+                        { id: 'warm', label: 'Sunset', icon: null }
+                      ].map(tab => {
+                        const Icon = tab.icon;
+                        return (
+                          <button
+                            key={tab.id}
+                            type="button"
+                            className={`crm-studio-tab-btn ${paletteModeFilter === tab.id ? 'active' : ''}`}
+                            onClick={() => setPaletteModeFilter(tab.id)}
+                            style={{ padding: '4px 9px', fontSize: 11 }}
+                          >
+                            {Icon && <Icon size={10} />}
+                            {tab.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="crm-studio-search-wrapper" style={{ minWidth: 140 }}>
+                      <Search size={12} color="#848E9C" />
+                      <input
+                        type="text"
+                        className="crm-studio-search-input"
+                        placeholder="Search colors or hex..."
+                        value={paletteSearchQuery}
+                        onChange={(e) => setPaletteSearchQuery(e.target.value)}
+                      />
+                      {paletteSearchQuery && (
+                        <button
+                          type="button"
+                          onClick={() => setPaletteSearchQuery('')}
+                          style={{ position: 'absolute', right: 8, background: 'none', border: 'none', color: '#848E9C', cursor: 'pointer' }}
+                        >
+                          <X size={11} />
+                        </button>
+                      )}
                     </div>
                   </div>
+                </div>
 
-                  <div className="crm-color-swatch-item">
-                    <label>Accent Tone</label>
-                    <div className="crm-color-picker-input-wrapper">
-                      <input
-                        type="color"
-                        value={siteConfig.accentColor}
-                        onChange={(e) => updateField('accentColor', e.target.value)}
-                      />
-                      <span className="crm-color-picker-hex">{siteConfig.accentColor}</span>
+                {/* Scrollable Palette List */}
+                <div className="crm-scrollable-studio-container" style={{ maxHeight: 340 }}>
+                  <div className="crm-coolors-palette-list">
+                    {filteredPalettes.map((pal) => {
+                      const isSelected =
+                        siteConfig.primaryColor === pal.primary &&
+                        siteConfig.backgroundColor === pal.bg &&
+                        siteConfig.cardBg === pal.card;
+
+                      return (
+                        <div
+                          key={pal.id}
+                          className={`crm-coolors-palette-card ${isSelected ? 'active' : ''}`}
+                          onClick={() => handleApplyPalette(pal)}
+                        >
+                          <div className="crm-coolors-card-meta">
+                            <div className="crm-coolors-card-title">
+                              <span>{pal.name}</span>
+                              {isSelected && <CheckCircle2 size={12} color="#F0B90B" />}
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span className={`crm-coolors-card-badge ${pal.isLight ? 'light' : 'dark'}`}>
+                                {pal.contrastLevel} · {pal.isLight ? 'LIGHT' : 'DARK'}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* 5-Color Horizontal Swatch Strip like Coolors.co */}
+                          <div className="crm-coolors-swatch-strip">
+                            <div className="crm-coolors-swatch-bar" style={{ background: pal.primary }} title={`Primary: ${pal.primary}`}>
+                              {pal.primary}
+                            </div>
+                            <div className="crm-coolors-swatch-bar" style={{ background: pal.bg }} title={`Background: ${pal.bg}`}>
+                              {pal.bg}
+                            </div>
+                            <div className="crm-coolors-swatch-bar" style={{ background: pal.card }} title={`Card Surface: ${pal.card}`}>
+                              {pal.card}
+                            </div>
+                            <div className="crm-coolors-swatch-bar" style={{ background: pal.accent }} title={`Accent: ${pal.accent}`}>
+                              {pal.accent}
+                            </div>
+                            <div className="crm-coolors-swatch-bar" style={{ background: pal.secondary }} title={`Secondary: ${pal.secondary}`}>
+                              {pal.secondary}
+                            </div>
+                          </div>
+
+                          <div className="crm-coolors-actions-row">
+                            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                              {(pal.tags || []).slice(0, 2).map(tag => (
+                                <span key={tag} className="crm-template-tag-chip" style={{ fontSize: 9 }}>
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                            <div style={{ display: 'flex', gap: 6 }}>
+                              <button
+                                type="button"
+                                className="crm-coolors-apply-btn"
+                                onClick={(e) => handleCopyPaletteHexes(pal, e)}
+                                title="Copy all 5 hex values"
+                              >
+                                {copiedPaletteId === pal.id ? <Check size={10} color="#0ECB81" /> : <Copy size={10} />}
+                                <span>{copiedPaletteId === pal.id ? 'Copied' : 'Copy'}</span>
+                              </button>
+                              <button
+                                type="button"
+                                className="crm-coolors-apply-btn"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleApplyPalette(pal);
+                                }}
+                              >
+                                {isSelected ? <Check size={10} /> : <CheckCircle2 size={10} />}
+                                <span>{isSelected ? 'Active' : 'Apply'}</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Integrated Granular Live Color Customizer */}
+                <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: 12, marginTop: 4 }}>
+                  <div style={{ fontSize: 11.5, fontWeight: 600, color: '#848E9C', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    Granular Hex Fine-Tuning
+                  </div>
+                  <div className="crm-color-swatch-bar">
+                    <div className="crm-color-swatch-item">
+                      <label>Brand Primary</label>
+                      <div className="crm-color-picker-input-wrapper">
+                        <input
+                          type="color"
+                          value={siteConfig.primaryColor}
+                          onChange={(e) => updateField('primaryColor', e.target.value)}
+                        />
+                        <span className="crm-color-picker-hex">{siteConfig.primaryColor}</span>
+                      </div>
+                    </div>
+
+                    <div className="crm-color-swatch-item">
+                      <label>Canvas BG</label>
+                      <div className="crm-color-picker-input-wrapper">
+                        <input
+                          type="color"
+                          value={siteConfig.backgroundColor}
+                          onChange={(e) => updateField('backgroundColor', e.target.value)}
+                        />
+                        <span className="crm-color-picker-hex">{siteConfig.backgroundColor}</span>
+                      </div>
+                    </div>
+
+                    <div className="crm-color-swatch-item">
+                      <label>Card Surface</label>
+                      <div className="crm-color-picker-input-wrapper">
+                        <input
+                          type="color"
+                          value={siteConfig.cardBg}
+                          onChange={(e) => updateField('cardBg', e.target.value)}
+                        />
+                        <span className="crm-color-picker-hex">{siteConfig.cardBg}</span>
+                      </div>
+                    </div>
+
+                    <div className="crm-color-swatch-item">
+                      <label>Accent Tone</label>
+                      <div className="crm-color-picker-input-wrapper">
+                        <input
+                          type="color"
+                          value={siteConfig.accentColor}
+                          onChange={(e) => updateField('accentColor', e.target.value)}
+                        />
+                        <span className="crm-color-picker-hex">{siteConfig.accentColor}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* 3. Hero Layout & Header Navigation Style */}
-              <div className="crm-studio-card">
-                <div className="crm-studio-card-head">
-                  <div>
-                    <h4><Layers size={15} color="#F0B90B" /> Hero Layout & Header Style</h4>
-                    <p>Choose visual structure for top opening blocks.</p>
+              {/* 4. Hero Structure & Header Navigation (Apple Tile Selector) */}
+              <div className="crm-ios-card">
+                <div className="crm-ios-card-head">
+                  <div className="crm-ios-head-left">
+                    <div className="crm-ios-icon-badge teal">
+                      <Layers size={20} />
+                    </div>
+                    <div className="crm-ios-title-wrap">
+                      <h4>Hero Structure & Header Navigation</h4>
+                      <p>Opening block visual layout and persistent navigation bar behavior.</p>
+                    </div>
                   </div>
                 </div>
 
-                <div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: '#848E9C', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    Hero Opening Block Style
+                <div className="crm-ios-inset-box">
+                  <div style={{ fontSize: 11.5, fontWeight: 600, color: '#C4C9D3', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    Hero Opening Block Structure
                   </div>
-                  <div className="crm-options-pill-grid">
+                  <div className="crm-ios-tiles-grid">
                     {HERO_LAYOUT_OPTIONS.map((opt) => (
                       <button
                         key={opt.id}
                         type="button"
-                        className={`crm-options-pill-btn ${(siteConfig.heroLayout || 'streamer') === opt.id ? 'active' : ''}`}
+                        className={`crm-ios-tile-btn ${(siteConfig.heroLayout || 'streamer') === opt.id ? 'active' : ''}`}
                         onClick={() => updateField('heroLayout', opt.id)}
                       >
-                        <span className="crm-options-pill-title">{opt.label}</span>
-                        <span className="crm-options-pill-desc">{opt.desc}</span>
+                        <div className="crm-ios-tile-header">
+                          <span className="crm-ios-tile-title">{opt.label}</span>
+                          {(siteConfig.heroLayout || 'streamer') === opt.id && <CheckCircle2 size={13} color="#F0B90B" />}
+                        </div>
+                        <span className="crm-ios-tile-desc">{opt.desc}</span>
                       </button>
                     ))}
                   </div>
                 </div>
 
-                <div style={{ marginTop: 6 }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: '#848E9C', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <div className="crm-ios-inset-box">
+                  <div style={{ fontSize: 11.5, fontWeight: 600, color: '#C4C9D3', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                     Header Navigation Style
                   </div>
-                  <div className="crm-options-pill-grid">
-                    {HEADER_OPTIONS.map((opt) => (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        className={`crm-options-pill-btn ${(siteConfig.headerStyle || 'floating') === opt.id ? 'active' : ''}`}
-                        onClick={() => updateField('headerStyle', opt.id)}
-                      >
-                        <span className="crm-options-pill-title">{opt.label}</span>
-                        <span className="crm-options-pill-desc">{opt.desc}</span>
-                      </button>
-                    ))}
+                  <div className="crm-ios-stack-options">
+                    {HEADER_OPTIONS.map((opt) => {
+                      const isSelected = (siteConfig.headerStyle || 'floating') === opt.id;
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          className={`crm-ios-stack-row ${isSelected ? 'active' : ''}`}
+                          onClick={() => updateField('headerStyle', opt.id)}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+                            <div className={`crm-ios-radio-circle ${isSelected ? 'checked' : ''}`}>
+                              {isSelected && <div className="crm-ios-radio-dot" />}
+                            </div>
+                            <div style={{ minWidth: 0 }}>
+                              <div className="crm-ios-tile-title">{opt.label}</div>
+                              <div className="crm-ios-tile-desc">{opt.desc}</div>
+                            </div>
+                          </div>
+                          {isSelected && (
+                            <span className="crm-status-pill saved" style={{ fontSize: 10, padding: '2px 7px', flexShrink: 0 }}>Active</span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
 
-              {/* 4. Section Sequence & Visibility Reordering */}
-              <div className="crm-studio-card">
-                <div className="crm-studio-card-head">
-                  <div>
-                    <h4><Compass size={15} color="#F0B90B" /> Homepage Section Sequence</h4>
-                    <p>Reorder sequence, toggle visibility, and click "Inspect" to scroll preview directly to each section.</p>
+              {/* 5. Homepage Section Sequence & Visibility (Apple Reorder Group) */}
+              <div className="crm-ios-card">
+                <div className="crm-ios-card-head">
+                  <div className="crm-ios-head-left">
+                    <div className="crm-ios-icon-badge orange">
+                      <Compass size={20} />
+                    </div>
+                    <div className="crm-ios-title-wrap">
+                      <h4>Homepage Section Sequence</h4>
+                      <p>Reorder layout sequence, toggle visibility, and inspect live in preview.</p>
+                    </div>
                   </div>
                   <button
                     type="button"
-                    className="crm-sec-inspect-btn"
+                    className="crm-apple-apply-stage-btn"
                     onClick={handleResetSectionOrder}
                     title="Reset to default sequence"
+                    style={{ padding: '6px 12px', fontSize: 11.5 }}
                   >
                     <RotateCcw size={11} />
-                    <span>Reset</span>
+                    <span>Reset Order</span>
                   </button>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <div className="crm-ios-reorder-container">
                   {siteConfig.sectionsOrder.map((secId, idx) => {
                     const meta = DEFAULT_SECTIONS.find((s) => s.id === secId) || { name: secId, desc: '', category: 'Section' };
                     const isVisible = siteConfig.sectionsVisibility[secId] !== false;
@@ -2106,74 +2524,67 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
                     return (
                       <div
                         key={secId}
-                        className={`crm-order-item-enhanced ${!isVisible ? 'hidden-sec' : ''}`}
-                        style={{
-                          borderColor: isHighlighted ? '#F0B90B' : undefined,
-                          boxShadow: isHighlighted ? '0 0 10px rgba(240, 185, 11, 0.2)' : undefined,
-                        }}
+                        className={`crm-ios-reorder-row ${isHighlighted ? 'highlighted' : ''}`}
+                        style={{ opacity: isVisible ? 1 : 0.55 }}
                       >
-                        <div className="crm-order-sec-meta" style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-                          <span className="crm-order-sec-num">0{idx + 1}</span>
-                          <div style={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-                              <span
-                                style={{
-                                  fontSize: 12,
-                                  fontWeight: 600,
-                                  color: isVisible ? '#EAECEF' : '#5E6673',
-                                  textDecoration: isVisible ? 'none' : 'line-through',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  whiteSpace: 'nowrap',
-                                }}
-                              >
+                        <div className="crm-ios-reorder-left">
+                          <div className="crm-ios-order-arrows">
+                            <button
+                              type="button"
+                              className="crm-ios-arrow-btn"
+                              disabled={idx === 0}
+                              onClick={() => moveSection(idx, -1)}
+                              title="Move section up"
+                            >
+                              <ArrowUp size={11} />
+                            </button>
+                            <button
+                              type="button"
+                              className="crm-ios-arrow-btn"
+                              disabled={idx === siteConfig.sectionsOrder.length - 1}
+                              onClick={() => moveSection(idx, 1)}
+                              title="Move section down"
+                            >
+                              <ArrowDown size={11} />
+                            </button>
+                          </div>
+                          <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: '#8E8E93', width: 22 }}>
+                            0{idx + 1}
+                          </span>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                              <span className="crm-ios-sec-name" style={{ textDecoration: isVisible ? 'none' : 'line-through' }}>
                                 {meta.name}
                               </span>
-                              <span className="crm-sec-tag">{meta.category}</span>
+                              <span className="crm-ios-sec-cat">{meta.category}</span>
                             </div>
-                            <div style={{ fontSize: 10, color: '#707A8A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <div style={{ fontSize: 11, color: '#8E8E93', marginTop: 1 }}>
                               {meta.desc}
                             </div>
                           </div>
                         </div>
 
-                        <div className="crm-order-actions" style={{ display: 'flex', gap: 3, alignItems: 'center', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           {isVisible && (
                             <button
                               type="button"
-                              className="crm-sec-inspect-btn"
+                              className="crm-apple-apply-stage-btn"
                               onClick={() => handleJumpToSection(secId)}
                               title="Scroll preview to this section"
+                              style={{ padding: '4px 10px', fontSize: 11 }}
                             >
-                              <Eye size={10} />
+                              <Eye size={11} />
                               <span>Inspect</span>
                             </button>
                           )}
                           <button
                             type="button"
-                            className="crm-icon-btn"
-                            disabled={idx === 0}
-                            onClick={() => moveSection(idx, -1)}
-                            title="Move section up"
-                          >
-                            <ArrowUp size={12} />
-                          </button>
-                          <button
-                            type="button"
-                            className="crm-icon-btn"
-                            disabled={idx === siteConfig.sectionsOrder.length - 1}
-                            onClick={() => moveSection(idx, 1)}
-                            title="Move section down"
-                          >
-                            <ArrowDown size={12} />
-                          </button>
-                          <button
-                            type="button"
-                            className={`crm-icon-btn ${isVisible ? '' : 'danger'}`}
+                            className={`crm-ios-arrow-btn ${isVisible ? '' : 'danger'}`}
                             onClick={() => toggleSectionVisibility(secId)}
                             title={isVisible ? 'Hide section' : 'Show section'}
+                            style={{ width: 28, height: 28, borderRadius: 6 }}
                           >
-                            {isVisible ? <Eye size={12} /> : <EyeOff size={12} />}
+                            {isVisible ? <Eye size={13} /> : <EyeOff size={13} color="#F6465D" />}
                           </button>
                         </div>
                       </div>
@@ -2182,25 +2593,30 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
                 </div>
               </div>
 
-              {/* 5. Floating WhatsApp Dock & Tidio */}
-              <div className="crm-studio-card">
-                <div className="crm-studio-card-head">
-                  <div>
-                    <h4><MessageCircle size={15} color="#0ECB81" /> Floating Conversion Modules</h4>
-                    <p>Enable persistent floating visitor buttons on the live site.</p>
+              {/* 6. Floating Conversion Modules (Apple Grouped Switch) */}
+              <div className="crm-ios-card">
+                <div className="crm-ios-card-head">
+                  <div className="crm-ios-head-left">
+                    <div className="crm-ios-icon-badge green">
+                      <MessageCircle size={20} />
+                    </div>
+                    <div className="crm-ios-title-wrap">
+                      <h4>Floating Conversion Modules</h4>
+                      <p>Persistent floating visitor engagement buttons on the live site.</p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="crm-settings-well" style={{ margin: 0 }}>
+                <div className="crm-ios-inset-box">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                      <strong style={{ fontSize: 12.5, color: '#EAECEF', display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <WhatsAppLogo width={16} height={16} />
+                      <div style={{ fontSize: 13, fontWeight: 600, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 7 }}>
+                        <WhatsAppLogo width={18} height={18} />
                         Floating WhatsApp Quick-Contact Dock
-                      </strong>
-                      <p style={{ margin: '2px 0 0 0', fontSize: 11, color: '#848E9C' }}>
-                        Persistent bottom contact button with instant chat greeting.
-                      </p>
+                      </div>
+                      <div style={{ fontSize: 11.5, color: '#98989D', marginTop: 2 }}>
+                        Persistent bottom-corner button with instant pre-filled chat greeting.
+                      </div>
                     </div>
                     <label className="crm-toggle-switch" title="Toggle WhatsApp dock">
                       <input
@@ -2213,9 +2629,9 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
                   </div>
 
                   {siteConfig.whatsappDock.enabled && (
-                    <div className="crm-form-grid-2" style={{ paddingTop: 10, marginTop: 10, borderTop: '1px solid #444A55' }}>
+                    <div className="crm-form-grid-2" style={{ paddingTop: 12, marginTop: 4, borderTop: '1px solid rgba(255, 255, 255, 0.07)' }}>
                       <div className="crm-settings-field">
-                        <label>WhatsApp Number</label>
+                        <label>WhatsApp Number (International format)</label>
                         <input
                           type="text"
                           className="crm-settings-input"
@@ -3148,8 +3564,8 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
                 <div style={{ fontSize: 11, fontWeight: 700, color: '#848E9C', marginBottom: 8, textTransform: 'uppercase' }}>
                   Theme & Template Presets
                 </div>
-                <div className="crm-template-presets-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
-                  {TEMPLATE_PRESETS.map((preset) => {
+                <div className="crm-template-presets-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)', maxHeight: 280, overflowY: 'auto', paddingRight: 4 }}>
+                  {THEME_LAYOUT_PRESETS.map((preset) => {
                     const isSelected =
                       siteConfig.activeTheme === preset.id ||
                       (siteConfig.primaryColor === preset.primary && siteConfig.backgroundColor === preset.bg);

@@ -27,7 +27,6 @@ import type { SiteConfig } from "@/types/site-editor";
 import { useSiteConfig } from "@/context/SiteConfigContext";
 import { persistSiteConfig } from "@/lib/theme-engine";
 
-import { BrandingSettingsSection } from "./settings/BrandingSettingsSection";
 import { LayoutSettingsSection } from "./settings/LayoutSettingsSection";
 import { ConversionSettingsSection } from "./settings/ConversionSettingsSection";
 import { SeoSettingsSection } from "./settings/SeoSettingsSection";
@@ -46,7 +45,7 @@ interface SettingsTabProps {
   onSubTabChange?: (subTab: SubTabId) => void;
 }
 
-type SubTabId = "branding" | "layout" | "conversion" | "seo" | "emergency" | "system";
+type SubTabId = "layout" | "conversion" | "seo" | "emergency" | "system";
 
 export function SettingsTab({
   stats: _stats,
@@ -62,7 +61,7 @@ export function SettingsTab({
 }: SettingsTabProps) {
   const { config: globalConfig, updateLocalConfig } = useSiteConfig();
   const [localConfig, setLocalConfig] = useState<SiteConfig>(globalConfig);
-  const [activeSubTab, setActiveSubTab] = useState<SubTabId>(defaultSubTab || "branding");
+  const [activeSubTab, setActiveSubTab] = useState<SubTabId>(defaultSubTab || "layout");
   const [savingConfig, setSavingConfig] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
@@ -238,7 +237,6 @@ export function SettingsTab({
   };
 
   const SUB_TABS: { id: SubTabId; label: string; icon: any; badge?: string }[] = [
-    { id: "branding", label: "Visual Branding", icon: Palette },
     { id: "layout", label: "Layout & Sections", icon: Layout },
     { id: "conversion", label: "Conversion Tools", icon: Megaphone },
     { id: "seo", label: "SEO & Social Suite", icon: Globe },
@@ -340,10 +338,6 @@ export function SettingsTab({
       </div>
 
       {/* Render Active Settings Section */}
-      {activeSubTab === "branding" && (
-        <BrandingSettingsSection config={localConfig} onChange={handleConfigChange} />
-      )}
-
       {activeSubTab === "layout" && (
         <LayoutSettingsSection config={localConfig} onChange={handleConfigChange} />
       )}
