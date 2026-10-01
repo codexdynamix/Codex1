@@ -10,6 +10,7 @@ import {
 import { useConfirmDialog } from '../components/ConfirmModal/ConfirmModal';
 import Dashboard from '../components/Dashboard/Dashboard.jsx';
 import SiteSettingsTab from '../components/SiteSettings/SiteSettingsTab.jsx';
+import CrmSettingsTab from '../components/CrmSettings/CrmSettingsTab.jsx';
 import ProjectsTab from '../components/Projects/ProjectsTab.jsx';
 import SiteCrmWorkspace from '../components/SiteCrmWorkspace.jsx';
 import LeadProfileModal from '../components/LeadProfileModal.jsx';
@@ -26,7 +27,7 @@ import { CountrySelect, PhoneInput, buildStoredPhone } from '../components/Count
 import { COUNTRY_LIST } from '../countryData';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faBell, faBuilding, faCog, faHistory, faIdCard, faTachometerAlt, faTrash, faUser, faUserPlus, faUsers,
+  faBell, faBuilding, faCog, faPalette, faHistory, faIdCard, faTachometerAlt, faTrash, faUser, faUserPlus, faUsers,
   faArrowDown, faArrowUp, faKey, faGlobe, faComments, faBriefcase,
 } from '@fortawesome/free-solid-svg-icons';
 import {
@@ -873,26 +874,28 @@ function AllLeadsTable({ data, currentUser, setData, setLeadAssignment, showNoti
       {/* View toggle: Active | Bin */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
         <button
-          className={`crm-super-admin-btn crm-super-admin-btn-small${view === 'crm-active' ? '' : ' crm-super-admin-btn-secondary'}`}
+          className={`crm-super-admin-btn crm-super-admin-btn-small${view === 'active' ? '' : ' crm-super-admin-btn-secondary'}`}
           onClick={() => setView('active')}
+          style={view === 'active' ? { background: 'var(--crm-accent, #0A84FF)', color: '#fff', borderColor: 'transparent' } : {}}
         >
-          [list] Active Leads ({data.leads.length})
+          Active Leads ({data.leads.length})
         </button>
         <button
           className={`crm-super-admin-btn crm-super-admin-btn-small${view === 'bin' ? '' : ' crm-super-admin-btn-secondary'}`}
           onClick={() => setView('bin')}
+          style={view === 'bin' ? { background: '#F6465D', color: '#fff', borderColor: 'transparent' } : {}}
         >
-          🗑 Bin ({deletedLeads.length})
+          Recycle Bin ({deletedLeads.length})
         </button>
       </div>
 
       {/* ── Client ID Lookup Bar ── */}
       <div style={{ marginBottom: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#363B44', border: '1px solid ' + (idLookupQuery.trim().length >= 3 ? '#F0B90B' : '#444A55'), borderRadius: 8, padding: '8px 14px', transition: 'border-color 0.2s' }}>
-          <i className="fas fa-fingerprint" style={{ color: idLookupQuery.trim().length >= 3 ? '#F0B90B' : '#848E9C', fontSize: 15, flexShrink: 0, transition: 'color 0.2s' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--crm-card, #23242A)', border: '1px solid ' + (idLookupQuery.trim().length >= 3 ? 'var(--crm-accent, #0A84FF)' : 'var(--crm-border, rgba(255, 255, 255, 0.08))'), borderRadius: 9999, padding: '8px 16px', transition: 'border-color 0.2s' }}>
+          <i className="fas fa-fingerprint" style={{ color: idLookupQuery.trim().length >= 3 ? 'var(--crm-accent, #0A84FF)' : 'var(--crm-text-secondary, #8E8E93)', fontSize: 15, flexShrink: 0, transition: 'color 0.2s' }} />
           <input
             className="crm-super-admin-input"
-            style={{ flex: 1, background: 'transparent', border: 'none', padding: 0, fontFamily: 'monospace', fontSize: 13, outline: 'none', color: '#EAECEF' }}
+            style={{ flex: 1, background: 'transparent', border: 'none', padding: 0, fontFamily: 'monospace', fontSize: 13, outline: 'none', color: 'var(--crm-text-primary, #FFFFFF)' }}
             placeholder="Find client by ID - paste or type any part of the ID..."
             value={idLookupQuery}
             onChange={e => setIdLookupQuery(e.target.value)}
@@ -902,13 +905,13 @@ function AllLeadsTable({ data, currentUser, setData, setLeadAssignment, showNoti
           {idLookupQuery && (
             <button
               onClick={() => setIdLookupQuery('')}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#848E9C', fontSize: 14, padding: '2px 4px', lineHeight: 1, borderRadius: 3, flexShrink: 0 }}
-              onMouseEnter={e => e.currentTarget.style.color = '#EAECEF'}
-              onMouseLeave={e => e.currentTarget.style.color = '#848E9C'}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--crm-text-secondary, #8E8E93)', fontSize: 14, padding: '2px 4px', lineHeight: 1, borderRadius: 3, flexShrink: 0 }}
+              onMouseEnter={e => e.currentTarget.style.color = 'var(--crm-text-primary, #FFFFFF)'}
+              onMouseLeave={e => e.currentTarget.style.color = 'var(--crm-text-secondary, #8E8E93)'}
               title="Clear"
             >✕</button>
           )}
-          <span style={{ fontSize: 11, color: '#848E9C', whiteSpace: 'nowrap', flexShrink: 0 }}>
+          <span style={{ fontSize: 11, color: 'var(--crm-text-secondary, #8E8E93)', whiteSpace: 'nowrap', flexShrink: 0 }}>
             {idLookupQuery.trim().length >= 2
               ? idLookupResults.length > 0 ? `${idLookupResults.length} match${idLookupResults.length !== 1 ? 'es' : ''}` : 'No matches'
               : 'type 2+ chars'}
@@ -916,7 +919,7 @@ function AllLeadsTable({ data, currentUser, setData, setLeadAssignment, showNoti
         </div>
 
         {idLookupQuery.trim().length >= 2 && idLookupResults.length > 0 && (
-          <div style={{ marginTop: 4, background: '#2A2E36', border: '1px solid #F0B90B40', borderRadius: 8, overflow: 'hidden' }}>
+          <div style={{ marginTop: 6, background: 'var(--crm-card, #23242A)', border: '1px solid var(--crm-border, rgba(255, 255, 255, 0.1))', borderRadius: 12, overflow: 'hidden', boxShadow: '0 8px 24px rgba(0,0,0,0.3)' }}>
             {idLookupResults.map((lead, idx) => {
               const isDeleted = !!(lead.deletedAt);
               const office = data.offices.find(o => o.id === lead.assignedToOffice);
@@ -928,14 +931,14 @@ function AllLeadsTable({ data, currentUser, setData, setLeadAssignment, showNoti
               const highlightedId = matchStart >= 0
                 ? <span style={{ fontFamily: 'monospace', fontSize: 12 }}>
                     {idStr.slice(0, matchStart)}
-                    <mark style={{ background: '#F0B90B', color: '#2A2E36', borderRadius: 2, padding: '0 1px' }}>{idStr.slice(matchStart, matchStart + q.length)}</mark>
+                    <mark style={{ background: 'var(--crm-accent, #0A84FF)', color: '#FFFFFF', borderRadius: 2, padding: '0 2px' }}>{idStr.slice(matchStart, matchStart + q.length)}</mark>
                     {idStr.slice(matchStart + q.length)}
                   </span>
                 : <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{idStr}</span>;
               return (
                 <div
                   key={lead.id}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderTop: idx > 0 ? '1px solid #363B44' : 'none', background: idx % 2 === 0 ? '#2A2E36' : '#272B32' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderTop: idx > 0 ? '1px solid var(--crm-border, rgba(255, 255, 255, 0.06))' : 'none', background: idx % 2 === 0 ? 'transparent' : 'rgba(255, 255, 255, 0.02)' }}
                 >
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -946,9 +949,9 @@ function AllLeadsTable({ data, currentUser, setData, setLeadAssignment, showNoti
                     <div style={{ display: 'flex', gap: 12, marginTop: 4, flexWrap: 'wrap' }}>
                       <span style={{ color: '#848E9C', fontSize: 11 }}>{highlightedId}</span>
                       {lead.email && <span style={{ color: '#848E9C', fontSize: 11 }}>{lead.email}</span>}
-                      {office && <span style={{ color: '#848E9C', fontSize: 11 }}>[office] {office.name}</span>}
-                      {team && <span style={{ color: '#848E9C', fontSize: 11 }}>[users] {team.name}</span>}
-                      {agent && <span style={{ color: '#0ECB81', fontSize: 11 }}>[user] {agent.name}</span>}
+                      {office && <span style={{ color: '#848E9C', fontSize: 11 }}>Office: {office.name}</span>}
+                      {team && <span style={{ color: '#848E9C', fontSize: 11 }}>Team: {team.name}</span>}
+                      {agent && <span style={{ color: '#30D158', fontSize: 11 }}>Agent: {agent.name}</span>}
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
@@ -1095,28 +1098,33 @@ function AllLeadsTable({ data, currentUser, setData, setLeadAssignment, showNoti
       ) : (
         /* ── ACTIVE LEADS VIEW ── */
         <div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 18 }}>
             {[
-              { label: 'Unassigned Pool', value: unassignedCount, color: '#F0B90B' },
-              { label: 'Pending Team', value: poolCount, color: '#848E9C' },
+              { label: 'Unassigned Pool', value: unassignedCount, color: '#FF9F0A' },
+              { label: 'Pending Team', value: poolCount, color: '#86868B' },
               { label: 'Pending Agent', value: pendingAgentCount, color: '#0A84FF' },
-              { label: 'With Agents', value: assignedCount, color: '#0ECB81' },
-              { label: 'Total', value: data.leads.length, color: '#EAECEF' },
+              { label: 'With Agents', value: assignedCount, color: '#30D158' },
+              { label: 'Total Leads', value: data.leads.length, color: 'var(--crm-text-primary, #F5F5F7)' },
             ].map(s => (
               <div
                 key={s.label}
                 title={s.title}
                 onClick={s.onClick}
                 style={{
-                  background: '#363B44',
-                  border: '1px solid #444A55',
-                  borderRadius: 6,
-                  padding: '10px 14px',
+                  background: 'var(--crm-card, #181A20)',
+                  border: '1px solid var(--crm-border, rgba(255, 255, 255, 0.08))',
+                  borderRadius: 'var(--crm-radius, 14px)',
+                  padding: '14px 16px',
                   cursor: s.onClick ? 'pointer' : 'default',
+                  transition: 'all 0.16s ease',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
                 }}
               >
-                <div style={{ fontSize: 11, color: '#848E9C', marginBottom: 4 }}>{s.label}</div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: s.color }}>{s.value}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: 'var(--crm-text-secondary, #86868B)', marginBottom: 6, fontWeight: 500 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: s.color, boxShadow: `0 0 6px ${s.color}80` }} />
+                  <span>{s.label}</span>
+                </div>
+                <div style={{ fontSize: 22, fontWeight: 700, color: s.color, fontVariantNumeric: 'tabular-nums' }}>{s.value}</div>
               </div>
             ))}
           </div>
@@ -1172,31 +1180,31 @@ function AllLeadsTable({ data, currentUser, setData, setLeadAssignment, showNoti
           </div>
 
           {/* Quick action toolbar: Unassigned filter + bulk / shuffle entry */}
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12, alignItems: 'center' }}>
             <button
               className={`crm-super-admin-btn crm-super-admin-btn-small${showUnassignedOnly ? '' : ' crm-super-admin-btn-secondary'}`}
               onClick={() => { setShowUnassignedOnly(v => !v); setPage(1); }}
-              style={showUnassignedOnly ? { background: '#F0B90B', color: '#2A2E36' } : {}}
+              style={showUnassignedOnly ? { background: 'var(--crm-accent, #0A84FF)', color: '#fff', borderColor: 'transparent' } : {}}
             >
-              {showUnassignedOnly ? '✓ Showing Unassigned' : '[user] Show Unassigned Only'}
+              {showUnassignedOnly ? '✓ Showing Unassigned' : 'Show Unassigned Only'}
             </button>
             <button
               className={`crm-super-admin-btn crm-super-admin-btn-small${bulkMode === 'assign' ? '' : ' crm-super-admin-btn-secondary'}`}
               onClick={() => setBulkMode(bulkMode === 'assign' ? null : 'assign')}
             >
-              📌 Bulk Assign / Reassign
+              Bulk Assign
             </button>
             <button
               className={`crm-super-admin-btn crm-super-admin-btn-small${bulkMode === 'shuffle' ? '' : ' crm-super-admin-btn-secondary'}`}
               onClick={() => setBulkMode(bulkMode === 'shuffle' ? null : 'shuffle')}
             >
-              🔀 Shuffle / Distribute
+              Shuffle / Distribute
             </button>
             <button
               className="crm-super-admin-btn crm-super-admin-btn-small crm-super-admin-btn-secondary"
               onClick={() => { setCsvImportOpen(true); setCsvRawText(''); setCsvFile(null); setCsvParsed([]); setCsvParseError(''); }}
             >
-              [upload] Import CSV
+              Import CSV
             </button>
             {selected.length > 0 && (
               <>
@@ -1425,8 +1433,28 @@ function AllLeadsTable({ data, currentUser, setData, setLeadAssignment, showNoti
                       </div>
                     </td>
                     <td>
-                      <div style={{ fontWeight: 600 }}>{lead.firstName} {lead.lastName}</div>
-                      <div style={{ fontSize: 11, color: '#848E9C' }}>{lead.email}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: '50%',
+                          background: 'linear-gradient(135deg, var(--crm-accent, #0A84FF), #5E5CE6)',
+                          color: '#FFFFFF',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: 600,
+                          fontSize: 11,
+                          flexShrink: 0,
+                          boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
+                        }}>
+                          {((lead.firstName?.[0] || '') + (lead.lastName?.[0] || '')).toUpperCase() || 'L'}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 600, color: 'var(--crm-text-primary, #F5F5F7)', fontSize: 13 }}>{lead.firstName} {lead.lastName}</div>
+                          <div style={{ fontSize: 11, color: 'var(--crm-text-secondary, #86868B)' }}>{lead.email || '—'}</div>
+                        </div>
+                      </div>
                     </td>
                     <td>{getCountryFlag(lead.countryCode, lead.country)} {lead.country}</td>
                     <td onClick={e => e.stopPropagation()} style={{ whiteSpace: 'nowrap' }}>
@@ -2531,6 +2559,7 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
     { name: 'Sessions', icon: faUsers },
     { name: 'Recycle Bin', icon: faTrash },
     { name: 'Site Settings', icon: faCog },
+    { name: 'CRM Settings', icon: faPalette },
     { name: 'Projects', icon: faBriefcase },
     { name: 'Audit Log', icon: faHistory },
     { name: 'Agent Access', icon: faKey },
@@ -3420,10 +3449,10 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
                 ) : staffSubTab === 'Agents' ? (
                   <div style={{ padding: 24 }}>
                     <div className="crm-super-admin-card">
-                      <h2>[user] Agents Management</h2>
+                      <h2>Agents Management</h2>
                       <p style={{ color: '#848E9C', fontSize: 13, marginBottom: 20 }}>Manage agents, assign to teams, and oversee agent performance.</p>
                       <div className="crm-super-admin-card" style={{ marginBottom: 24, background: 'rgba(52,152,219,0.1)' }}>
-                        <h3>[user] Create Agent</h3>
+                        <h3>Create Agent</h3>
                         <div className="crm-super-admin-form-row">
                           <div className="crm-super-admin-form-group">
                             <label>Select Team</label>
@@ -3535,14 +3564,14 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
                     <div className="crm-super-admin-card" style={{ marginBottom: 20 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
                         <div>
-                          <h2 style={{ margin: '0 0 4px 0' }}>[users] All Staff</h2>
+                          <h2 style={{ margin: '0 0 4px 0' }}>All Staff Directory</h2>
                           <p style={{ margin: 0, color: '#848E9C', fontSize: 13 }}>{staffRows.length} staff member{staffRows.length !== 1 ? 's' : ''} - managers, team leaders, and agents across all offices</p>
                         </div>
                       </div>
                     </div>
                     <div className="crm-super-admin-card">
                       <div style={{ display: 'flex', gap: 10, marginBottom: 14, flexWrap: 'wrap', alignItems: 'center' }}>
-                        <input className="crm-super-admin-input" style={{ flex: '1 1 260px', minWidth: 200 }} placeholder="[search]  Search by name, email, office, or team..." value={staffSearch} onChange={e => setStaffSearch(e.target.value)} autoComplete="off" />
+                        <input className="crm-super-admin-input" style={{ flex: '1 1 260px', minWidth: 200 }} placeholder="Search by name, email, office, or team..." value={staffSearch} onChange={e => setStaffSearch(e.target.value)} autoComplete="off" />
                         <select className="crm-super-admin-select" style={{ flex: '0 0 180px' }} value={staffRoleFilter} onChange={e => setStaffRoleFilter(e.target.value)}>
                           <option value="">All roles</option>
                           <option value={ROLE.OFFICE_MANAGER}>Office Managers</option>
@@ -3629,6 +3658,8 @@ function SuperAdminPanel({ data, currentUser, setData, assignOfficeManager, crea
               <Dashboard offices={data.offices} teams={data.teams} staffUsers={data.users} />
             ) : activeTab === 'Site Settings' ? (
               <SiteSettingsTab showNotification={showNotification} />
+            ) : activeTab === 'CRM Settings' ? (
+              <CrmSettingsTab showNotification={showNotification} />
             ) : activeTab === 'Projects' ? (
               <ProjectsTab showNotification={showNotification} />
             ) : activeTab === 'Audit Log' ? (

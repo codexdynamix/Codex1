@@ -50,6 +50,8 @@ import AgentPanel, { LeadProfilePage } from './panels/AgentPanel.jsx';
 import StaffProfilePage from './components/StaffProfilePage.jsx';
 import { UserChrome } from './components/UserChrome.jsx';
 import ReactCapabilityWorkspace from './components/ReactCapabilityWorkspace.jsx';
+import { Crown, Building2, Users, UserCheck, Briefcase, ArrowRight, ShieldCheck, KeyRound } from 'lucide-react';
+import { applyCrmThemeToDom } from './components/CrmSettings/crmThemeState';
 
 const CRM_ICON_TOKENS = {
   office: '🏢',
@@ -295,69 +297,168 @@ function BackofficeLanding() {
   const initial = (abbreviation || 'C').charAt(0).toUpperCase();
 
   const portals = [
-    { to: '/admin/login/super-admin',    icon: '👑', title: 'Super Admin',    desc: 'Full system control - offices, teams, agents, leads', accent: '#F0B90B' },
-    { to: '/admin/login/office-manager', icon: '[office]', title: 'Office Manager', desc: 'Manage your office, its teams, agents and leads',     accent: '#0A84FF' },
-    { to: '/admin/login/team-leader',    icon: '[users]', title: 'Team Leader',    desc: 'Manage your team - agents and assigned leads',        accent: '#64D2FF' },
-    { to: '/admin/login/agent',          icon: '[agent]', title: 'Agent',          desc: 'Work the leads assigned to you',                       accent: '#30D158' },
+    { to: '/admin/login/super-admin',    icon: Crown, title: 'Super Admin',    desc: 'Full system governance: offices, teams, staff & leads', accent: '#FF9F0A' },
+    { to: '/admin/login/office-manager', icon: Building2, title: 'Office Manager', desc: 'Oversee your office branch, teams, agents and pipeline',  accent: '#0A84FF' },
+    { to: '/admin/login/team-leader',    icon: Users, title: 'Team Leader',    desc: 'Coach your unit: monitor agents, calls & active leads',     accent: '#5E5CE6' },
+    { to: '/admin/login/agent',          icon: UserCheck, title: 'Sales Agent', desc: 'Work assigned leads, log touchpoints & record deposits', accent: '#30D158' },
   ];
 
   return (
-    <div style={{ minHeight: '100vh', background: '#2A2E36', color: '#EAECEF', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px 20px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif' }}>
-      <div style={{ textAlign: 'center', marginBottom: 28 }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-          <div style={{ width: 38, height: 38, borderRadius: 10, background: '#F0B90B', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(240,185,11,0.35)' }}>
-            <span style={{ fontSize: 20, fontWeight: 800, color: '#2A2E36', letterSpacing: '-0.02em' }}>{initial}</span>
+    <div style={{
+      minHeight: '100vh',
+      background: 'var(--crm-bg, #0F1013)',
+      color: 'var(--crm-text-primary, #F5F5F7)',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '36px 20px',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif',
+      WebkitFontSmoothing: 'antialiased',
+    }}>
+      {/* Brand Header */}
+      <div style={{ textAlign: 'center', marginBottom: 32 }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+          <div style={{
+            width: 44,
+            height: 44,
+            borderRadius: 12,
+            background: 'linear-gradient(135deg, var(--crm-accent, #0A84FF), #5E5CE6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 8px 24px rgba(10, 132, 255, 0.35)',
+          }}>
+            <span style={{ fontSize: 22, fontWeight: 800, color: '#FFFFFF', letterSpacing: '-0.02em' }}>{initial}</span>
           </div>
-          <div style={{ fontSize: 26, fontWeight: 700, color: '#EAECEF', letterSpacing: '-0.02em' }}>
-            {first}<span style={{ color: '#F0B90B' }}> / </span>{second}
+          <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--crm-text-primary, #F5F5F7)', letterSpacing: '-0.025em' }}>
+            {first}<span style={{ color: 'var(--crm-accent, #0A84FF)' }}> / </span>{second}
           </div>
         </div>
-        <div style={{ fontSize: 14, color: '#A8AEB8', fontWeight: 500 }}>Backoffice Administration</div>
-        <div style={{ fontSize: 12, color: '#7B8392', marginTop: 4 }}>Choose your role to continue (no password required).</div>
+        <div style={{ fontSize: 15, color: 'var(--crm-text-secondary, #86868B)', fontWeight: 500 }}>Backoffice Enterprise Suite</div>
+        <div style={{ fontSize: 13, color: 'var(--crm-text-muted, #515158)', marginTop: 4 }}>Select a role workspace to launch instant session.</div>
       </div>
 
-      <div style={{
-        width: '100%', maxWidth: 920, marginBottom: 16, background: '#363B44',
-        borderRadius: 12, padding: '12px 16px', fontSize: 12, color: '#A8AEB8',
-        lineHeight: 1.55, textAlign: 'left',
-      }}>
-        <div style={{ color: '#F0B90B', fontWeight: 700, marginBottom: 6 }}>Direct Access (No Password Required)</div>
-        <div>Super Admin — superadmin@codexdynamics.com</div>
-        <div>Office Manager — manager@codexdynamics.com</div>
-        <div>Team Leader — leader@codexdynamics.com</div>
-        <div>Agent — agent@codexdynamics.com</div>
-        <div>Client portal — client@codexdynamics.com</div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12, width: '100%', maxWidth: 920 }}>
-        {portals.map((p) => (
-          <div
-            key={p.to}
-            onClick={() => navigate(p.to)}
-            style={{ background: '#363B44', borderRadius: 14, padding: '18px 14px', cursor: 'pointer', transition: 'transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease', textAlign: 'center', boxShadow: '0 1px 0 rgba(255,255,255,0.04) inset, 0 4px 12px rgba(0,0,0,0.18)' }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = '#3F4550'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = `0 1px 0 rgba(255,255,255,0.06) inset, 0 8px 22px rgba(0,0,0,0.30), 0 0 0 1px ${p.accent}40`; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = '#363B44'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 0 rgba(255,255,255,0.04) inset, 0 4px 12px rgba(0,0,0,0.18)'; }}
-          >
-            <div style={{ width: 40, height: 40, borderRadius: 10, background: `${p.accent}1A`, color: p.accent, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, marginBottom: 10 }}>
-              {p.icon}
+      {/* Role Cards Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 16, width: '100%', maxWidth: 960, marginBottom: 20 }}>
+        {portals.map((p) => {
+          const IconComp = p.icon;
+          return (
+            <div
+              key={p.to}
+              onClick={() => navigate(p.to)}
+              style={{
+                background: 'var(--crm-card, #181A20)',
+                border: '1px solid var(--crm-border, rgba(255,255,255,0.08))',
+                borderRadius: 'var(--crm-radius, 14px)',
+                padding: '24px 18px',
+                cursor: 'pointer',
+                transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                textAlign: 'center',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-3px)';
+                e.currentTarget.style.borderColor = p.accent;
+                e.currentTarget.style.boxShadow = `0 12px 28px rgba(0,0,0,0.3), 0 0 0 1px ${p.accent}50`;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.borderColor = 'var(--crm-border, rgba(255,255,255,0.08))';
+                e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.15)';
+              }}
+            >
+              <div style={{
+                width: 48,
+                height: 48,
+                borderRadius: 12,
+                background: `${p.accent}18`,
+                color: p.accent,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 14,
+                boxShadow: `0 2px 10px ${p.accent}25`,
+              }}>
+                <IconComp size={22} strokeWidth={2.2} />
+              </div>
+              <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 6, color: 'var(--crm-text-primary, #F5F5F7)', letterSpacing: '-0.015em' }}>{p.title}</div>
+              <div style={{ color: 'var(--crm-text-secondary, #86868B)', fontSize: 12, lineHeight: 1.5 }}>{p.desc}</div>
             </div>
-            <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 3, color: '#EAECEF', letterSpacing: '-0.01em' }}>{p.title}</div>
-            <div style={{ color: '#8B94A3', fontSize: 11.5, lineHeight: 1.45 }}>{p.desc}</div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
+      {/* Direct Access Credentials Grouped Card */}
+      <div style={{
+        width: '100%',
+        maxWidth: 960,
+        marginBottom: 20,
+        background: 'var(--crm-card, #181A20)',
+        border: '1px solid var(--crm-border, rgba(255,255,255,0.08))',
+        borderRadius: 'var(--crm-radius, 14px)',
+        padding: '16px 20px',
+        fontSize: 12.5,
+        color: 'var(--crm-text-secondary, #86868B)',
+        lineHeight: 1.6,
+        textAlign: 'left',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--crm-accent, #0A84FF)', fontWeight: 600, fontSize: 13, marginBottom: 8 }}>
+          <KeyRound size={14} />
+          <span>Direct Access Sandbox Credentials (Instant Login)</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 8, fontFamily: 'monospace', fontSize: 12 }}>
+          <div><strong style={{ color: 'var(--crm-text-primary, #F5F5F7)' }}>Super Admin:</strong> superadmin@codexdynamics.com</div>
+          <div><strong style={{ color: 'var(--crm-text-primary, #F5F5F7)' }}>Office Mgr:</strong> manager@codexdynamics.com</div>
+          <div><strong style={{ color: 'var(--crm-text-primary, #F5F5F7)' }}>Team Leader:</strong> leader@codexdynamics.com</div>
+          <div><strong style={{ color: 'var(--crm-text-primary, #F5F5F7)' }}>Sales Agent:</strong> agent@codexdynamics.com</div>
+        </div>
+      </div>
+
+      {/* Client Portal Link */}
       <div
         onClick={() => { window.location.href = '/login'; }}
-        style={{ marginTop: 20, background: '#363B44', borderRadius: 12, padding: '12px 18px', cursor: 'pointer', transition: 'transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease', display: 'inline-flex', alignItems: 'center', gap: 12, boxShadow: '0 1px 0 rgba(255,255,255,0.04) inset, 0 4px 12px rgba(0,0,0,0.18)' }}
-        onMouseEnter={(e) => { e.currentTarget.style.background = '#3F4550'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-        onMouseLeave={(e) => { e.currentTarget.style.background = '#363B44'; e.currentTarget.style.transform = 'translateY(0)'; }}
+        style={{
+          background: 'var(--crm-card, #181A20)',
+          border: '1px solid var(--crm-border, rgba(255,255,255,0.08))',
+          borderRadius: 12,
+          padding: '12px 20px',
+          cursor: 'pointer',
+          transition: 'all 0.18s ease',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 12,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor = 'var(--crm-border-hover, rgba(255,255,255,0.2))';
+          e.currentTarget.style.transform = 'translateY(-1px)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderColor = 'var(--crm-border, rgba(255,255,255,0.08))';
+          e.currentTarget.style.transform = 'translateY(0)';
+        }}
       >
-        <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(10,132,255,0.15)', color: '#0A84FF', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}></div>
-        <div style={{ textAlign: 'left' }}>
-          <div style={{ fontWeight: 600, fontSize: 13, color: '#EAECEF' }}>Client Portal</div>
-          <div style={{ color: '#8B94A3', fontSize: 11.5 }}>Client workspace &amp; project portal</div>
+        <div style={{
+          width: 34,
+          height: 34,
+          borderRadius: 8,
+          background: 'rgba(10,132,255,0.14)',
+          color: '#0A84FF',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <Briefcase size={16} />
         </div>
+        <div style={{ textAlign: 'left' }}>
+          <div style={{ fontWeight: 600, fontSize: 13.5, color: 'var(--crm-text-primary, #F5F5F7)' }}>Client Workspace Portal</div>
+          <div style={{ color: 'var(--crm-text-secondary, #86868B)', fontSize: 11.5 }}>Access customer deliverables &amp; project timelines</div>
+        </div>
+        <ArrowRight size={14} style={{ color: 'var(--crm-text-muted, #515158)', marginLeft: 8 }} />
       </div>
     </div>
   );
@@ -383,6 +484,13 @@ const LEGACY_ADMIN_CACHE_KEYS = ['codex_admin_data_legacy'];
 
 function App() {
   useCrmTextNormalization();
+
+  useEffect(() => {
+    applyCrmThemeToDom();
+    const handleThemeChange = () => applyCrmThemeToDom();
+    window.addEventListener('cdx:crm-theme-changed', handleThemeChange);
+    return () => window.removeEventListener('cdx:crm-theme-changed', handleThemeChange);
+  }, []);
 
   const [data, setData] = useState(() => {
     try {

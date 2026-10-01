@@ -33,23 +33,25 @@ const KIND_MAP = {
 
 const s = {
   wrap:        { width: '100%' },
-  section:     { background: '#2B3139', border: '1px solid #444A55', borderRadius: 10, padding: '20px 22px', marginBottom: 20 },
-  sectionHead: { fontSize: 15, fontWeight: 700, color: '#EAECEF', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 },
-  label:       { display: 'block', fontSize: 12, color: '#848E9C', marginBottom: 5, fontWeight: 600 },
-  input:       { width: '100%', background: '#363B44', border: '1px solid #444A55', borderRadius: 6, padding: '8px 12px', color: '#EAECEF', fontSize: 13, outline: 'none', boxSizing: 'border-box' },
-  textarea:    { width: '100%', background: '#363B44', border: '1px solid #444A55', borderRadius: 6, padding: '8px 12px', color: '#EAECEF', fontSize: 13, outline: 'none', resize: 'vertical', minHeight: 90, boxSizing: 'border-box', fontFamily: 'inherit' },
+  section:     { background: 'var(--crm-card, #23242A)', border: '1px solid var(--crm-border, rgba(255, 255, 255, 0.08))', borderRadius: 14, padding: '22px 24px', marginBottom: 20, boxShadow: '0 4px 16px rgba(0, 0, 0, 0.18)' },
+  sectionHead: { fontSize: 16, fontWeight: 700, color: 'var(--crm-text-primary, #FFFFFF)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 },
+  label:       { display: 'block', fontSize: 12, color: 'var(--crm-text-secondary, #8E8E93)', marginBottom: 6, fontWeight: 600 },
+  input:       { width: '100%', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--crm-border, rgba(255, 255, 255, 0.1))', borderRadius: 8, padding: '9px 12px', color: '#FFFFFF', fontSize: 13, outline: 'none', boxSizing: 'border-box' },
+  textarea:    { width: '100%', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--crm-border, rgba(255, 255, 255, 0.1))', borderRadius: 8, padding: '10px 12px', color: '#FFFFFF', fontSize: 13, outline: 'none', resize: 'vertical', minHeight: 90, boxSizing: 'border-box', fontFamily: 'inherit' },
   sendBtn: (disabled) => ({
-    marginTop: 14, padding: '10px 22px',
-    background: disabled ? '#363B44' : '#F0B90B',
-    color: disabled ? '#555' : '#1A1D23',
-    border: 'none', borderRadius: 7, fontWeight: 700,
+    marginTop: 14, padding: '10px 24px',
+    background: disabled ? 'rgba(255, 255, 255, 0.06)' : 'var(--crm-accent, #0A84FF)',
+    color: disabled ? '#636366' : '#FFFFFF',
+    border: 'none', borderRadius: 9999, fontWeight: 600,
     fontSize: 13, cursor: disabled ? 'not-allowed' : 'pointer', width: '100%',
+    boxShadow: disabled ? 'none' : '0 2px 10px rgba(10, 132, 255, 0.35)',
+    transition: 'all 0.15s ease',
   }),
-  pill:   { display: 'inline-flex', alignItems: 'center', gap: 6, background: '#363B44', border: '1px solid #444A55', borderRadius: 20, padding: '4px 10px', fontSize: 12, color: '#EAECEF' },
-  pillX:  { background: 'none', border: 'none', color: '#848E9C', cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: '0 2px' },
+  pill:   { display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255, 255, 255, 0.06)', border: '1px solid var(--crm-border, rgba(255, 255, 255, 0.1))', borderRadius: 9999, padding: '5px 12px', fontSize: 12, color: '#FFFFFF' },
+  pillX:  { background: 'none', border: 'none', color: 'var(--crm-text-secondary, #8E8E93)', cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: '0 2px' },
   ddWrap: { position: 'relative' },
-  ddList: { position: 'absolute', top: '100%', left: 0, right: 0, background: '#2B3139', border: '1px solid #444A55', borderRadius: 7, zIndex: 99, maxHeight: 200, overflowY: 'auto', marginTop: 2 },
-  ddItem: { padding: '9px 12px', cursor: 'pointer', fontSize: 13, color: '#EAECEF', borderBottom: '1px solid #363B44' },
+  ddList: { position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--crm-card, #23242A)', border: '1px solid var(--crm-border, rgba(255, 255, 255, 0.12))', borderRadius: 10, zIndex: 99, maxHeight: 200, overflowY: 'auto', marginTop: 4, boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)' },
+  ddItem: { padding: '9px 12px', cursor: 'pointer', fontSize: 13, color: 'var(--crm-text-primary, #FFFFFF)', borderBottom: '1px solid var(--crm-border, rgba(255, 255, 255, 0.05))' },
 };
 
 function useDebounce(value, delay) {
@@ -131,14 +133,15 @@ const Compose = ({ onSent }) => {
             <button key={mode}
               onClick={() => { setRecipientMode(mode); clearUser(); setResult(null); }}
               style={{
-                padding: '7px 18px', borderRadius: 6, border: '1.5px solid',
-                borderColor: recipientMode === mode ? '#F0B90B' : '#444A55',
-                background:  recipientMode === mode ? '#F0B90B22' : '#363B44',
-                color:       recipientMode === mode ? '#F0B90B' : '#848E9C',
+                padding: '7px 18px', borderRadius: 9999, border: '1px solid',
+                borderColor: recipientMode === mode ? 'var(--crm-accent, #0A84FF)' : 'var(--crm-border, rgba(255, 255, 255, 0.1))',
+                background:  recipientMode === mode ? 'var(--crm-accent, #0A84FF)' : 'rgba(255, 255, 255, 0.05)',
+                color:       recipientMode === mode ? '#FFFFFF' : 'var(--crm-text-secondary, #8E8E93)',
                 fontWeight: 600, fontSize: 13, cursor: 'pointer',
+                transition: 'all 0.15s ease',
               }}
             >
-              {mode === 'all' ? '📢 All Clients' : '[user] Specific Client'}
+              {mode === 'all' ? '📢 All Clients' : '👤 Specific Client'}
             </button>
           ))}
         </div>
@@ -188,8 +191,8 @@ const Compose = ({ onSent }) => {
           value={kind}
           onChange={e => setKind(e.target.value)}
           style={{
-            width: '100%', background: '#363B44', border: '1px solid #444A55',
-            borderRadius: 6, padding: '8px 12px', color: '#EAECEF',
+            width: '100%', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--crm-border, rgba(255, 255, 255, 0.1))',
+            borderRadius: 8, padding: '9px 12px', color: '#FFFFFF',
             fontSize: 13, outline: 'none', cursor: 'pointer',
             appearance: 'none', WebkitAppearance: 'none',
             backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path fill='%23848E9C' d='M5 7L1 3h8z'/></svg>")`,
@@ -417,12 +420,12 @@ const SentHistory = ({ refreshKey }) => {
         <div style={{ display: 'flex', gap: 6 }}>
           {total > 0 && (
             <button onClick={handleClearAll} disabled={clearing || loading}
-              style={{ padding: '5px 13px', background: 'rgba(246,70,93,0.12)', color: '#F6465D', border: '1px solid #F6465D55', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: clearing ? 'not-allowed' : 'pointer' }}>
+              style={{ padding: '6px 14px', background: 'rgba(255, 69, 58, 0.12)', color: '#FF453A', border: '1px solid rgba(255, 69, 58, 0.3)', borderRadius: 9999, fontSize: 12, fontWeight: 600, cursor: clearing ? 'not-allowed' : 'pointer', transition: 'all 0.15s ease' }}>
               {clearing ? 'Clearing...' : '🗑 Clear All'}
             </button>
           )}
           <button onClick={() => load(offset)} disabled={loading}
-            style={{ padding: '5px 13px', background: '#363B44', color: '#848E9C', border: '1px solid #444A55', borderRadius: 6, fontSize: 12, cursor: 'pointer' }}>
+            style={{ padding: '6px 14px', background: 'rgba(255, 255, 255, 0.06)', color: 'var(--crm-text-primary, #FFFFFF)', border: '1px solid var(--crm-border, rgba(255, 255, 255, 0.1))', borderRadius: 9999, fontSize: 12, cursor: 'pointer', transition: 'all 0.15s ease' }}>
             {loading ? '...' : '↺ Refresh'}
           </button>
         </div>
@@ -451,10 +454,12 @@ const SentHistory = ({ refreshKey }) => {
           {/* Header */}
           <div style={{
             display: 'grid', gridTemplateColumns: cols,
-            gap: 8, padding: '6px 10px',
-            borderBottom: '1px solid #444A55',
-            fontSize: 11, color: '#848E9C', fontWeight: 700,
+            gap: 8, padding: '10px 12px',
+            borderBottom: '1px solid var(--crm-border, rgba(255, 255, 255, 0.08))',
+            fontSize: 11, color: 'var(--crm-text-secondary, #8E8E93)', fontWeight: 700,
             textTransform: 'uppercase', letterSpacing: '0.05em',
+            background: 'rgba(255, 255, 255, 0.02)',
+            borderRadius: 8,
           }}>
             <div>Type</div>
             <div>Message</div>
@@ -481,13 +486,14 @@ const SentHistory = ({ refreshKey }) => {
                     onClick={() => setExpanded(isExpanded ? null : row.id)}
                     style={{
                       display: 'grid', gridTemplateColumns: cols,
-                      gap: 8, padding: '10px 10px',
-                      borderBottom: '1px solid #363B44',
+                      gap: 8, padding: '11px 12px',
+                      borderBottom: '1px solid var(--crm-border, rgba(255, 255, 255, 0.05))',
                       cursor: 'pointer',
-                      background: isExpanded ? '#363B44' : 'transparent',
-                      transition: 'background .1s',
+                      background: isExpanded ? 'rgba(255, 255, 255, 0.06)' : 'transparent',
+                      transition: 'background .15s ease',
+                      borderRadius: 8,
                     }}
-                    onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.background = '#2f3540'; }}
+                    onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)'; }}
                     onMouseLeave={e => { if (!isExpanded) e.currentTarget.style.background = 'transparent'; }}
                   >
                     {/* Kind badge */}

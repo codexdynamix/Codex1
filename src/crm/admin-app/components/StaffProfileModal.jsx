@@ -154,7 +154,9 @@ export default function StaffProfileModal({
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(0,0,0,0.72)',
+        background: 'rgba(0,0,0,0.65)',
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
         zIndex: 2050,
         overflowY: 'auto',
         display: 'flex',
@@ -166,14 +168,14 @@ export default function StaffProfileModal({
     >
       <div
         style={{
-          background: '#1E2329',
-          border: '1px solid #444A55',
-          borderRadius: 14,
+          background: 'var(--crm-card, #23242A)',
+          border: '1px solid var(--crm-border, rgba(255, 255, 255, 0.1))',
+          borderRadius: 18,
           width: '100%',
-          maxWidth: 520,
+          maxWidth: 540,
           padding: 24,
-          color: '#EAECEF',
-          boxShadow: '0 20px 50px rgba(0,0,0,0.55)',
+          color: 'var(--crm-text-primary, #FFFFFF)',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.55)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -185,7 +187,7 @@ export default function StaffProfileModal({
             justifyContent: 'space-between',
             gap: 12,
             paddingBottom: 16,
-            borderBottom: '1px solid #363B44',
+            borderBottom: '1px solid var(--crm-border, rgba(255, 255, 255, 0.08))',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
@@ -193,15 +195,16 @@ export default function StaffProfileModal({
               style={{
                 width: 48,
                 height: 48,
-                borderRadius: 12,
-                background: 'linear-gradient(135deg, #F0B90B 0%, #d4a106 100%)',
-                color: '#1E2329',
+                borderRadius: 14,
+                background: 'linear-gradient(135deg, var(--crm-accent, #0A84FF) 0%, #5E5CE6 100%)',
+                color: '#FFFFFF',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: 17,
                 fontWeight: 800,
                 flexShrink: 0,
+                boxShadow: '0 2px 8px rgba(10, 132, 255, 0.3)',
               }}
             >
               {getInitials(liveStaff.name)}
@@ -213,9 +216,10 @@ export default function StaffProfileModal({
                     margin: 0,
                     fontSize: 18,
                     fontWeight: 700,
-                    color: '#EAECEF',
+                    color: 'var(--crm-text-primary, #FFFFFF)',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
+                    letterSpacing: '-0.02em',
                   }}
                 >
                   {liveStaff.name}
@@ -225,7 +229,7 @@ export default function StaffProfileModal({
                     fontSize: 11,
                     fontWeight: 700,
                     padding: '2px 8px',
-                    borderRadius: 6,
+                    borderRadius: 9999,
                     ...(ROLE_BADGE_STYLE[liveStaff.role] || ROLE_BADGE_STYLE[ROLE.AGENT]),
                   }}
                 >
@@ -252,11 +256,11 @@ export default function StaffProfileModal({
                       gap: 5,
                       fontSize: 11,
                       fontWeight: 600,
-                      color: liveStaff.isLoggedIn ? '#0ECB81' : '#848E9C',
-                      background: liveStaff.isLoggedIn ? 'rgba(14,203,129,0.12)' : '#2A2E36',
-                      border: `1px solid ${liveStaff.isLoggedIn ? 'rgba(14,203,129,0.35)' : '#444A55'}`,
+                      color: liveStaff.isLoggedIn ? '#30D158' : '#8E8E93',
+                      background: liveStaff.isLoggedIn ? 'rgba(48,209,88,0.12)' : 'rgba(255,255,255,0.05)',
+                      border: `1px solid ${liveStaff.isLoggedIn ? 'rgba(48,209,88,0.35)' : 'var(--crm-border, rgba(255,255,255,0.08))'}`,
                       padding: '2px 8px',
-                      borderRadius: 999,
+                      borderRadius: 9999,
                     }}
                   >
                     <span
@@ -264,7 +268,7 @@ export default function StaffProfileModal({
                         width: 6,
                         height: 6,
                         borderRadius: '50%',
-                        background: liveStaff.isLoggedIn ? '#0ECB81' : '#848E9C',
+                        background: liveStaff.isLoggedIn ? '#30D158' : '#8E8E93',
                       }}
                     />
                     {liveStaff.isLoggedIn ? 'Online' : 'Offline'}
@@ -277,17 +281,7 @@ export default function StaffProfileModal({
           <button
             type="button"
             onClick={onClose}
-            style={{
-              background: '#2A2E36',
-              border: '1px solid #444A55',
-              color: '#848E9C',
-              borderRadius: 8,
-              padding: '6px 10px',
-              cursor: 'pointer',
-              fontSize: 15,
-              lineHeight: 1,
-              flexShrink: 0,
-            }}
+            className="crm-modal-close-btn"
             aria-label="Close modal"
           >
             ✕
@@ -297,9 +291,9 @@ export default function StaffProfileModal({
         {/* Concise Staff Summary Grid */}
         <div
           style={{
-            background: '#2A2E36',
-            border: '1px solid #363B44',
-            borderRadius: 10,
+            background: 'rgba(255, 255, 255, 0.03)',
+            border: '1px solid var(--crm-border, rgba(255, 255, 255, 0.08))',
+            borderRadius: 12,
             padding: 14,
             marginTop: 16,
             display: 'grid',
@@ -309,8 +303,8 @@ export default function StaffProfileModal({
           }}
         >
           <div>
-            <div style={{ fontSize: 11, color: '#848E9C', marginBottom: 2 }}>Staff ID</div>
-            <div style={{ fontFamily: 'monospace', color: '#EAECEF', fontWeight: 600 }}>
+            <div style={{ fontSize: 11, color: 'var(--crm-text-secondary, #8E8E93)', marginBottom: 2 }}>Staff ID</div>
+            <div style={{ fontFamily: 'monospace', color: 'var(--crm-text-primary, #FFFFFF)', fontWeight: 600 }}>
               {liveStaff.id}
               <button
                 type="button"
@@ -318,7 +312,7 @@ export default function StaffProfileModal({
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: '#848E9C',
+                  color: 'var(--crm-text-secondary, #8E8E93)',
                   cursor: 'pointer',
                   marginLeft: 4,
                   fontSize: 11,
@@ -331,10 +325,10 @@ export default function StaffProfileModal({
           </div>
 
           <div>
-            <div style={{ fontSize: 11, color: '#848E9C', marginBottom: 2 }}>Email</div>
+            <div style={{ fontSize: 11, color: 'var(--crm-text-secondary, #8E8E93)', marginBottom: 2 }}>Email</div>
             <div
               style={{
-                color: '#EAECEF',
+                color: 'var(--crm-text-primary, #FFFFFF)',
                 fontWeight: 500,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -346,8 +340,8 @@ export default function StaffProfileModal({
           </div>
 
           <div>
-            <div style={{ fontSize: 11, color: '#848E9C', marginBottom: 2 }}>Office</div>
-            <div style={{ color: '#EAECEF', fontWeight: 600 }}>{officeName}</div>
+            <div style={{ fontSize: 11, color: 'var(--crm-text-secondary, #8E8E93)', marginBottom: 2 }}>Office</div>
+            <div style={{ color: 'var(--crm-text-primary, #FFFFFF)', fontWeight: 600 }}>{officeName}</div>
           </div>
 
           <div>

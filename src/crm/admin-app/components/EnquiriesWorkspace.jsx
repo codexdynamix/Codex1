@@ -717,47 +717,62 @@ export default function EnquiriesWorkspace({
   return (
     <div style={{ width: '100%' }}>
       {/* 1. Stat Summary Cards - Exactly Matching Leads Table Layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 16 }}>
+      {/* 1. Metric Counter Boxes - Apple iOS Glass Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 18 }}>
         {[
-          { label: 'Total Intake', value: stats.total, color: '#EAECEF' },
-          { label: 'New Enquiries', value: stats.newCount, color: '#0ECB81' },
-          { label: 'Contacted', value: stats.contactedCount, color: '#0A84FF' },
-          { label: 'Converted', value: stats.convertedCount, color: '#F0B90B' },
+          { label: 'Total Inquiries', value: stats.total, color: 'var(--crm-text-primary, #FFFFFF)', sub: 'Historical intake' },
+          { label: 'New Intake', value: stats.newCount, color: '#30D158', sub: 'Awaiting first contact' },
+          { label: 'Contacted', value: stats.contactedCount, color: 'var(--crm-accent, #0A84FF)', sub: 'In active discussion' },
+          { label: 'Converted Client', value: stats.convertedCount, color: '#FF9F0A', sub: 'Moved to project' },
         ].map((s) => (
           <div
             key={s.label}
             style={{
-              background: '#363B44',
-              border: '1px solid #444A55',
-              borderRadius: 6,
-              padding: '10px 14px',
+              background: 'var(--crm-card, #23242A)',
+              border: '1px solid var(--crm-border, rgba(255, 255, 255, 0.08))',
+              borderRadius: 14,
+              padding: '14px 18px',
+              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.15)',
+              display: 'flex',
+              flexDirection: 'column',
+              transition: 'transform 0.15s ease, border-color 0.15s ease',
             }}
           >
-            <div style={{ fontSize: 11, color: '#848E9C', marginBottom: 4 }}>{s.label}</div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: s.color }}>{s.value}</div>
+            <div style={{ fontSize: 11, color: 'var(--crm-text-secondary, #8E8E93)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>
+              {s.label}
+            </div>
+            <div style={{ fontSize: 24, fontWeight: 700, fontVariantNumeric: 'tabular-nums', color: s.color, letterSpacing: '-0.02em', marginBottom: 2 }}>
+              {s.value}
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--crm-text-muted, #636366)' }}>
+              {s.sub}
+            </div>
           </div>
         ))}
       </div>
 
-      {/* 2. Filters & Search Bar */}
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
-        <input
-          type="text"
-          className="crm-super-admin-input"
-          placeholder="Search customer, email, phone, company, service..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          style={{ flex: 2, minWidth: 200 }}
-        />
+      {/* 2. Filters & Search Bar - Apple iOS Search Capsule */}
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14, alignItems: 'center' }}>
+        <div style={{ position: 'relative', flex: 2, minWidth: 240 }}>
+          <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--crm-text-secondary, #8E8E93)' }} />
+          <input
+            type="text"
+            className="crm-super-admin-input"
+            placeholder="Search customer, email, phone, company, service..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ width: '100%', paddingLeft: 36, borderRadius: 9999, boxSizing: 'border-box' }}
+          />
+        </div>
 
         <select
           className="crm-super-admin-select"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          style={{ flex: 1, minWidth: 130 }}
+          style={{ flex: 1, minWidth: 150, borderRadius: 9999 }}
         >
           <option value="all">All Statuses ({localList.length})</option>
-          <option value="new">New ({stats.newCount})</option>
+          <option value="new">New Intake ({stats.newCount})</option>
           <option value="contacted">Contacted ({stats.contactedCount})</option>
           <option value="converted">Converted ({stats.convertedCount})</option>
           <option value="closed">Closed</option>
@@ -767,7 +782,7 @@ export default function EnquiriesWorkspace({
           className="crm-super-admin-select"
           value={serviceFilter}
           onChange={(e) => setServiceFilter(e.target.value)}
-          style={{ flex: 1, minWidth: 150 }}
+          style={{ flex: 1, minWidth: 170, borderRadius: 9999 }}
         >
           <option value="all">All Services</option>
           {serviceOptions.map((svc) => (
@@ -779,7 +794,7 @@ export default function EnquiriesWorkspace({
 
         {(searchQuery || statusFilter !== 'all' || serviceFilter !== 'all') && (
           <button
-            className="crm-super-admin-btn crm-super-admin-btn-small"
+            className="crm-super-admin-btn crm-super-admin-btn-small crm-super-admin-btn-secondary"
             onClick={() => {
               setSearchQuery('');
               setStatusFilter('all');
@@ -787,26 +802,26 @@ export default function EnquiriesWorkspace({
               setPage(1);
             }}
           >
-            Clear
+            Clear Filters
           </button>
         )}
       </div>
 
-      {/* 3. Action Toolbar & Bulk Operations */}
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10, alignItems: 'center' }}>
+      {/* 3. Action Toolbar & Bulk Operations - Apple iOS Buttons */}
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12, alignItems: 'center' }}>
         <button
           className="crm-super-admin-btn crm-super-admin-btn-small"
-          style={{ background: '#F0B90B', color: '#1A1D23', fontWeight: 600 }}
+          style={{ background: 'var(--crm-accent, #0A84FF)', color: '#FFFFFF', fontWeight: 600 }}
           onClick={() => setIsAddModalOpen(true)}
         >
-          + Log Enquiry
+          <Plus size={14} /> Log Customer Enquiry
         </button>
 
         <button
           className="crm-super-admin-btn crm-super-admin-btn-small crm-super-admin-btn-secondary"
           onClick={handleExportCsv}
         >
-          Export CSV
+          <Download size={14} /> Export CSV
         </button>
 
         <button
@@ -818,45 +833,44 @@ export default function EnquiriesWorkspace({
 
         {selectedIds.size > 0 && (
           <>
-            <span style={{ color: '#F0B90B', fontSize: 12, fontWeight: 600 }}>
-              {selectedIds.size} selected
+            <span style={{ color: 'var(--crm-accent, #0A84FF)', fontSize: 12, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <span>{selectedIds.size} selected</span>
               <button
                 onClick={() => setSelectedIds(new Set())}
                 style={{
-                  marginLeft: 8,
-                  background: 'transparent',
-                  border: '1px solid #444A55',
-                  color: '#848E9C',
+                  background: 'none',
+                  border: '1px solid var(--crm-border, rgba(255, 255, 255, 0.15))',
+                  color: 'var(--crm-text-secondary, #8E8E93)',
                   fontSize: 11,
-                  padding: '3px 8px',
-                  borderRadius: 4,
+                  padding: '2px 8px',
+                  borderRadius: 9999,
                   cursor: 'pointer',
                 }}
               >
-                clear
+                Clear
               </button>
             </span>
-            <span style={{ width: 1, height: 22, background: '#444A55' }} />
+            <span style={{ width: 1, height: 20, background: 'var(--crm-border, rgba(255, 255, 255, 0.1))' }} />
             <button
               className="crm-super-admin-btn crm-super-admin-btn-small"
-              style={{ background: 'rgba(10,132,255,0.15)', color: '#0A84FF', border: '1px solid #0A84FF40' }}
+              style={{ background: 'rgba(10,132,255,0.15)', color: '#0A84FF', border: '1px solid rgba(10,132,255,0.35)' }}
               onClick={() => handleBulkUpdateStatus('contacted')}
             >
               Mark Contacted
             </button>
             <button
               className="crm-super-admin-btn crm-super-admin-btn-small"
-              style={{ background: 'rgba(14,203,129,0.12)', color: '#0ECB81', border: '1px solid #0ECB8140' }}
+              style={{ background: 'rgba(48,209,88,0.15)', color: '#30D158', border: '1px solid rgba(48,209,88,0.35)' }}
               onClick={() => handleBulkUpdateStatus('converted')}
             >
               Mark Converted
             </button>
             <button
               className="crm-super-admin-btn crm-super-admin-btn-small"
-              style={{ background: '#c0392b', color: '#fff' }}
+              style={{ background: 'rgba(255,69,58,0.15)', color: '#FF453A', border: '1px solid rgba(255,69,58,0.35)' }}
               onClick={handleBulkDelete}
             >
-              🗑 Delete Selected
+              <Trash2 size={13} /> Delete Selected
             </button>
           </>
         )}
@@ -916,7 +930,7 @@ export default function EnquiriesWorkspace({
                     key={item.id}
                     style={{
                       cursor: 'pointer',
-                      background: isSelected ? '#363B44' : undefined,
+                      background: isSelected ? 'rgba(10, 132, 255, 0.12)' : undefined,
                     }}
                     onClick={() => handleOpenLead(item)}
                   >
@@ -1206,12 +1220,13 @@ export default function EnquiriesWorkspace({
         >
           <div
             style={{
-              background: '#363B44',
-              border: '1px solid #444A55',
-              borderRadius: 12,
+              background: 'var(--crm-card, #23242A)',
+              border: '1px solid var(--crm-border, rgba(255, 255, 255, 0.1))',
+              borderRadius: 16,
               width: '100%',
-              maxWidth: 560,
+              maxWidth: 580,
               padding: 24,
+              boxShadow: '0 24px 64px rgba(0, 0, 0, 0.55)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -1220,24 +1235,21 @@ export default function EnquiriesWorkspace({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                marginBottom: 16,
+                marginBottom: 18,
+                paddingBottom: 14,
+                borderBottom: '1px solid var(--crm-border, rgba(255, 255, 255, 0.08))',
               }}
             >
-              <h3 style={{ margin: 0, fontSize: 16, color: '#FFFFFF', fontWeight: 700 }}>
-                Log Customer Enquiry / Lead
-              </h3>
+              <div>
+                <span style={{ fontSize: 11, color: 'var(--crm-accent, #0A84FF)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Manual Intake</span>
+                <h3 style={{ margin: 0, fontSize: 17, color: 'var(--crm-text-primary, #FFFFFF)', fontWeight: 700 }}>
+                  Log Customer Enquiry / Lead
+                </h3>
+              </div>
               <button
                 type="button"
                 onClick={() => setIsAddModalOpen(false)}
-                style={{
-                  background: 'none',
-                  border: '1px solid #444A55',
-                  color: '#848E9C',
-                  borderRadius: 6,
-                  padding: '4px 8px',
-                  cursor: 'pointer',
-                  fontSize: 16,
-                }}
+                className="crm-modal-close-btn"
               >
                 ✕
               </button>
