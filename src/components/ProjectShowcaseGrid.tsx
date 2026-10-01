@@ -33,7 +33,57 @@ const DEFAULT_CATEGORIES = [
 ];
 
 export function ProjectShowcaseGrid() {
-  const [projects] = useState<ShowcaseProject[]>(RECENT_WEB_PROJECTS);
+  const [projects, setProjects] = useState<ShowcaseProject[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("codex_custom_projects");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            // Only show published projects on the public site
+            return parsed.filter((p: any) => p.published !== false);
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to read custom projects from storage", err);
+      }
+    }
+    return RECENT_WEB_PROJECTS;
+  });
+
+  // Listen for real-time project updates from the CRM
+  useEffect(() => {
+    const handleProjectsSync = () => {
+      try {
+        const stored = localStorage.getItem("codex_custom_projects");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setProjects(parsed.filter((p: any) => p.published !== false));
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to sync updated projects", err);
+      }
+    };
+
+    window.addEventListener("storage", handleProjectsSync);
+    window.addEventListener("codex_projects_updated", handleProjectsSync);
+
+    const handleWindowMessage = (event: MessageEvent) => {
+      if (event.data?.type === "CODEX_PROJECTS_UPDATE" && Array.isArray(event.data.projects)) {
+        setProjects(event.data.projects.filter((p: any) => p.published !== false));
+      }
+    };
+    window.addEventListener("message", handleWindowMessage);
+
+    return () => {
+      window.removeEventListener("storage", handleProjectsSync);
+      window.removeEventListener("codex_projects_updated", handleProjectsSync);
+      window.removeEventListener("message", handleWindowMessage);
+    };
+  }, []);
+
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedProject, setSelectedProject] = useState<ShowcaseProject | null>(null);
