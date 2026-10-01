@@ -55,7 +55,9 @@ import {
   Crown,
   Building2,
   Terminal,
-  Zap
+  Zap,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import {
   THEME_LAYOUT_PRESETS,
@@ -72,6 +74,7 @@ import {
   FacebookLogo,
   LinkedInLogo,
   TwitterXLogo,
+  GitHubLogo,
   MapsLogo
 } from '../../../../components/BrandMarks';
 
@@ -251,6 +254,65 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
   const [copiedPillarIdx, setCopiedPillarIdx] = useState(null);
   const [coolorsAutoApply, setCoolorsAutoApply] = useState(true);
 
+  // Left Column Sections Collapse / Expand state & Quick Navigator
+  const [expandedSections, setExpandedSections] = useState({
+    identity: true,
+    themes: true,
+    palettes: true,
+    hero: true,
+    sequence: true,
+    conversion: true,
+  });
+  const [activeNavSection, setActiveNavSection] = useState('identity');
+
+  // Track active section as user scrolls through the left column
+  useEffect(() => {
+    if (activeSubTab !== 'layout') return;
+    const sectionKeys = ['identity', 'themes', 'palettes', 'hero', 'sequence', 'conversion'];
+    const handleScroll = () => {
+      let current = sectionKeys[0];
+      for (const key of sectionKeys) {
+        const el = document.getElementById(`studio-card-${key}`);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= 160) {
+            current = key;
+          }
+        }
+      }
+      setActiveNavSection(current);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [activeSubTab]);
+
+  const toggleSectionCollapse = (secKey) => {
+    setExpandedSections(prev => ({ ...prev, [secKey]: !prev[secKey] }));
+  };
+
+  const handleExpandAll = (expand = true) => {
+    setExpandedSections({
+      identity: expand,
+      themes: expand,
+      palettes: expand,
+      hero: expand,
+      sequence: expand,
+      conversion: expand,
+    });
+  };
+
+  const scrollToSection = (secKey) => {
+    setExpandedSections(prev => ({ ...prev, [secKey]: true }));
+    setActiveNavSection(secKey);
+    setTimeout(() => {
+      const el = document.getElementById(`studio-card-${secKey}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 40);
+  };
+
   const handleCopyValue = useCallback((text, key, label = 'Value') => {
     if (!text) return;
     if (navigator.clipboard) {
@@ -299,6 +361,12 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
+  });
+
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    newPass: false,
+    confirm: false,
   });
 
   // Config State
@@ -634,34 +702,30 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
     const isCurrentlyDark = coolorsStage.mode === 'dark' || (coolorsStage.mode === 'auto' && isDarkColor(siteConfig.backgroundColor));
     const newPal = generateRandomHarmoniousPalette(isCurrentlyDark ? 'dark' : 'light');
 
-    setCoolorsStage(prev => {
-      const updatedColors = prev.colors.map(col => {
-        if (col.locked) return col;
-        if (col.id === 'primary') return { ...col, hex: newPal.primary };
-        if (col.id === 'bg') return { ...col, hex: newPal.bg };
-        if (col.id === 'card') return { ...col, hex: newPal.card };
-        if (col.id === 'accent') return { ...col, hex: newPal.accent };
-        if (col.id === 'secondary') return { ...col, hex: newPal.secondary };
-        return col;
-      });
+    const updatedColors = [
+      { id: 'primary', label: 'Primary', hex: newPal.primary },
+      { id: 'bg', label: 'Canvas BG', hex: newPal.bg },
+      { id: 'card', label: 'Card Surface', hex: newPal.card },
+      { id: 'accent', label: 'Accent', hex: newPal.accent },
+      { id: 'secondary', label: 'Secondary', hex: newPal.secondary },
+    ];
 
-      return {
-        ...prev,
-        name: newPal.name,
-        contrastRating: newPal.contrastLevel || 'AAA',
-        contrastRatio: isCurrentlyDark ? '14.8:1' : '11.5:1',
-        colors: updatedColors
-      };
-    });
+    setCoolorsStage(prev => ({
+      ...prev,
+      name: newPal.name,
+      contrastRating: newPal.contrastLevel || 'AAA',
+      contrastRatio: isCurrentlyDark ? '14.8:1' : '11.5:1',
+      colors: updatedColors
+    }));
 
     if (coolorsAutoApply) {
       setSiteConfig(prev => ({
         ...prev,
-        primaryColor: coolorsStage.colors[0]?.locked ? prev.primaryColor : newPal.primary,
-        backgroundColor: coolorsStage.colors[1]?.locked ? prev.backgroundColor : newPal.bg,
-        cardBg: coolorsStage.colors[2]?.locked ? prev.cardBg : newPal.card,
-        accentColor: coolorsStage.colors[3]?.locked ? prev.accentColor : newPal.accent,
-        secondaryColor: coolorsStage.colors[4]?.locked ? prev.secondaryColor : newPal.secondary,
+        primaryColor: newPal.primary,
+        backgroundColor: newPal.bg,
+        cardBg: newPal.card,
+        accentColor: newPal.accent,
+        secondaryColor: newPal.secondary,
       }));
       setHasUnsavedChanges(true);
     }
@@ -1598,24 +1662,30 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
                               onMouseEnter={e => { if (!isAddrCopied) e.currentTarget.style.color = '#F0B90B'; }}
                               onMouseLeave={e => { if (!isAddrCopied) e.currentTarget.style.color = isAddrCopied ? '#0ECB81' : '#848E9C'; }}
                             >
-                              {isAddrCopied ? <Check size={12} color="#0ECB81" /> : <i className="fas fa-copy" style={{ fontSize: 11 }}></i>}
+                              {isAddrCopied ? <Check size={12} color="#0ECB81" /> : <Copy size={12} />}
                             </button>
                           </div>
                         </td>
                         <td>
                           {addr.isPrimary ? (
-                            <span className="crm-status-badge crm-status-pending">HQ Hub</span>
+                            <span className="crm-status-badge crm-status-pending" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                              ★ HQ Hub
+                            </span>
                           ) : (
-                            <span className="crm-status-badge crm-status-suspended">Regional</span>
+                            <span className="crm-status-badge crm-status-suspended">
+                              Regional
+                            </span>
                           )}
                         </td>
                         <td style={{ textAlign: 'right' }}>
                           <button
                             type="button"
-                            className="crm-super-admin-btn crm-super-admin-btn-small"
+                            className="crm-btn-secondary"
+                            style={{ padding: '4px 10px', fontSize: 11.5, gap: 5, borderRadius: 6, display: 'inline-flex', alignItems: 'center' }}
                             onClick={() => handleCopyValue(addr.fullAddress, `addr-${addr.id}`, addr.label)}
                           >
-                            Copy
+                            {isAddrCopied ? <Check size={11} color="#0ECB81" /> : <Copy size={11} />}
+                            <span>{isAddrCopied ? 'Copied' : 'Copy'}</span>
                           </button>
                         </td>
                       </tr>
@@ -1634,72 +1704,97 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
           <div className="crm-settings-section-head">
             <div>
               <h3><Share2 size={16} color="#2979F0" /> Header Social Profiles</h3>
-              <p>Configure social presence icons rendered in the navigation header bar and footer directory.</p>
+              <p>Configure official brand presence icons rendered across the website navigation header and footer directory.</p>
             </div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {[
-              { key: 'x', name: 'X (formerly Twitter)', defaultUrl: 'https://x.com/codexdynamics' },
-              { key: 'linkedin', name: 'LinkedIn Company Profile', defaultUrl: 'https://linkedin.com/company/codexdynamics' },
-              { key: 'github', name: 'GitHub Organization', defaultUrl: 'https://github.com/codexdynamix' },
-              { key: 'instagram', name: 'Instagram Portfolio', defaultUrl: 'https://instagram.com/codexdynamics' },
-              { key: 'facebook', name: 'Facebook Page', defaultUrl: 'https://facebook.com/codexdynamics' },
+              { key: 'x', name: 'X (formerly Twitter)', defaultUrl: 'https://x.com/codexdynamics', Logo: TwitterXLogo, desc: 'Broadcast platform announcements, milestone releases & engineering updates.' },
+              { key: 'linkedin', name: 'LinkedIn Company Profile', defaultUrl: 'https://linkedin.com/company/codexdynamics', Logo: LinkedInLogo, desc: 'Corporate identity, B2B institutional relationships & executive recruitment.' },
+              { key: 'github', name: 'GitHub Organization', defaultUrl: 'https://github.com/codexdynamix', Logo: GitHubLogo, desc: 'Open-source components, developer API libraries & integration SDKs.' },
+              { key: 'instagram', name: 'Instagram Portfolio', defaultUrl: 'https://instagram.com/codexdynamics', Logo: InstagramLogo, desc: 'Design showcases, studio life, interactive culture & stories.' },
+              { key: 'facebook', name: 'Facebook Page', defaultUrl: 'https://facebook.com/codexdynamics', Logo: FacebookLogo, desc: 'Community engagement, verified client reviews & company announcements.' },
             ].map(social => {
               const item = siteConfig.headerSocials[social.key] || { enabled: false, url: social.defaultUrl, handle: '' };
               const isSocialCopied = copiedKey === `social-${social.key}`;
+              const LogoComp = social.Logo;
 
               return (
-                <div key={social.key} className="crm-toggle-card">
-                  <div className="crm-toggle-card-info" style={{ flex: 1 }}>
-                    <div className="crm-toggle-card-title">
-                      <Globe size={14} color="#848E9C" />
-                      {social.name}
-                    </div>
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 4 }}>
-                      <input
-                        type="text"
-                        className="crm-settings-input"
-                        placeholder={social.defaultUrl}
-                        value={item.url}
-                        disabled={!item.enabled}
-                        onChange={e => {
-                          const updated = {
-                            ...siteConfig.headerSocials,
-                            [social.key]: { ...item, url: e.target.value }
-                          };
-                          updateField('headerSocials', updated);
-                        }}
-                      />
-                      {item.enabled && item.url && (
-                        <button
-                          type="button"
-                          className={`crm-settings-copy-btn ${isSocialCopied ? 'copied' : ''}`}
-                          onClick={() => handleCopyValue(item.url, `social-${social.key}`, social.name)}
-                          title={isSocialCopied ? 'Copied!' : 'Copy URL'}
-                          aria-label={`Copy URL for ${social.name}`}
-                        >
-                          {isSocialCopied ? <Check size={13} strokeWidth={2.5} /> : <Copy size={13} />}
-                        </button>
-                      )}
-                    </div>
+                <div key={social.key} className="crm-social-card">
+                  <div className="crm-social-card-avatar" title={social.name}>
+                    <LogoComp style={{ width: 22, height: 22, display: 'block' }} />
                   </div>
 
-                  {/* Standard Toggle Switch */}
-                  <label className="crm-toggle-switch" title={`Toggle ${social.name}`}>
-                    <input
-                      type="checkbox"
-                      checked={item.enabled}
-                      onChange={() => {
-                        const updated = {
-                          ...siteConfig.headerSocials,
-                          [social.key]: { ...item, enabled: !item.enabled }
-                        };
-                        updateField('headerSocials', updated);
-                      }}
-                    />
-                    <span className="crm-toggle-slider" />
-                  </label>
+                  <div className="crm-social-card-content">
+                    <div className="crm-social-card-header">
+                      <div className="crm-social-card-title-wrap">
+                        <span className="crm-social-card-title">{social.name}</span>
+                        {item.enabled ? (
+                          <span className="crm-status-pill saved" style={{ fontSize: 10, padding: '2px 8px' }}>
+                            Active in Header
+                          </span>
+                        ) : (
+                          <span className="crm-status-pill" style={{ fontSize: 10, padding: '2px 8px', background: 'rgba(255,255,255,0.05)', color: '#848E9C', border: '1px solid #444A55' }}>
+                            Hidden
+                          </span>
+                        )}
+                      </div>
+                      <p className="crm-social-card-desc">{social.desc}</p>
+                    </div>
+
+                    <div className="crm-social-input-row">
+                      <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
+                        <input
+                          type="text"
+                          className="crm-settings-input"
+                          placeholder={social.defaultUrl}
+                          value={item.url}
+                          disabled={!item.enabled}
+                          onChange={e => {
+                            const updated = {
+                              ...siteConfig.headerSocials,
+                              [social.key]: { ...item, url: e.target.value }
+                            };
+                            updateField('headerSocials', updated);
+                          }}
+                          style={{
+                            width: '100%',
+                            paddingRight: item.enabled && item.url ? 36 : 12,
+                            opacity: item.enabled ? 1 : 0.65
+                          }}
+                        />
+                        {item.enabled && item.url && (
+                          <button
+                            type="button"
+                            className={`crm-settings-copy-btn ${isSocialCopied ? 'copied' : ''}`}
+                            onClick={() => handleCopyValue(item.url, `social-${social.key}`, social.name)}
+                            title={isSocialCopied ? 'Copied!' : 'Copy URL'}
+                            aria-label={`Copy URL for ${social.name}`}
+                            style={{ position: 'absolute', right: 6 }}
+                          >
+                            {isSocialCopied ? <Check size={12} strokeWidth={2.5} /> : <Copy size={12} />}
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Standard Apple/iOS Toggle Switch */}
+                      <label className="crm-toggle-switch" title={`Toggle ${social.name} visibility`}>
+                        <input
+                          type="checkbox"
+                          checked={item.enabled}
+                          onChange={() => {
+                            const updated = {
+                              ...siteConfig.headerSocials,
+                              [social.key]: { ...item, enabled: !item.enabled }
+                            };
+                            updateField('headerSocials', updated);
+                          }}
+                        />
+                        <span className="crm-toggle-slider" />
+                      </label>
+                    </div>
+                  </div>
                 </div>
               );
             })}
@@ -1743,9 +1838,84 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
           <div className="crm-layout-studio-grid">
             {/* ── Left Column: Controls & Presets ── */}
             <div className="crm-layout-controls-col">
-              {/* 1. Core Visual Identity & Typography (Apple / iOS Inset Grouped) */}
-              <div className="crm-ios-card">
-                <div className="crm-ios-card-head">
+              {/* Quick Navigation & Section Jumper Bar */}
+              <div className="crm-layout-controls-sticky-bar">
+                <div className="crm-layout-controls-nav-chips">
+                  <button
+                    type="button"
+                    onClick={() => scrollToSection('identity')}
+                    className={`crm-nav-chip ${activeNavSection === 'identity' ? 'active' : ''}`}
+                    title="Jump to Identity & Typography"
+                  >
+                    <Sliders size={12} color={activeNavSection === 'identity' ? '#121418' : '#0A84FF'} />
+                    <span>Identity</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => scrollToSection('themes')}
+                    className={`crm-nav-chip ${activeNavSection === 'themes' ? 'active' : ''}`}
+                    title="Jump to Themes & Layouts"
+                  >
+                    <Sparkles size={12} color={activeNavSection === 'themes' ? '#121418' : '#FF9F0A'} />
+                    <span>Themes ({filteredThemes.length})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => scrollToSection('palettes')}
+                    className={`crm-nav-chip ${activeNavSection === 'palettes' ? 'active' : ''}`}
+                    title="Jump to Brand Palettes & Coolors"
+                  >
+                    <Palette size={12} color={activeNavSection === 'palettes' ? '#121418' : '#BF5AF2'} />
+                    <span>Colors ({filteredPalettes.length})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => scrollToSection('hero')}
+                    className={`crm-nav-chip ${activeNavSection === 'hero' ? 'active' : ''}`}
+                    title="Jump to Hero & Header Navigation"
+                  >
+                    <Layers size={12} color={activeNavSection === 'hero' ? '#121418' : '#64D2FF'} />
+                    <span>Hero & Nav</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => scrollToSection('sequence')}
+                    className={`crm-nav-chip ${activeNavSection === 'sequence' ? 'active' : ''}`}
+                    title="Jump to Homepage Sections Sequence"
+                  >
+                    <Compass size={12} color={activeNavSection === 'sequence' ? '#121418' : '#FF6B00'} />
+                    <span>Sections ({siteConfig.sectionsOrder.length})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => scrollToSection('conversion')}
+                    className={`crm-nav-chip ${activeNavSection === 'conversion' ? 'active' : ''}`}
+                    title="Jump to Conversion Modules"
+                  >
+                    <MessageCircle size={12} color={activeNavSection === 'conversion' ? '#121418' : '#30D158'} />
+                    <span>Modules</span>
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  className="crm-expand-toggle-btn"
+                  onClick={() => handleExpandAll(!Object.values(expandedSections).every(Boolean))}
+                  title="Expand or collapse all setting sections"
+                >
+                  {Object.values(expandedSections).every(Boolean) ? 'Collapse All' : 'Expand All'}
+                </button>
+              </div>
+
+              {/* 1. Core Visual Identity & Typography */}
+              <div className="crm-ios-card" id="studio-card-identity">
+                <div
+                  className={`crm-ios-card-head ${!expandedSections.identity ? 'collapsed' : ''}`}
+                  onClick={() => toggleSectionCollapse('identity')}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={e => e.key === 'Enter' && toggleSectionCollapse('identity')}
+                  title="Click to toggle section collapse"
+                >
                   <div className="crm-ios-head-left">
                     <div className="crm-ios-icon-badge blue">
                       <Sliders size={20} />
@@ -1755,161 +1925,180 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
                       <p>Company branding, public display typefaces, and global theme mode.</p>
                     </div>
                   </div>
-                </div>
-
-                <div className="crm-ios-inset-box">
-                  <div className="crm-ios-form-row-2">
-                    <div className="crm-settings-field" style={{ flex: 2, minWidth: 0 }}>
-                      <label>Company / Platform Name</label>
-                      <input
-                        type="text"
-                        className="crm-settings-input"
-                        value={siteConfig.siteName}
-                        onChange={e => updateField('siteName', e.target.value)}
-                        placeholder="e.g. Codex Dynamics"
-                      />
-                    </div>
-
-                    <div className="crm-settings-field" style={{ flex: 1, minWidth: 100 }}>
-                      <label>Base Currency</label>
-                      <select
-                        className="crm-settings-select"
-                        value={siteConfig.baseCurrency}
-                        onChange={e => updateField('baseCurrency', e.target.value)}
-                      >
-                        <option value="USD">USD ($)</option>
-                        <option value="EUR">EUR (€)</option>
-                        <option value="GBP">GBP (£)</option>
-                        <option value="UAH">UAH (₴)</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="crm-settings-field" style={{ width: '100%', minWidth: 0 }}>
-                    <label>Hero Badge Tagline</label>
-                    <input
-                      type="text"
-                      className="crm-settings-input"
-                      value={siteConfig.heroBadge}
-                      onChange={e => updateField('heroBadge', e.target.value)}
-                      placeholder="e.g. Codex Dynamics"
-                    />
-                  </div>
-
-                  <div className="crm-settings-field" style={{ width: '100%', minWidth: 0 }}>
-                    <label>Hero Headline (Display Title)</label>
-                    <textarea
-                      className="crm-settings-textarea"
-                      rows={2}
-                      value={siteConfig.heroTitle}
-                      onChange={e => updateField('heroTitle', e.target.value)}
-                      placeholder="e.g. Precision on every screen."
-                    />
-                  </div>
-
-                  <div className="crm-settings-field" style={{ width: '100%', minWidth: 0 }}>
-                    <label>Hero Supporting Statement</label>
-                    <textarea
-                      className="crm-settings-textarea"
-                      rows={2}
-                      value={siteConfig.heroSubtitle}
-                      onChange={e => updateField('heroSubtitle', e.target.value)}
-                      placeholder="e.g. High-performance websites, custom CRM software, and digital marketing engines."
-                    />
-                  </div>
-                </div>
-
-                {/* Quick Theme Switcher (Apple Inset Grid) */}
-                <div className="crm-ios-inset-box">
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <Palette size={15} color="#F0B90B" /> Global Theme Mode
-                      </div>
-                      <div style={{ fontSize: 11.5, color: '#98989D', marginTop: 2 }}>
-                        Instant switch between Apple Light and Luxury Dark aesthetic.
-                      </div>
-                    </div>
-                    <span className="crm-status-pill saved" style={{ fontSize: 10, padding: '2px 8px' }}>
-                      {isDarkColor(siteConfig.backgroundColor) ? '🌙 Dark Active' : '☀️ Light Active'}
+                  <div className="crm-ios-card-head-right">
+                    <span className="crm-status-pill saved" style={{ fontSize: 10.5, padding: '3px 8px', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={`${siteConfig.siteName || 'Codex'} · ${siteConfig.fontFamily}`}>
+                      {siteConfig.siteName || 'Codex'} · {siteConfig.fontFamily}
                     </span>
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, width: '100%' }}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        handleApplyPreset({
-                          id: 'titanium-light',
-                          name: 'Titanium Apple Light',
-                          primary: '#0071E3',
-                          secondary: '#F2F2F7',
-                          accent: '#0071E3',
-                          bg: '#F5F5F7',
-                          card: '#FFFFFF'
-                        });
-                      }}
-                      className={`crm-ios-mode-btn ${!isDarkColor(siteConfig.backgroundColor) ? 'active' : ''}`}
-                    >
-                      <Sun size={14} color={!isDarkColor(siteConfig.backgroundColor) ? '#F0B90B' : '#8E8E93'} />
-                      <span>Apple Light</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        handleApplyPreset({
-                          id: 'codex-gold',
-                          name: 'Codex Gold (Dark)',
-                          primary: '#F0B90B',
-                          secondary: '#1E2329',
-                          accent: '#F0B90B',
-                          bg: '#0F1216',
-                          card: '#181A20'
-                        });
-                      }}
-                      className={`crm-ios-mode-btn ${isDarkColor(siteConfig.backgroundColor) ? 'active' : ''}`}
-                    >
-                      <Moon size={14} color={isDarkColor(siteConfig.backgroundColor) ? '#F0B90B' : '#8E8E93'} />
-                      <span>Luxury Dark</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Typography & Radii */}
-                <div className="crm-ios-inset-box">
-                  <div className="crm-form-grid-2">
-                    <div className="crm-settings-field">
-                      <label>Display & Body Typography</label>
-                      <select
-                        className="crm-settings-select"
-                        value={siteConfig.fontFamily}
-                        onChange={e => updateField('fontFamily', e.target.value)}
-                      >
-                        {FONT_OPTIONS.map(opt => (
-                          <option key={opt.id} value={opt.id}>{opt.name} — ({opt.sample})</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="crm-settings-field">
-                      <label>Surface Border Radius Style</label>
-                      <select
-                        className="crm-settings-select"
-                        value={siteConfig.borderRadius}
-                        onChange={e => updateField('borderRadius', e.target.value)}
-                      >
-                        {RADIUS_OPTIONS.map(opt => (
-                          <option key={opt.id} value={opt.id}>{opt.label} — {opt.desc}</option>
-                        ))}
-                      </select>
+                    <div className="crm-ios-card-collapse-btn">
+                      {expandedSections.identity ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                     </div>
                   </div>
                 </div>
+
+                {expandedSections.identity && (
+                  <div className="crm-ios-card-body">
+                    <div className="crm-ios-inset-box">
+                      <div className="crm-ios-form-row-2" style={{ alignItems: 'flex-start', gap: 12 }}>
+                        <div className="crm-settings-field" style={{ flex: 1, minWidth: 0 }}>
+                          <label>Company / Platform Name</label>
+                          <input
+                            type="text"
+                            className="crm-settings-input"
+                            value={siteConfig.siteName}
+                            onChange={e => updateField('siteName', e.target.value)}
+                            placeholder="e.g. Codex Dynamics"
+                          />
+                        </div>
+
+                        <div className="crm-settings-field" style={{ width: 110, minWidth: 100, flexShrink: 0 }}>
+                          <label>Base Currency</label>
+                          <select
+                            className="crm-settings-select"
+                            value={siteConfig.baseCurrency}
+                            onChange={e => updateField('baseCurrency', e.target.value)}
+                          >
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="GBP">GBP (£)</option>
+                            <option value="UAH">UAH (₴)</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="crm-settings-field" style={{ width: '100%', minWidth: 0 }}>
+                        <label>Hero Badge Tagline</label>
+                        <input
+                          type="text"
+                          className="crm-settings-input"
+                          value={siteConfig.heroBadge}
+                          onChange={e => updateField('heroBadge', e.target.value)}
+                          placeholder="e.g. Codex Dynamics"
+                        />
+                      </div>
+
+                      <div className="crm-settings-field" style={{ width: '100%', minWidth: 0 }}>
+                        <label>Hero Headline (Display Title)</label>
+                        <textarea
+                          className="crm-settings-textarea"
+                          rows={2}
+                          value={siteConfig.heroTitle}
+                          onChange={e => updateField('heroTitle', e.target.value)}
+                          placeholder="e.g. Precision on every screen."
+                        />
+                      </div>
+
+                      <div className="crm-settings-field" style={{ width: '100%', minWidth: 0 }}>
+                        <label>Hero Supporting Statement</label>
+                        <textarea
+                          className="crm-settings-textarea"
+                          rows={2}
+                          value={siteConfig.heroSubtitle}
+                          onChange={e => updateField('heroSubtitle', e.target.value)}
+                          placeholder="e.g. High-performance websites, custom CRM software, and digital marketing engines."
+                        />
+                      </div>
+                    </div>
+
+                    {/* Quick Theme Switcher (Apple Inset Grid) */}
+                    <div className="crm-ios-inset-box">
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <Palette size={15} color="#F0B90B" /> Global Theme Mode
+                          </div>
+                          <div style={{ fontSize: 11.5, color: '#98989D', marginTop: 2 }}>
+                            Instant switch between Apple Light and Luxury Dark aesthetic.
+                          </div>
+                        </div>
+                        <span className="crm-status-pill saved" style={{ fontSize: 10, padding: '2px 8px' }}>
+                          {isDarkColor(siteConfig.backgroundColor) ? '🌙 Dark Active' : '☀️ Light Active'}
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, width: '100%' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleApplyPreset({
+                              id: 'titanium-light',
+                              name: 'Titanium Apple Light',
+                              primary: '#0071E3',
+                              secondary: '#F2F2F7',
+                              accent: '#0071E3',
+                              bg: '#F5F5F7',
+                              card: '#FFFFFF'
+                            });
+                          }}
+                          className={`crm-ios-mode-btn ${!isDarkColor(siteConfig.backgroundColor) ? 'active' : ''}`}
+                        >
+                          <Sun size={14} color={!isDarkColor(siteConfig.backgroundColor) ? '#F0B90B' : '#8E8E93'} />
+                          <span>Apple Light</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleApplyPreset({
+                              id: 'codex-gold',
+                              name: 'Codex Gold (Dark)',
+                              primary: '#F0B90B',
+                              secondary: '#1E2329',
+                              accent: '#F0B90B',
+                              bg: '#0F1216',
+                              card: '#181A20'
+                            });
+                          }}
+                          className={`crm-ios-mode-btn ${isDarkColor(siteConfig.backgroundColor) ? 'active' : ''}`}
+                        >
+                          <Moon size={14} color={isDarkColor(siteConfig.backgroundColor) ? '#F0B90B' : '#8E8E93'} />
+                          <span>Luxury Dark</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Typography & Radii */}
+                    <div className="crm-ios-inset-box">
+                      <div className="crm-form-responsive-grid">
+                        <div className="crm-settings-field" style={{ minWidth: 0 }}>
+                          <label>Display & Body Typography</label>
+                          <select
+                            className="crm-settings-select"
+                            value={siteConfig.fontFamily}
+                            onChange={e => updateField('fontFamily', e.target.value)}
+                          >
+                            {FONT_OPTIONS.map(opt => (
+                              <option key={opt.id} value={opt.id}>{opt.name} — ({opt.sample})</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="crm-settings-field" style={{ minWidth: 0 }}>
+                          <label>Surface Border Radius Style</label>
+                          <select
+                            className="crm-settings-select"
+                            value={siteConfig.borderRadius}
+                            onChange={e => updateField('borderRadius', e.target.value)}
+                          >
+                            {RADIUS_OPTIONS.map(opt => (
+                              <option key={opt.id} value={opt.id}>{opt.label} — {opt.desc}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* 2. Theme & Layout Architecture (Apple / iOS Single Column, Non-Cramped) */}
-              <div className="crm-ios-card">
-                <div className="crm-ios-card-head">
+              {/* 2. Theme & Layout Architecture */}
+              <div className="crm-ios-card" id="studio-card-themes">
+                <div
+                  className={`crm-ios-card-head ${!expandedSections.themes ? 'collapsed' : ''}`}
+                  onClick={() => toggleSectionCollapse('themes')}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={e => e.key === 'Enter' && toggleSectionCollapse('themes')}
+                  title="Click to toggle section collapse"
+                >
                   <div className="crm-ios-head-left">
                     <div className="crm-ios-icon-badge amber">
                       <Sparkles size={20} />
@@ -1919,187 +2108,203 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
                       <p>Meticulously designed agency layouts with full visual hierarchy, hero structures, and typography.</p>
                     </div>
                   </div>
-                  <div className="crm-status-pill saved" style={{ fontSize: 11, padding: '4px 10px' }}>
-                    {filteredThemes.length} Layouts
+                  <div className="crm-ios-card-head-right">
+                    <div className="crm-status-pill saved" style={{ fontSize: 11, padding: '4px 10px' }}>
+                      {filteredThemes.length} Layouts
+                    </div>
+                    <div className="crm-ios-card-collapse-btn">
+                      {expandedSections.themes ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                    </div>
                   </div>
                 </div>
 
-                {/* Filter Toolbar */}
-                <div className="crm-studio-filter-toolbar">
-                  <div className="crm-studio-filter-row">
-                    <div className="crm-studio-segmented-tabs">
-                      <button
-                        type="button"
-                        className={`crm-studio-tab-btn ${themeModeFilter === 'all' ? 'active' : ''}`}
-                        onClick={() => setThemeModeFilter('all')}
-                      >
-                        All ({THEME_LAYOUT_PRESETS.length})
-                      </button>
-                      <button
-                        type="button"
-                        className={`crm-studio-tab-btn ${themeModeFilter === 'dark' ? 'active' : ''}`}
-                        onClick={() => setThemeModeFilter('dark')}
-                      >
-                        <Moon size={11} /> Dark ({THEME_LAYOUT_PRESETS.filter(t => !t.isLight).length})
-                      </button>
-                      <button
-                        type="button"
-                        className={`crm-studio-tab-btn ${themeModeFilter === 'light' ? 'active' : ''}`}
-                        onClick={() => setThemeModeFilter('light')}
-                      >
-                        <Sun size={11} /> Light ({THEME_LAYOUT_PRESETS.filter(t => t.isLight).length})
-                      </button>
-                    </div>
-
-                    <div className="crm-studio-search-wrapper">
-                      <Search size={13} color="#848E9C" />
-                      <input
-                        type="text"
-                        className="crm-studio-search-input"
-                        placeholder="Search themes, styles, fonts..."
-                        value={themeSearchQuery}
-                        onChange={(e) => setThemeSearchQuery(e.target.value)}
-                      />
-                      {themeSearchQuery && (
-                        <button
-                          type="button"
-                          onClick={() => setThemeSearchQuery('')}
-                          style={{ position: 'absolute', right: 8, background: 'none', border: 'none', color: '#848E9C', cursor: 'pointer' }}
-                        >
-                          <X size={12} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Spacious Apple Category Filter Pills (Generous, Non-Cramped) */}
-                  <div className="crm-apple-filter-pills-row">
-                    {[
-                      { id: 'all', label: 'All Categories', icon: LayoutGrid, count: THEME_LAYOUT_PRESETS.length },
-                      { id: 'luxury', label: 'Luxury & Atelier', icon: Crown, count: THEME_LAYOUT_PRESETS.filter(t => t.category === 'luxury').length },
-                      { id: 'enterprise', label: 'SaaS & Enterprise', icon: Building2, count: THEME_LAYOUT_PRESETS.filter(t => t.category === 'enterprise').length },
-                      { id: 'creative', label: 'Creative Studio', icon: Sparkles, count: THEME_LAYOUT_PRESETS.filter(t => t.category === 'creative').length },
-                      { id: 'performance', label: 'Performance', icon: Zap, count: THEME_LAYOUT_PRESETS.filter(t => t.category === 'performance').length },
-                      { id: 'architectural', label: 'Architectural', icon: Compass, count: THEME_LAYOUT_PRESETS.filter(t => t.category === 'architectural').length },
-                      { id: 'cyber', label: 'Cyber & Terminal', icon: Terminal, count: THEME_LAYOUT_PRESETS.filter(t => t.category === 'cyber').length },
-                      { id: 'minimal', label: 'Minimalist', icon: Sliders, count: THEME_LAYOUT_PRESETS.filter(t => t.category === 'minimal').length }
-                    ].map(cat => {
-                      const Icon = cat.icon;
-                      const isActive = themeCategoryFilter === cat.id;
-                      return (
-                        <button
-                          key={cat.id}
-                          type="button"
-                          className={`crm-apple-filter-pill ${isActive ? 'active' : ''}`}
-                          onClick={() => setThemeCategoryFilter(cat.id)}
-                        >
-                          <Icon size={13} />
-                          <span>{cat.label}</span>
-                          <span style={{
-                            fontSize: 10,
-                            padding: '1px 6px',
-                            borderRadius: 10,
-                            background: isActive ? 'rgba(0, 0, 0, 0.25)' : 'rgba(255, 255, 255, 0.08)',
-                            color: isActive ? '#121418' : '#8E8E93',
-                            fontWeight: 600,
-                            marginLeft: 2
-                          }}>
-                            {cat.count}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Single-Column Spacious Theme Cards (No Cramping, Fully Visible) */}
-                <div className="crm-scrollable-studio-container" style={{ maxHeight: 460 }}>
-                  <div className="crm-theme-single-column">
-                    {filteredThemes.map((preset) => {
-                      const isSelected =
-                        siteConfig.activeTheme === preset.id ||
-                        (siteConfig.heroLayout === preset.heroLayout &&
-                         siteConfig.fontFamily === preset.fontFamily &&
-                         siteConfig.borderRadius === preset.borderRadius &&
-                         siteConfig.primaryColor === preset.primary &&
-                         siteConfig.backgroundColor === preset.bg);
-
-                      return (
-                        <div
-                          key={preset.id}
-                          className={`crm-apple-theme-card ${isSelected ? 'active' : ''}`}
-                          onClick={() => handleApplyTemplatePreset(preset)}
-                        >
-                          <div className="crm-apple-theme-card-top">
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                              <span className="crm-apple-theme-title">
-                                {preset.name}
-                              </span>
-                              <span className="crm-template-layout-pill">
-                                {preset.heroLayout} hero
-                              </span>
-                              <span className="crm-apple-theme-badge">
-                                {preset.badge}
-                              </span>
-                            </div>
-
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <span style={{ fontSize: 11, color: '#8E8E93', fontWeight: 500 }}>
-                                {preset.isLight ? '☀️ Light' : '🌙 Dark'}
-                              </span>
-                              {isSelected ? (
-                                <span className="crm-status-pill saved" style={{ fontSize: 10.5, padding: '3px 8px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                                  <Check size={11} /> Active
-                                </span>
-                              ) : (
-                                <button
-                                  type="button"
-                                  className="crm-apple-apply-stage-btn"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleApplyTemplatePreset(preset);
-                                  }}
-                                  style={{ padding: '3px 10px', fontSize: 11 }}
-                                >
-                                  Apply
-                                </button>
-                              )}
-                            </div>
-                          </div>
-
-                          <p className="crm-apple-theme-desc">
-                            {preset.desc}
-                          </p>
-
-                          <div className="crm-apple-theme-specs-row">
-                            <div className="crm-apple-theme-tags-group">
-                              <span className="crm-apple-spec-pill">Nav: {preset.headerStyle}</span>
-                              <span className="crm-apple-spec-pill">Font: {preset.fontFamily}</span>
-                              <span className="crm-apple-spec-pill">Radius: {preset.borderRadius}</span>
-                              {(preset.layoutTags || []).slice(0, 2).map(tag => (
-                                <span key={tag} className="crm-apple-spec-pill" style={{ opacity: 0.8 }}>{tag}</span>
-                              ))}
-                            </div>
-
-                            {/* 5-Color Swatch Strip */}
-                            <div className="crm-apple-palette-dots-large" title="Theme Color Harmony">
-                              <span className="crm-apple-palette-dot-lg" style={{ background: preset.primary }} title={`Primary: ${preset.primary}`} />
-                              <span className="crm-apple-palette-dot-lg" style={{ background: preset.bg }} title={`Background: ${preset.bg}`} />
-                              <span className="crm-apple-palette-dot-lg" style={{ background: preset.card }} title={`Card Surface: ${preset.card}`} />
-                              <span className="crm-apple-palette-dot-lg" style={{ background: preset.accent }} title={`Accent: ${preset.accent}`} />
-                              <span className="crm-apple-palette-dot-lg" style={{ background: preset.secondary }} title={`Secondary: ${preset.secondary}`} />
-                            </div>
-                          </div>
+                {expandedSections.themes && (
+                  <div className="crm-ios-card-body">
+                    {/* Filter Toolbar */}
+                    <div className="crm-studio-filter-toolbar">
+                      <div className="crm-studio-filter-row">
+                        <div className="crm-studio-segmented-tabs">
+                          <button
+                            type="button"
+                            className={`crm-studio-tab-btn ${themeModeFilter === 'all' ? 'active' : ''}`}
+                            onClick={() => setThemeModeFilter('all')}
+                          >
+                            All ({THEME_LAYOUT_PRESETS.length})
+                          </button>
+                          <button
+                            type="button"
+                            className={`crm-studio-tab-btn ${themeModeFilter === 'dark' ? 'active' : ''}`}
+                            onClick={() => setThemeModeFilter('dark')}
+                          >
+                            <Moon size={11} /> Dark ({THEME_LAYOUT_PRESETS.filter(t => !t.isLight).length})
+                          </button>
+                          <button
+                            type="button"
+                            className={`crm-studio-tab-btn ${themeModeFilter === 'light' ? 'active' : ''}`}
+                            onClick={() => setThemeModeFilter('light')}
+                          >
+                            <Sun size={11} /> Light ({THEME_LAYOUT_PRESETS.filter(t => t.isLight).length})
+                          </button>
                         </div>
-                      );
-                    })}
+
+                        <div className="crm-studio-search-wrapper">
+                          <Search size={13} color="#848E9C" />
+                          <input
+                            type="text"
+                            className="crm-studio-search-input"
+                            placeholder="Search themes, styles, fonts..."
+                            value={themeSearchQuery}
+                            onChange={(e) => setThemeSearchQuery(e.target.value)}
+                          />
+                          {themeSearchQuery && (
+                            <button
+                              type="button"
+                              onClick={() => setThemeSearchQuery('')}
+                              style={{ position: 'absolute', right: 8, background: 'none', border: 'none', color: '#848E9C', cursor: 'pointer' }}
+                            >
+                              <X size={12} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Spacious Apple Category Filter Pills */}
+                      <div className="crm-apple-filter-pills-row">
+                        {[
+                          { id: 'all', label: 'All Categories', icon: LayoutGrid, count: THEME_LAYOUT_PRESETS.length },
+                          { id: 'luxury', label: 'Luxury & Atelier', icon: Crown, count: THEME_LAYOUT_PRESETS.filter(t => t.category === 'luxury').length },
+                          { id: 'enterprise', label: 'SaaS & Enterprise', icon: Building2, count: THEME_LAYOUT_PRESETS.filter(t => t.category === 'enterprise').length },
+                          { id: 'creative', label: 'Creative Studio', icon: Sparkles, count: THEME_LAYOUT_PRESETS.filter(t => t.category === 'creative').length },
+                          { id: 'performance', label: 'Performance', icon: Zap, count: THEME_LAYOUT_PRESETS.filter(t => t.category === 'performance').length },
+                          { id: 'architectural', label: 'Architectural', icon: Compass, count: THEME_LAYOUT_PRESETS.filter(t => t.category === 'architectural').length },
+                          { id: 'cyber', label: 'Cyber & Terminal', icon: Terminal, count: THEME_LAYOUT_PRESETS.filter(t => t.category === 'cyber').length },
+                          { id: 'minimal', label: 'Minimalist', icon: Sliders, count: THEME_LAYOUT_PRESETS.filter(t => t.category === 'minimal').length }
+                        ].map(cat => {
+                          const Icon = cat.icon;
+                          const isActive = themeCategoryFilter === cat.id;
+                          return (
+                            <button
+                              key={cat.id}
+                              type="button"
+                              className={`crm-apple-filter-pill ${isActive ? 'active' : ''}`}
+                              onClick={() => setThemeCategoryFilter(cat.id)}
+                            >
+                              <Icon size={13} />
+                              <span>{cat.label}</span>
+                              <span style={{
+                                fontSize: 10,
+                                padding: '1px 6px',
+                                borderRadius: 10,
+                                background: isActive ? 'rgba(0, 0, 0, 0.25)' : 'rgba(255, 255, 255, 0.08)',
+                                color: isActive ? '#121418' : '#8E8E93',
+                                fontWeight: 600,
+                                marginLeft: 2
+                              }}>
+                                {cat.count}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Single-Column Spacious Theme Cards */}
+                    <div className="crm-scrollable-studio-container" style={{ maxHeight: 440 }}>
+                      <div className="crm-theme-single-column">
+                        {filteredThemes.map((preset) => {
+                          const isSelected =
+                            siteConfig.activeTheme === preset.id ||
+                            (siteConfig.heroLayout === preset.heroLayout &&
+                             siteConfig.fontFamily === preset.fontFamily &&
+                             siteConfig.borderRadius === preset.borderRadius &&
+                             siteConfig.primaryColor === preset.primary &&
+                             siteConfig.backgroundColor === preset.bg);
+
+                          return (
+                            <div
+                              key={preset.id}
+                              className={`crm-apple-theme-card ${isSelected ? 'active' : ''}`}
+                              onClick={() => handleApplyTemplatePreset(preset)}
+                            >
+                              <div className="crm-apple-theme-card-top">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', minWidth: 0, flex: 1 }}>
+                                  <span className="crm-apple-theme-title">
+                                    {preset.name}
+                                  </span>
+                                  <span className="crm-template-layout-pill">
+                                    {preset.heroLayout} hero
+                                  </span>
+                                  <span className="crm-apple-theme-badge">
+                                    {preset.badge}
+                                  </span>
+                                </div>
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                                  <span style={{ fontSize: 11, color: '#8E8E93', fontWeight: 500 }}>
+                                    {preset.isLight ? '☀️ Light' : '🌙 Dark'}
+                                  </span>
+                                  {isSelected ? (
+                                    <span className="crm-status-pill saved" style={{ fontSize: 10.5, padding: '3px 8px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                      <Check size={11} /> Active
+                                    </span>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      className="crm-apple-apply-stage-btn"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleApplyTemplatePreset(preset);
+                                      }}
+                                      style={{ padding: '3px 10px', fontSize: 11 }}
+                                    >
+                                      Apply
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+
+                              <p className="crm-apple-theme-desc">
+                                {preset.desc}
+                              </p>
+
+                              <div className="crm-apple-theme-specs-row">
+                                <div className="crm-apple-theme-tags-group">
+                                  <span className="crm-apple-spec-pill">Nav: {preset.headerStyle}</span>
+                                  <span className="crm-apple-spec-pill">Font: {preset.fontFamily}</span>
+                                  <span className="crm-apple-spec-pill">Radius: {preset.borderRadius}</span>
+                                  {(preset.layoutTags || []).slice(0, 2).map(tag => (
+                                    <span key={tag} className="crm-apple-spec-pill" style={{ opacity: 0.8 }}>{tag}</span>
+                                  ))}
+                                </div>
+
+                                {/* 5-Color Swatch Strip */}
+                                <div className="crm-apple-palette-dots-large" title="Theme Color Harmony">
+                                  <span className="crm-apple-palette-dot-lg" style={{ background: preset.primary }} title={`Primary: ${preset.primary}`} />
+                                  <span className="crm-apple-palette-dot-lg" style={{ background: preset.bg }} title={`Background: ${preset.bg}`} />
+                                  <span className="crm-apple-palette-dot-lg" style={{ background: preset.card }} title={`Card Surface: ${preset.card}`} />
+                                  <span className="crm-apple-palette-dot-lg" style={{ background: preset.accent }} title={`Accent: ${preset.accent}`} />
+                                  <span className="crm-apple-palette-dot-lg" style={{ background: preset.secondary }} title={`Secondary: ${preset.secondary}`} />
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* 3. Professional Color Palette Studio & Coolors Generator */}
-              <div className="crm-ios-card">
-                <div className="crm-ios-card-head">
+              <div className="crm-ios-card" id="studio-card-palettes">
+                <div
+                  className={`crm-ios-card-head ${!expandedSections.palettes ? 'collapsed' : ''}`}
+                  onClick={() => toggleSectionCollapse('palettes')}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={e => e.key === 'Enter' && toggleSectionCollapse('palettes')}
+                  title="Click to toggle section collapse"
+                >
                   <div className="crm-ios-head-left">
                     <div className="crm-ios-icon-badge purple">
                       <Palette size={20} />
@@ -2109,322 +2314,314 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
                       <p>Interactive 5-color generator engine and curated professional color harmonies.</p>
                     </div>
                   </div>
-                  <div className="crm-status-pill saved" style={{ fontSize: 11, padding: '4px 10px' }}>
-                    {filteredPalettes.length} Palettes
-                  </div>
-                </div>
-
-                {/* 🎲 Interactive Coolors Generator Stage */}
-                <div className="crm-coolors-interactive-stage">
-                  <div className="crm-coolors-stage-head">
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 7 }}>
-                        <Dices size={16} color="#F0B90B" />
-                        Coolors Interactive Color Studio
-                      </div>
-                      <div style={{ fontSize: 11.5, color: '#98989D', marginTop: 2 }}>
-                        Click 'Generate' to watch colors shuffle live. Click lock to keep a color.
-                      </div>
+                  <div className="crm-ios-card-head-right">
+                    <div className="crm-status-pill saved" style={{ fontSize: 11, padding: '4px 10px' }}>
+                      {filteredPalettes.length} Palettes
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span className="crm-status-pill saved" style={{ fontSize: 10.5, padding: '2px 8px' }}>
-                        {coolorsStage.contrastRating} · {coolorsStage.contrastRatio}
-                      </span>
-                      <div className="crm-studio-segmented-tabs" style={{ padding: 2 }}>
-                        <button
-                          type="button"
-                          className={`crm-studio-tab-btn ${coolorsStage.mode === 'dark' ? 'active' : ''}`}
-                          onClick={() => setCoolorsStage(prev => ({ ...prev, mode: 'dark' }))}
-                          style={{ padding: '3px 8px', fontSize: 10.5 }}
-                        >
-                          <Moon size={10} /> Dark
-                        </button>
-                        <button
-                          type="button"
-                          className={`crm-studio-tab-btn ${coolorsStage.mode === 'light' ? 'active' : ''}`}
-                          onClick={() => setCoolorsStage(prev => ({ ...prev, mode: 'light' }))}
-                          style={{ padding: '3px 8px', fontSize: 10.5 }}
-                        >
-                          <Sun size={10} /> Light
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 5 Interactive Pillars */}
-                  <div className="crm-coolors-pillars-grid">
-                    {coolorsStage.colors.map((c, idx) => {
-                      const displayLabel = c.id === 'bg' ? 'CANVAS' : c.id === 'card' ? 'SURFACE' : c.id === 'secondary' ? 'MUTED' : c.label.toUpperCase();
-                      return (
-                        <div
-                          key={c.id}
-                          className="crm-coolors-pillar"
-                          style={{ background: c.hex }}
-                          onClick={() => handleCopyPillarHex(c.hex, idx)}
-                          title={`Click to copy ${c.hex} (${c.label})`}
-                        >
-                          <div className="crm-coolors-pillar-label">{displayLabel}</div>
-                          <div className="crm-coolors-pillar-hex">
-                            {copiedPillarIdx === idx ? 'COPIED!' : c.hex}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleTogglePillarLock(idx);
-                            }}
-                            style={{
-                              background: c.locked ? '#F0B90B' : 'rgba(0, 0, 0, 0.45)',
-                              color: c.locked ? '#121418' : '#FFFFFF',
-                              border: 'none',
-                              borderRadius: '50%',
-                              width: 20,
-                              height: 20,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              cursor: 'pointer',
-                              marginTop: 1,
-                              transition: 'all 0.15s ease'
-                            }}
-                            title={c.locked ? 'Locked: Will not change on generate' : 'Unlocked: Click to lock'}
-                          >
-                            {c.locked ? <Lock size={9} /> : <Unlock size={9} />}
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Generator Controls */}
-                  <div className="crm-coolors-stage-controls">
-                    <div className="crm-coolors-stage-actions">
-                      <button
-                        type="button"
-                        className="crm-apple-gen-btn"
-                        onClick={handleCoolorsStageGenerate}
-                      >
-                        <Dices size={15} />
-                        <span>Generate Colors</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        className="crm-apple-apply-stage-btn"
-                        onClick={handleApplyCoolorsStage}
-                      >
-                        <Sparkles size={13} color="#F0B90B" />
-                        <span>Apply to Website</span>
-                      </button>
-                    </div>
-
-                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#98989D', cursor: 'pointer', userSelect: 'none' }}>
-                      <input
-                        type="checkbox"
-                        checked={coolorsAutoApply}
-                        onChange={(e) => setCoolorsAutoApply(e.target.checked)}
-                        style={{ accentColor: '#F0B90B' }}
-                      />
-                      Auto-apply on generate
-                    </label>
-                  </div>
-                </div>
-
-                {/* Filter Toolbar for Curated Palettes */}
-                <div className="crm-studio-filter-toolbar">
-                  <div className="crm-studio-filter-row">
-                    <div className="crm-studio-segmented-tabs" style={{ flexWrap: 'wrap' }}>
-                      {[
-                        { id: 'all', label: 'All', icon: null },
-                        { id: 'dark', label: 'Dark', icon: Moon },
-                        { id: 'light', label: 'Light', icon: Sun },
-                        { id: 'cyber', label: 'Cyber', icon: Sparkles },
-                        { id: 'luxury', label: 'Luxury', icon: null },
-                        { id: 'ocean', label: 'Ocean', icon: null },
-                        { id: 'nature', label: 'Mint', icon: null },
-                        { id: 'warm', label: 'Sunset', icon: null }
-                      ].map(tab => {
-                        const Icon = tab.icon;
-                        return (
-                          <button
-                            key={tab.id}
-                            type="button"
-                            className={`crm-studio-tab-btn ${paletteModeFilter === tab.id ? 'active' : ''}`}
-                            onClick={() => setPaletteModeFilter(tab.id)}
-                            style={{ padding: '4px 9px', fontSize: 11 }}
-                          >
-                            {Icon && <Icon size={10} />}
-                            {tab.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <div className="crm-studio-search-wrapper" style={{ minWidth: 140 }}>
-                      <Search size={12} color="#848E9C" />
-                      <input
-                        type="text"
-                        className="crm-studio-search-input"
-                        placeholder="Search colors or hex..."
-                        value={paletteSearchQuery}
-                        onChange={(e) => setPaletteSearchQuery(e.target.value)}
-                      />
-                      {paletteSearchQuery && (
-                        <button
-                          type="button"
-                          onClick={() => setPaletteSearchQuery('')}
-                          style={{ position: 'absolute', right: 8, background: 'none', border: 'none', color: '#848E9C', cursor: 'pointer' }}
-                        >
-                          <X size={11} />
-                        </button>
-                      )}
+                    <div className="crm-ios-card-collapse-btn">
+                      {expandedSections.palettes ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                     </div>
                   </div>
                 </div>
 
-                {/* Scrollable Palette List */}
-                <div className="crm-scrollable-studio-container" style={{ maxHeight: 340 }}>
-                  <div className="crm-coolors-palette-list">
-                    {filteredPalettes.map((pal) => {
-                      const isSelected =
-                        siteConfig.primaryColor === pal.primary &&
-                        siteConfig.backgroundColor === pal.bg &&
-                        siteConfig.cardBg === pal.card;
-
-                      return (
-                        <div
-                          key={pal.id}
-                          className={`crm-coolors-palette-card ${isSelected ? 'active' : ''}`}
-                          onClick={() => handleApplyPalette(pal)}
-                        >
-                          <div className="crm-coolors-card-meta">
-                            <div className="crm-coolors-card-title">
-                              <span>{pal.name}</span>
-                              {isSelected && <CheckCircle2 size={12} color="#F0B90B" />}
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <span className={`crm-coolors-card-badge ${pal.isLight ? 'light' : 'dark'}`}>
-                                {pal.contrastLevel} · {pal.isLight ? 'LIGHT' : 'DARK'}
-                              </span>
-                            </div>
+                {expandedSections.palettes && (
+                  <div className="crm-ios-card-body">
+                    {/* 🎲 Interactive Coolors Generator Stage */}
+                    <div className="crm-coolors-interactive-stage">
+                      <div className="crm-coolors-stage-head">
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 7 }}>
+                            <Dices size={16} color="#F0B90B" />
+                            Coolors Interactive Color Studio
                           </div>
-
-                          {/* 5-Color Horizontal Swatch Strip like Coolors.co */}
-                          <div className="crm-coolors-swatch-strip">
-                            <div className="crm-coolors-swatch-bar" style={{ background: pal.primary }} title={`Primary: ${pal.primary}`}>
-                              {pal.primary}
-                            </div>
-                            <div className="crm-coolors-swatch-bar" style={{ background: pal.bg }} title={`Background: ${pal.bg}`}>
-                              {pal.bg}
-                            </div>
-                            <div className="crm-coolors-swatch-bar" style={{ background: pal.card }} title={`Card Surface: ${pal.card}`}>
-                              {pal.card}
-                            </div>
-                            <div className="crm-coolors-swatch-bar" style={{ background: pal.accent }} title={`Accent: ${pal.accent}`}>
-                              {pal.accent}
-                            </div>
-                            <div className="crm-coolors-swatch-bar" style={{ background: pal.secondary }} title={`Secondary: ${pal.secondary}`}>
-                              {pal.secondary}
-                            </div>
-                          </div>
-
-                          <div className="crm-coolors-actions-row">
-                            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                              {(pal.tags || []).slice(0, 2).map(tag => (
-                                <span key={tag} className="crm-template-tag-chip" style={{ fontSize: 9 }}>
-                                  {tag}
-                                </span>
-                              ))}
-                            </div>
-                            <div style={{ display: 'flex', gap: 6 }}>
-                              <button
-                                type="button"
-                                className="crm-coolors-apply-btn"
-                                onClick={(e) => handleCopyPaletteHexes(pal, e)}
-                                title="Copy all 5 hex values"
-                              >
-                                {copiedPaletteId === pal.id ? <Check size={10} color="#0ECB81" /> : <Copy size={10} />}
-                                <span>{copiedPaletteId === pal.id ? 'Copied' : 'Copy'}</span>
-                              </button>
-                              <button
-                                type="button"
-                                className="crm-coolors-apply-btn"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleApplyPalette(pal);
-                                }}
-                              >
-                                {isSelected ? <Check size={10} /> : <CheckCircle2 size={10} />}
-                                <span>{isSelected ? 'Active' : 'Apply'}</span>
-                              </button>
-                            </div>
+                          <div style={{ fontSize: 11.5, color: '#848E9C', marginTop: 2 }}>
+                            Click 'Generate Colors' to shuffle the harmony live, or tap any swatch to copy HEX.
                           </div>
                         </div>
-                      );
-                    })}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span className="crm-status-pill saved" style={{ fontSize: 10.5, padding: '2px 8px' }}>
+                            {coolorsStage.contrastRating} · {coolorsStage.contrastRatio}
+                          </span>
+                          <div className="crm-studio-segmented-tabs" style={{ padding: 2 }}>
+                            <button
+                              type="button"
+                              className={`crm-studio-tab-btn ${coolorsStage.mode === 'dark' ? 'active' : ''}`}
+                              onClick={() => setCoolorsStage(prev => ({ ...prev, mode: 'dark' }))}
+                              style={{ padding: '3px 8px', fontSize: 10.5 }}
+                            >
+                              <Moon size={10} /> Dark
+                            </button>
+                            <button
+                              type="button"
+                              className={`crm-studio-tab-btn ${coolorsStage.mode === 'light' ? 'active' : ''}`}
+                              onClick={() => setCoolorsStage(prev => ({ ...prev, mode: 'light' }))}
+                              style={{ padding: '3px 8px', fontSize: 10.5 }}
+                            >
+                              <Sun size={10} /> Light
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 5 Interactive Pillars - Pure Apple Minimalism without Lock Icons */}
+                      <div className="crm-coolors-pillars-grid">
+                        {coolorsStage.colors.map((c, idx) => {
+                          const displayLabel = c.id === 'bg' ? 'CANVAS' : c.id === 'card' ? 'SURFACE' : c.id === 'secondary' ? 'MUTED' : c.label.toUpperCase();
+                          return (
+                            <div
+                              key={c.id}
+                              className="crm-coolors-pillar"
+                              style={{ background: c.hex }}
+                              onClick={() => handleCopyPillarHex(c.hex, idx)}
+                              title={`Click to copy ${c.hex} (${c.label})`}
+                            >
+                              <div className="crm-coolors-pillar-label">{displayLabel}</div>
+                              <div className="crm-coolors-pillar-hex">
+                                {copiedPillarIdx === idx ? 'COPIED!' : c.hex}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Generator Controls */}
+                      <div className="crm-coolors-stage-controls">
+                        <div className="crm-coolors-stage-actions">
+                          <button
+                            type="button"
+                            className="crm-apple-gen-btn"
+                            onClick={handleCoolorsStageGenerate}
+                          >
+                            <Dices size={15} />
+                            <span>Generate Colors</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            className="crm-apple-apply-stage-btn"
+                            onClick={handleApplyCoolorsStage}
+                          >
+                            <Sparkles size={13} color="#F0B90B" />
+                            <span>Apply to Website</span>
+                          </button>
+                        </div>
+
+                        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#98989D', cursor: 'pointer', userSelect: 'none' }}>
+                          <input
+                            type="checkbox"
+                            checked={coolorsAutoApply}
+                            onChange={(e) => setCoolorsAutoApply(e.target.checked)}
+                            style={{ accentColor: '#F0B90B' }}
+                          />
+                          Auto-apply on generate
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Filter Toolbar for Curated Palettes */}
+                    <div className="crm-studio-filter-toolbar">
+                      <div className="crm-studio-filter-row">
+                        <div className="crm-studio-segmented-tabs" style={{ flexWrap: 'wrap' }}>
+                          {[
+                            { id: 'all', label: 'All', icon: null },
+                            { id: 'dark', label: 'Dark', icon: Moon },
+                            { id: 'light', label: 'Light', icon: Sun },
+                            { id: 'cyber', label: 'Cyber', icon: Sparkles },
+                            { id: 'luxury', label: 'Luxury', icon: null },
+                            { id: 'ocean', label: 'Ocean', icon: null },
+                            { id: 'nature', label: 'Mint', icon: null },
+                            { id: 'warm', label: 'Sunset', icon: null }
+                          ].map(tab => {
+                            const Icon = tab.icon;
+                            return (
+                              <button
+                                key={tab.id}
+                                type="button"
+                                className={`crm-studio-tab-btn ${paletteModeFilter === tab.id ? 'active' : ''}`}
+                                onClick={() => setPaletteModeFilter(tab.id)}
+                                style={{ padding: '4px 9px', fontSize: 11 }}
+                              >
+                                {Icon && <Icon size={10} />}
+                                {tab.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        <div className="crm-studio-search-wrapper" style={{ minWidth: 140 }}>
+                          <Search size={12} color="#848E9C" />
+                          <input
+                            type="text"
+                            className="crm-studio-search-input"
+                            placeholder="Search colors or hex..."
+                            value={paletteSearchQuery}
+                            onChange={(e) => setPaletteSearchQuery(e.target.value)}
+                          />
+                          {paletteSearchQuery && (
+                            <button
+                              type="button"
+                              onClick={() => setPaletteSearchQuery('')}
+                              style={{ position: 'absolute', right: 8, background: 'none', border: 'none', color: '#848E9C', cursor: 'pointer' }}
+                            >
+                              <X size={11} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Scrollable Palette List */}
+                    <div className="crm-scrollable-studio-container" style={{ maxHeight: 360 }}>
+                      <div className="crm-coolors-palette-list">
+                        {filteredPalettes.map((pal) => {
+                          const isSelected =
+                            siteConfig.primaryColor === pal.primary &&
+                            siteConfig.backgroundColor === pal.bg &&
+                            siteConfig.cardBg === pal.card;
+
+                          return (
+                            <div
+                              key={pal.id}
+                              className={`crm-coolors-palette-card ${isSelected ? 'active' : ''}`}
+                              onClick={() => handleApplyPalette(pal)}
+                            >
+                              <div className="crm-coolors-card-meta">
+                                <div className="crm-coolors-card-title">
+                                  <span>{pal.name}</span>
+                                  {isSelected && <CheckCircle2 size={12} color="#F0B90B" />}
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                  <span className={`crm-coolors-card-badge ${pal.isLight ? 'light' : 'dark'}`}>
+                                    {pal.contrastLevel} · {pal.isLight ? 'LIGHT' : 'DARK'}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* 5-Color Horizontal Swatch Strip */}
+                              <div className="crm-coolors-swatch-strip">
+                                <div className="crm-coolors-swatch-bar" style={{ background: pal.primary }} title={`Primary: ${pal.primary}`}>
+                                  {pal.primary}
+                                </div>
+                                <div className="crm-coolors-swatch-bar" style={{ background: pal.bg }} title={`Background: ${pal.bg}`}>
+                                  {pal.bg}
+                                </div>
+                                <div className="crm-coolors-swatch-bar" style={{ background: pal.card }} title={`Card Surface: ${pal.card}`}>
+                                  {pal.card}
+                                </div>
+                                <div className="crm-coolors-swatch-bar" style={{ background: pal.accent }} title={`Accent: ${pal.accent}`}>
+                                  {pal.accent}
+                                </div>
+                                <div className="crm-coolors-swatch-bar" style={{ background: pal.secondary }} title={`Secondary: ${pal.secondary}`}>
+                                  {pal.secondary}
+                                </div>
+                              </div>
+
+                              <div className="crm-coolors-actions-row">
+                                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                                  {(pal.tags || []).slice(0, 2).map(tag => (
+                                    <span key={tag} className="crm-template-tag-chip" style={{ fontSize: 9 }}>
+                                      {tag}
+                                    </span>
+                                  ))}
+                                </div>
+                                <div style={{ display: 'flex', gap: 6 }}>
+                                  <button
+                                    type="button"
+                                    className="crm-coolors-apply-btn"
+                                    onClick={(e) => handleCopyPaletteHexes(pal, e)}
+                                    title="Copy all 5 hex values"
+                                  >
+                                    {copiedPaletteId === pal.id ? <Check size={10} color="#0ECB81" /> : <Copy size={10} />}
+                                    <span>{copiedPaletteId === pal.id ? 'Copied' : 'Copy'}</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="crm-coolors-apply-btn"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleApplyPalette(pal);
+                                    }}
+                                  >
+                                    {isSelected ? <Check size={10} /> : <CheckCircle2 size={10} />}
+                                    <span>{isSelected ? 'Active' : 'Apply'}</span>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Integrated Granular Live Color Customizer */}
+                    <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: 12, marginTop: 4 }}>
+                      <div style={{ fontSize: 11.5, fontWeight: 600, color: '#848E9C', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        Granular Hex Fine-Tuning
+                      </div>
+                      <div className="crm-color-swatch-bar">
+                        <div className="crm-color-swatch-item">
+                          <label>Brand Primary</label>
+                          <div className="crm-color-picker-input-wrapper">
+                            <input
+                              type="color"
+                              value={siteConfig.primaryColor}
+                              onChange={(e) => updateField('primaryColor', e.target.value)}
+                            />
+                            <span className="crm-color-picker-hex">{siteConfig.primaryColor}</span>
+                          </div>
+                        </div>
+
+                        <div className="crm-color-swatch-item">
+                          <label>Canvas BG</label>
+                          <div className="crm-color-picker-input-wrapper">
+                            <input
+                              type="color"
+                              value={siteConfig.backgroundColor}
+                              onChange={(e) => updateField('backgroundColor', e.target.value)}
+                            />
+                            <span className="crm-color-picker-hex">{siteConfig.backgroundColor}</span>
+                          </div>
+                        </div>
+
+                        <div className="crm-color-swatch-item">
+                          <label>Card Surface</label>
+                          <div className="crm-color-picker-input-wrapper">
+                            <input
+                              type="color"
+                              value={siteConfig.cardBg}
+                              onChange={(e) => updateField('cardBg', e.target.value)}
+                            />
+                            <span className="crm-color-picker-hex">{siteConfig.cardBg}</span>
+                          </div>
+                        </div>
+
+                        <div className="crm-color-swatch-item">
+                          <label>Accent Tone</label>
+                          <div className="crm-color-picker-input-wrapper">
+                            <input
+                              type="color"
+                              value={siteConfig.accentColor}
+                              onChange={(e) => updateField('accentColor', e.target.value)}
+                            />
+                            <span className="crm-color-picker-hex">{siteConfig.accentColor}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-
-                {/* Integrated Granular Live Color Customizer */}
-                <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: 12, marginTop: 4 }}>
-                  <div style={{ fontSize: 11.5, fontWeight: 600, color: '#848E9C', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    Granular Hex Fine-Tuning
-                  </div>
-                  <div className="crm-color-swatch-bar">
-                    <div className="crm-color-swatch-item">
-                      <label>Brand Primary</label>
-                      <div className="crm-color-picker-input-wrapper">
-                        <input
-                          type="color"
-                          value={siteConfig.primaryColor}
-                          onChange={(e) => updateField('primaryColor', e.target.value)}
-                        />
-                        <span className="crm-color-picker-hex">{siteConfig.primaryColor}</span>
-                      </div>
-                    </div>
-
-                    <div className="crm-color-swatch-item">
-                      <label>Canvas BG</label>
-                      <div className="crm-color-picker-input-wrapper">
-                        <input
-                          type="color"
-                          value={siteConfig.backgroundColor}
-                          onChange={(e) => updateField('backgroundColor', e.target.value)}
-                        />
-                        <span className="crm-color-picker-hex">{siteConfig.backgroundColor}</span>
-                      </div>
-                    </div>
-
-                    <div className="crm-color-swatch-item">
-                      <label>Card Surface</label>
-                      <div className="crm-color-picker-input-wrapper">
-                        <input
-                          type="color"
-                          value={siteConfig.cardBg}
-                          onChange={(e) => updateField('cardBg', e.target.value)}
-                        />
-                        <span className="crm-color-picker-hex">{siteConfig.cardBg}</span>
-                      </div>
-                    </div>
-
-                    <div className="crm-color-swatch-item">
-                      <label>Accent Tone</label>
-                      <div className="crm-color-picker-input-wrapper">
-                        <input
-                          type="color"
-                          value={siteConfig.accentColor}
-                          onChange={(e) => updateField('accentColor', e.target.value)}
-                        />
-                        <span className="crm-color-picker-hex">{siteConfig.accentColor}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
 
-              {/* 4. Hero Structure & Header Navigation (Apple Tile Selector) */}
-              <div className="crm-ios-card">
-                <div className="crm-ios-card-head">
+              {/* 4. Hero Structure & Header Navigation */}
+              <div className="crm-ios-card" id="studio-card-hero">
+                <div
+                  className={`crm-ios-card-head ${!expandedSections.hero ? 'collapsed' : ''}`}
+                  onClick={() => toggleSectionCollapse('hero')}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={e => e.key === 'Enter' && toggleSectionCollapse('hero')}
+                  title="Click to toggle section collapse"
+                >
                   <div className="crm-ios-head-left">
                     <div className="crm-ios-icon-badge teal">
                       <Layers size={20} />
@@ -2434,66 +2631,85 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
                       <p>Opening block visual layout and persistent navigation bar behavior.</p>
                     </div>
                   </div>
-                </div>
-
-                <div className="crm-ios-inset-box">
-                  <div style={{ fontSize: 11.5, fontWeight: 600, color: '#C4C9D3', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    Hero Opening Block Structure
-                  </div>
-                  <div className="crm-ios-tiles-grid">
-                    {HERO_LAYOUT_OPTIONS.map((opt) => (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        className={`crm-ios-tile-btn ${(siteConfig.heroLayout || 'streamer') === opt.id ? 'active' : ''}`}
-                        onClick={() => updateField('heroLayout', opt.id)}
-                      >
-                        <div className="crm-ios-tile-header">
-                          <span className="crm-ios-tile-title">{opt.label}</span>
-                          {(siteConfig.heroLayout || 'streamer') === opt.id && <CheckCircle2 size={13} color="#F0B90B" />}
-                        </div>
-                        <span className="crm-ios-tile-desc">{opt.desc}</span>
-                      </button>
-                    ))}
+                  <div className="crm-ios-card-head-right">
+                    <span className="crm-status-pill saved" style={{ fontSize: 10, padding: '3px 8px' }}>
+                      {(siteConfig.heroLayout || 'streamer').toUpperCase()} · {siteConfig.headerStyle || 'floating'}
+                    </span>
+                    <div className="crm-ios-card-collapse-btn">
+                      {expandedSections.hero ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                    </div>
                   </div>
                 </div>
 
-                <div className="crm-ios-inset-box">
-                  <div style={{ fontSize: 11.5, fontWeight: 600, color: '#C4C9D3', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    Header Navigation Style
-                  </div>
-                  <div className="crm-ios-stack-options">
-                    {HEADER_OPTIONS.map((opt) => {
-                      const isSelected = (siteConfig.headerStyle || 'floating') === opt.id;
-                      return (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          className={`crm-ios-stack-row ${isSelected ? 'active' : ''}`}
-                          onClick={() => updateField('headerStyle', opt.id)}
-                        >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
-                            <div className={`crm-ios-radio-circle ${isSelected ? 'checked' : ''}`}>
-                              {isSelected && <div className="crm-ios-radio-dot" />}
+                {expandedSections.hero && (
+                  <div className="crm-ios-card-body">
+                    <div className="crm-ios-inset-box">
+                      <div style={{ fontSize: 11.5, fontWeight: 600, color: '#C4C9D3', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        Hero Opening Block Structure
+                      </div>
+                      <div className="crm-ios-tiles-grid">
+                        {HERO_LAYOUT_OPTIONS.map((opt) => (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            className={`crm-ios-tile-btn ${(siteConfig.heroLayout || 'streamer') === opt.id ? 'active' : ''}`}
+                            onClick={() => updateField('heroLayout', opt.id)}
+                          >
+                            <div className="crm-ios-tile-header">
+                              <span className="crm-ios-tile-title">{opt.label}</span>
+                              {(siteConfig.heroLayout || 'streamer') === opt.id && <CheckCircle2 size={13} color="#F0B90B" />}
                             </div>
-                            <div style={{ minWidth: 0 }}>
-                              <div className="crm-ios-tile-title">{opt.label}</div>
-                              <div className="crm-ios-tile-desc">{opt.desc}</div>
-                            </div>
-                          </div>
-                          {isSelected && (
-                            <span className="crm-status-pill saved" style={{ fontSize: 10, padding: '2px 7px', flexShrink: 0 }}>Active</span>
-                          )}
-                        </button>
-                      );
-                    })}
+                            <span className="crm-ios-tile-desc">{opt.desc}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="crm-ios-inset-box">
+                      <div style={{ fontSize: 11.5, fontWeight: 600, color: '#C4C9D3', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        Header Navigation Style
+                      </div>
+                      <div className="crm-ios-stack-options">
+                        {HEADER_OPTIONS.map((opt) => {
+                          const isSelected = (siteConfig.headerStyle || 'floating') === opt.id;
+                          return (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              className={`crm-ios-stack-row ${isSelected ? 'active' : ''}`}
+                              onClick={() => updateField('headerStyle', opt.id)}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+                                <div className={`crm-ios-radio-circle ${isSelected ? 'checked' : ''}`}>
+                                  {isSelected && <div className="crm-ios-radio-dot" />}
+                                </div>
+                                <div style={{ minWidth: 0 }}>
+                                  <div className="crm-ios-tile-title">{opt.label}</div>
+                                  <div className="crm-ios-tile-desc">{opt.desc}</div>
+                                </div>
+                              </div>
+                              {isSelected && (
+                                <span className="crm-status-pill saved" style={{ fontSize: 10, padding: '2px 7px', flexShrink: 0 }}>Active</span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
-              {/* 5. Homepage Section Sequence & Visibility (Apple Reorder Group) */}
-              <div className="crm-ios-card">
-                <div className="crm-ios-card-head">
+              {/* 5. Homepage Section Sequence & Visibility */}
+              <div className="crm-ios-card" id="studio-card-sequence">
+                <div
+                  className={`crm-ios-card-head ${!expandedSections.sequence ? 'collapsed' : ''}`}
+                  onClick={() => toggleSectionCollapse('sequence')}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={e => e.key === 'Enter' && toggleSectionCollapse('sequence')}
+                  title="Click to toggle section collapse"
+                >
                   <div className="crm-ios-head-left">
                     <div className="crm-ios-icon-badge orange">
                       <Compass size={20} />
@@ -2503,99 +2719,118 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
                       <p>Reorder layout sequence, toggle visibility, and inspect live in preview.</p>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    className="crm-apple-apply-stage-btn"
-                    onClick={handleResetSectionOrder}
-                    title="Reset to default sequence"
-                    style={{ padding: '6px 12px', fontSize: 11.5 }}
-                  >
-                    <RotateCcw size={11} />
-                    <span>Reset Order</span>
-                  </button>
+                  <div className="crm-ios-card-head-right">
+                    <button
+                      type="button"
+                      className="crm-apple-apply-stage-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleResetSectionOrder();
+                      }}
+                      title="Reset to default sequence"
+                      style={{ padding: '4px 10px', fontSize: 11 }}
+                    >
+                      <RotateCcw size={11} />
+                      <span>Reset</span>
+                    </button>
+                    <div className="crm-ios-card-collapse-btn">
+                      {expandedSections.sequence ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                    </div>
+                  </div>
                 </div>
 
-                <div className="crm-ios-reorder-container">
-                  {siteConfig.sectionsOrder.map((secId, idx) => {
-                    const meta = DEFAULT_SECTIONS.find((s) => s.id === secId) || { name: secId, desc: '', category: 'Section' };
-                    const isVisible = siteConfig.sectionsVisibility[secId] !== false;
-                    const isHighlighted = highlightedSection === secId;
+                {expandedSections.sequence && (
+                  <div className="crm-ios-card-body">
+                    <div className="crm-ios-reorder-container">
+                      {siteConfig.sectionsOrder.map((secId, idx) => {
+                        const meta = DEFAULT_SECTIONS.find((s) => s.id === secId) || { name: secId, desc: '', category: 'Section' };
+                        const isVisible = siteConfig.sectionsVisibility[secId] !== false;
+                        const isHighlighted = highlightedSection === secId;
 
-                    return (
-                      <div
-                        key={secId}
-                        className={`crm-ios-reorder-row ${isHighlighted ? 'highlighted' : ''}`}
-                        style={{ opacity: isVisible ? 1 : 0.55 }}
-                      >
-                        <div className="crm-ios-reorder-left">
-                          <div className="crm-ios-order-arrows">
-                            <button
-                              type="button"
-                              className="crm-ios-arrow-btn"
-                              disabled={idx === 0}
-                              onClick={() => moveSection(idx, -1)}
-                              title="Move section up"
-                            >
-                              <ArrowUp size={11} />
-                            </button>
-                            <button
-                              type="button"
-                              className="crm-ios-arrow-btn"
-                              disabled={idx === siteConfig.sectionsOrder.length - 1}
-                              onClick={() => moveSection(idx, 1)}
-                              title="Move section down"
-                            >
-                              <ArrowDown size={11} />
-                            </button>
-                          </div>
-                          <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: '#8E8E93', width: 22 }}>
-                            0{idx + 1}
-                          </span>
-                          <div style={{ minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                              <span className="crm-ios-sec-name" style={{ textDecoration: isVisible ? 'none' : 'line-through' }}>
-                                {meta.name}
-                              </span>
-                              <span className="crm-ios-sec-cat">{meta.category}</span>
-                            </div>
-                            <div style={{ fontSize: 11, color: '#8E8E93', marginTop: 1 }}>
-                              {meta.desc}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          {isVisible && (
-                            <button
-                              type="button"
-                              className="crm-apple-apply-stage-btn"
-                              onClick={() => handleJumpToSection(secId)}
-                              title="Scroll preview to this section"
-                              style={{ padding: '4px 10px', fontSize: 11 }}
-                            >
-                              <Eye size={11} />
-                              <span>Inspect</span>
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            className={`crm-ios-arrow-btn ${isVisible ? '' : 'danger'}`}
-                            onClick={() => toggleSectionVisibility(secId)}
-                            title={isVisible ? 'Hide section' : 'Show section'}
-                            style={{ width: 28, height: 28, borderRadius: 6 }}
+                        return (
+                          <div
+                            key={secId}
+                            className={`crm-ios-reorder-row ${isHighlighted ? 'highlighted' : ''}`}
+                            style={{ opacity: isVisible ? 1 : 0.55 }}
                           >
-                            {isVisible ? <Eye size={13} /> : <EyeOff size={13} color="#F6465D" />}
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                            <div className="crm-ios-reorder-left">
+                              <div className="crm-ios-order-arrows">
+                                <button
+                                  type="button"
+                                  className="crm-ios-arrow-btn"
+                                  disabled={idx === 0}
+                                  onClick={() => moveSection(idx, -1)}
+                                  title="Move section up"
+                                >
+                                  <ArrowUp size={11} />
+                                </button>
+                                <button
+                                  type="button"
+                                  className="crm-ios-arrow-btn"
+                                  disabled={idx === siteConfig.sectionsOrder.length - 1}
+                                  onClick={() => moveSection(idx, 1)}
+                                  title="Move section down"
+                                >
+                                  <ArrowDown size={11} />
+                                </button>
+                              </div>
+                              <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: '#8E8E93', width: 22, flexShrink: 0 }}>
+                                0{idx + 1}
+                              </span>
+                              <div style={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
+                                  <span className="crm-ios-sec-name" style={{ textDecoration: isVisible ? 'none' : 'line-through' }}>
+                                    {meta.name}
+                                  </span>
+                                  <span className="crm-ios-sec-cat">{meta.category}</span>
+                                </div>
+                                <div className="crm-ios-sec-desc">
+                                  {meta.desc}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                              {isVisible && (
+                                <button
+                                  type="button"
+                                  className="crm-apple-apply-stage-btn"
+                                  onClick={() => handleJumpToSection(secId)}
+                                  title="Scroll preview to this section"
+                                  style={{ padding: '4px 8px', fontSize: 11 }}
+                                >
+                                  <Eye size={11} />
+                                  <span>Inspect</span>
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                className={`crm-ios-arrow-btn ${isVisible ? '' : 'danger'}`}
+                                onClick={() => toggleSectionVisibility(secId)}
+                                title={isVisible ? 'Hide section' : 'Show section'}
+                                style={{ width: 28, height: 28, borderRadius: 6 }}
+                              >
+                                {isVisible ? <Eye size={13} /> : <EyeOff size={13} color="#F6465D" />}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {/* 6. Floating Conversion Modules (Apple Grouped Switch) */}
-              <div className="crm-ios-card">
-                <div className="crm-ios-card-head">
+              {/* 6. Floating Conversion Modules */}
+              <div className="crm-ios-card" id="studio-card-conversion">
+                <div
+                  className={`crm-ios-card-head ${!expandedSections.conversion ? 'collapsed' : ''}`}
+                  onClick={() => toggleSectionCollapse('conversion')}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={e => e.key === 'Enter' && toggleSectionCollapse('conversion')}
+                  title="Click to toggle section collapse"
+                >
                   <div className="crm-ios-head-left">
                     <div className="crm-ios-icon-badge green">
                       <MessageCircle size={20} />
@@ -2605,53 +2840,65 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
                       <p>Persistent floating visitor engagement buttons on the live site.</p>
                     </div>
                   </div>
-                </div>
-
-                <div className="crm-ios-inset-box">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 7 }}>
-                        <WhatsAppLogo width={18} height={18} />
-                        Floating WhatsApp Quick-Contact Dock
-                      </div>
-                      <div style={{ fontSize: 11.5, color: '#98989D', marginTop: 2 }}>
-                        Persistent bottom-corner button with instant pre-filled chat greeting.
-                      </div>
+                  <div className="crm-ios-card-head-right">
+                    <span className={`crm-status-pill ${siteConfig.whatsappDock?.enabled ? 'saved' : 'unsaved'}`} style={{ fontSize: 10.5, padding: '3px 8px' }}>
+                      {siteConfig.whatsappDock?.enabled ? 'WhatsApp Active' : 'Disabled'}
+                    </span>
+                    <div className="crm-ios-card-collapse-btn">
+                      {expandedSections.conversion ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                     </div>
-                    <label className="crm-toggle-switch" title="Toggle WhatsApp dock">
-                      <input
-                        type="checkbox"
-                        checked={siteConfig.whatsappDock.enabled}
-                        onChange={() => updateNestedField('whatsappDock', 'enabled', !siteConfig.whatsappDock.enabled)}
-                      />
-                      <span className="crm-toggle-slider" />
-                    </label>
                   </div>
-
-                  {siteConfig.whatsappDock.enabled && (
-                    <div className="crm-form-grid-2" style={{ paddingTop: 12, marginTop: 4, borderTop: '1px solid rgba(255, 255, 255, 0.07)' }}>
-                      <div className="crm-settings-field">
-                        <label>WhatsApp Number (International format)</label>
-                        <input
-                          type="text"
-                          className="crm-settings-input"
-                          value={siteConfig.whatsappDock.number}
-                          onChange={(e) => updateNestedField('whatsappDock', 'number', e.target.value)}
-                          placeholder="+380636406783"
-                        />
-                      </div>
-                      <div className="crm-settings-field">
-                        <label>Prefilled Greeting Message</label>
-                        <input
-                          type="text"
-                          className="crm-settings-input"
-                          value={siteConfig.whatsappDock.defaultMessage}
-                          onChange={(e) => updateNestedField('whatsappDock', 'defaultMessage', e.target.value)}
-                        />
-                      </div>
-                    </div>
-                  )}
                 </div>
+
+                {expandedSections.conversion && (
+                  <div className="crm-ios-card-body">
+                    <div className="crm-ios-inset-box">
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: 7 }}>
+                            <WhatsAppLogo width={18} height={18} />
+                            Floating WhatsApp Quick-Contact Dock
+                          </div>
+                          <div style={{ fontSize: 11.5, color: '#98989D', marginTop: 2 }}>
+                            Persistent bottom-corner button with instant pre-filled chat greeting.
+                          </div>
+                        </div>
+                        <label className="crm-toggle-switch" title="Toggle WhatsApp dock">
+                          <input
+                            type="checkbox"
+                            checked={siteConfig.whatsappDock?.enabled}
+                            onChange={() => updateNestedField('whatsappDock', 'enabled', !siteConfig.whatsappDock?.enabled)}
+                          />
+                          <span className="crm-toggle-slider" />
+                        </label>
+                      </div>
+
+                      {siteConfig.whatsappDock?.enabled && (
+                        <div className="crm-form-responsive-grid" style={{ paddingTop: 12, marginTop: 4, borderTop: '1px solid rgba(255, 255, 255, 0.07)' }}>
+                          <div className="crm-settings-field">
+                            <label>WhatsApp Number (International format)</label>
+                            <input
+                              type="text"
+                              className="crm-settings-input"
+                              value={siteConfig.whatsappDock?.number || ''}
+                              onChange={(e) => updateNestedField('whatsappDock', 'number', e.target.value)}
+                              placeholder="+380636406783"
+                            />
+                          </div>
+                          <div className="crm-settings-field">
+                            <label>Prefilled Greeting Message</label>
+                            <input
+                              type="text"
+                              className="crm-settings-input"
+                              value={siteConfig.whatsappDock?.defaultMessage || ''}
+                              onChange={(e) => updateNestedField('whatsappDock', 'defaultMessage', e.target.value)}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -2821,109 +3068,178 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
           <div className="crm-settings-section-head">
             <div>
               <h3><Search size={16} color="#F0B90B" /> Search Engine Optimization & Social Sharing</h3>
-              <p>Configure search snippet tags, metadata descriptions, and OpenGraph social card previews.</p>
+              <p>Configure search snippet tags, metadata descriptions, and OpenGraph social card previews for web crawlers.</p>
             </div>
           </div>
 
-          <div className="crm-form-grid-2">
-            <div className="crm-settings-field">
-              <label>
-                Meta Title
-                <span className="crm-field-hint">{siteConfig.seo.metaTitle.length}/60 characters</span>
+          {/* Group 1: Search Indexing & Canonical Metadata */}
+          <div className="crm-seo-group-card">
+            <div className="crm-seo-group-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                <Globe size={15} color="#F0B90B" />
+                <span className="crm-seo-group-title">Search Engine Snippet & Canonical Routing</span>
+              </div>
+              <span className="crm-status-pill saved" style={{ fontSize: 10.5, padding: '2px 8px' }}>
+                SERP Optimized
+              </span>
+            </div>
+
+            <div className="crm-form-grid-2">
+              <div className="crm-settings-field">
+                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>Meta Title (Browser Tab & Search Result)</span>
+                  <span className={`crm-char-counter-pill ${siteConfig.seo.metaTitle.length > 60 ? 'warning' : 'good'}`}>
+                    {siteConfig.seo.metaTitle.length}/60 chars
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  className="crm-settings-input"
+                  value={siteConfig.seo.metaTitle}
+                  onChange={e => updateNestedField('seo', 'metaTitle', e.target.value)}
+                  placeholder="Codex Dynamics | Enterprise Architecture & CRM Systems"
+                />
+              </div>
+
+              <div className="crm-settings-field">
+                <label>Canonical Production URL</label>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center', position: 'relative' }}>
+                  <input
+                    type="text"
+                    className="crm-settings-input"
+                    value={siteConfig.seo.canonicalUrl}
+                    onChange={e => updateNestedField('seo', 'canonicalUrl', e.target.value)}
+                    placeholder="https://codexdynamics.com"
+                    style={{ flex: 1, paddingRight: 36 }}
+                  />
+                  <button
+                    type="button"
+                    className={`crm-settings-copy-btn ${copiedKey === 'canonical' ? 'copied' : ''}`}
+                    onClick={() => handleCopyValue(siteConfig.seo.canonicalUrl, 'canonical', 'Canonical URL')}
+                    title={copiedKey === 'canonical' ? 'Copied!' : 'Copy Canonical URL'}
+                    aria-label="Copy Canonical URL"
+                    style={{ position: 'absolute', right: 5 }}
+                  >
+                    {copiedKey === 'canonical' ? <Check size={12} strokeWidth={2.5} /> : <Copy size={12} />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="crm-settings-field" style={{ marginTop: 12 }}>
+              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span>Meta Description (Crawler Summary & Social Snippet)</span>
+                <span className={`crm-char-counter-pill ${siteConfig.seo.metaDescription.length > 160 ? 'warning' : 'good'}`}>
+                  {siteConfig.seo.metaDescription.length}/160 chars
+                </span>
               </label>
-              <input
-                type="text"
-                className="crm-settings-input"
-                value={siteConfig.seo.metaTitle}
-                onChange={e => updateNestedField('seo', 'metaTitle', e.target.value)}
+              <textarea
+                className="crm-settings-textarea"
+                rows={3}
+                value={siteConfig.seo.metaDescription}
+                onChange={e => updateNestedField('seo', 'metaDescription', e.target.value)}
+                placeholder="Brief summary of platform capabilities and strategic technology consulting services..."
               />
             </div>
 
-            <div className="crm-settings-field">
-              <label>Canonical Site URL</label>
-              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <div className="crm-form-grid-2" style={{ marginTop: 12 }}>
+              <div className="crm-settings-field">
+                <label>Meta Keywords (Comma-separated index terms)</label>
                 <input
                   type="text"
                   className="crm-settings-input"
-                  value={siteConfig.seo.canonicalUrl}
-                  onChange={e => updateNestedField('seo', 'canonicalUrl', e.target.value)}
-                  placeholder="https://codexdynamics.com"
+                  value={siteConfig.seo.keywords}
+                  onChange={e => updateNestedField('seo', 'keywords', e.target.value)}
+                  placeholder="CRM, Enterprise Software, Lead Management, Fintech Architecture"
                 />
-                <button
-                  type="button"
-                  className={`crm-settings-copy-btn ${copiedKey === 'canonical' ? 'copied' : ''}`}
-                  onClick={() => handleCopyValue(siteConfig.seo.canonicalUrl, 'canonical', 'Canonical URL')}
-                  title={copiedKey === 'canonical' ? 'Copied!' : 'Copy Canonical URL'}
-                  aria-label="Copy Canonical URL"
-                >
-                  {copiedKey === 'canonical' ? <Check size={13} strokeWidth={2.5} /> : <Copy size={13} />}
-                </button>
+              </div>
+
+              <div className="crm-settings-field">
+                <label>OpenGraph Social Share Image (OG Banner URL)</label>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center', position: 'relative' }}>
+                  <input
+                    type="text"
+                    className="crm-settings-input"
+                    value={siteConfig.seo.ogImage}
+                    onChange={e => updateNestedField('seo', 'ogImage', e.target.value)}
+                    placeholder="/og.jpg or https://cdn.codexdynamics.com/og.jpg"
+                    style={{ flex: 1, paddingRight: 36 }}
+                  />
+                  <button
+                    type="button"
+                    className={`crm-settings-copy-btn ${copiedKey === 'ogImage' ? 'copied' : ''}`}
+                    onClick={() => handleCopyValue(siteConfig.seo.ogImage, 'ogImage', 'OG Image URL')}
+                    title={copiedKey === 'ogImage' ? 'Copied!' : 'Copy OG Image URL'}
+                    aria-label="Copy OG Image URL"
+                    style={{ position: 'absolute', right: 5 }}
+                  >
+                    {copiedKey === 'ogImage' ? <Check size={12} strokeWidth={2.5} /> : <Copy size={12} />}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="crm-settings-field">
-            <label>
-              Meta Description
-              <span className="crm-field-hint">{siteConfig.seo.metaDescription.length}/160 characters</span>
-            </label>
-            <textarea
-              className="crm-settings-textarea"
-              rows={3}
-              value={siteConfig.seo.metaDescription}
-              onChange={e => updateNestedField('seo', 'metaDescription', e.target.value)}
-            />
-          </div>
-
-          <div className="crm-form-grid-2">
-            <div className="crm-settings-field">
-              <label>Meta Keywords (comma-separated)</label>
-              <input
-                type="text"
-                className="crm-settings-input"
-                value={siteConfig.seo.keywords}
-                onChange={e => updateNestedField('seo', 'keywords', e.target.value)}
-              />
-            </div>
-
-            <div className="crm-settings-field">
-              <label>OpenGraph Social Share Image URL</label>
-              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                <input
-                  type="text"
-                  className="crm-settings-input"
-                  value={siteConfig.seo.ogImage}
-                  onChange={e => updateNestedField('seo', 'ogImage', e.target.value)}
-                  placeholder="/og.jpg"
-                />
-                <button
-                  type="button"
-                  className={`crm-settings-copy-btn ${copiedKey === 'ogImage' ? 'copied' : ''}`}
-                  onClick={() => handleCopyValue(siteConfig.seo.ogImage, 'ogImage', 'OG Image URL')}
-                  title={copiedKey === 'ogImage' ? 'Copied!' : 'Copy OG Image URL'}
-                  aria-label="Copy OG Image URL"
-                >
-                  {copiedKey === 'ogImage' ? <Check size={13} strokeWidth={2.5} /> : <Copy size={13} />}
-                </button>
+          {/* Group 2: Dual Live Simulations (Google SERP & OpenGraph Social Card) */}
+          <div className="crm-seo-simulations-grid">
+            {/* Google Search Live Preview */}
+            <div className="crm-seo-sim-card">
+              <div className="crm-seo-sim-head">
+                <span className="crm-seo-sim-badge google">
+                  <span style={{ color: '#4285F4' }}>G</span>
+                  <span style={{ color: '#EA4335' }}>o</span>
+                  <span style={{ color: '#FBBC05' }}>o</span>
+                  <span style={{ color: '#4285F4' }}>g</span>
+                  <span style={{ color: '#34A853' }}>l</span>
+                  <span style={{ color: '#EA4335' }}>e</span>
+                  <span style={{ marginLeft: 4, color: '#848E9C' }}>Search Snippet</span>
+                </span>
+                <span style={{ fontSize: 11, color: '#848E9C' }}>Desktop & Mobile SERP</span>
+              </div>
+              <div className="crm-google-preview">
+                <div className="crm-google-url">
+                  <div className="crm-google-favicon">C</div>
+                  <span className="crm-google-domain">{siteConfig.seo.canonicalUrl.replace(/^https?:\/\//, '') || 'codexdynamics.com'}</span>
+                  <span className="crm-google-sep">›</span>
+                  <span className="crm-google-breadcrumb">home</span>
+                </div>
+                <div className="crm-google-title">
+                  {siteConfig.seo.metaTitle || 'Codex Dynamics | Enterprise Architecture & CRM Systems'}
+                </div>
+                <div className="crm-google-desc">
+                  {siteConfig.seo.metaDescription || 'Premier technology engineering and algorithmic trading systems consultancy. Delivering high-throughput platform infrastructure and custom lead workflows.'}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Google Search Live Preview */}
-          <div style={{ marginTop: 6 }}>
-            <div style={{ fontSize: 11.5, fontWeight: 600, color: '#848E9C', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              Google Search Result Snippet Simulation
-            </div>
-            <div className="crm-google-preview">
-              <div className="crm-google-url">
-                <span>{siteConfig.seo.canonicalUrl}</span>
-                <span style={{ color: '#5E6673' }}>› home</span>
+            {/* Social Share Card (OpenGraph / Twitter / iMessage) */}
+            <div className="crm-seo-sim-card">
+              <div className="crm-seo-sim-head">
+                <span className="crm-seo-sim-badge social">
+                  <Share2 size={12} color="#2979F0" />
+                  <span>OpenGraph Social Card</span>
+                </span>
+                <span style={{ fontSize: 11, color: '#848E9C' }}>iMessage · X · LinkedIn</span>
               </div>
-              <div className="crm-google-title">
-                {siteConfig.seo.metaTitle}
-              </div>
-              <div className="crm-google-desc">
-                {siteConfig.seo.metaDescription}
+              <div className="crm-og-social-card-box">
+                <div className="crm-og-social-banner" style={{ background: siteConfig.backgroundColor || '#181A20' }}>
+                  <div className="crm-og-brand-pill">
+                    <span className="crm-palette-dot" style={{ background: siteConfig.primaryColor || '#F0B90B' }} />
+                    <span style={{ fontWeight: 700, color: '#FFFFFF', fontSize: 11 }}>CODEX DYNAMICS</span>
+                  </div>
+                  <span style={{ fontSize: 11, color: '#848E9C', marginTop: 'auto' }}>1200 × 630 Web Sharing Card</span>
+                </div>
+                <div className="crm-og-social-body">
+                  <span className="crm-og-social-domain">
+                    {siteConfig.seo.canonicalUrl.replace(/^https?:\/\//, '') || 'codexdynamics.com'}
+                  </span>
+                  <div className="crm-og-social-title">
+                    {siteConfig.seo.metaTitle || 'Codex Dynamics | Enterprise Architecture'}
+                  </div>
+                  <div className="crm-og-social-desc">
+                    {siteConfig.seo.metaDescription || 'Premier technology engineering and algorithmic trading systems consultancy.'}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -2936,169 +3252,248 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
           <div className="crm-settings-section-head">
             <div>
               <h3><Shield size={16} color="#0ECB81" /> CRM Security Invariants & Integration Webhooks</h3>
-              <p>Manage authentication controls, outbound lead integration webhooks, and complete configuration snapshots.</p>
+              <p>Configure authentication controls, outbound lead webhooks, administrator credentials, and system snapshots.</p>
             </div>
           </div>
 
-          {/* Security Invariant Toggles */}
-          <div className="crm-form-grid-2">
-            <div className="crm-toggle-card">
-              <div className="crm-toggle-card-info">
-                <div className="crm-toggle-card-title">Client Self-Registration</div>
-                <div className="crm-toggle-card-desc">Permit prospective customers to register new client portal accounts.</div>
+          {/* Section 1: Authentication Invariants */}
+          <div className="crm-settings-group-block">
+            <div className="crm-settings-group-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Lock size={15} color="#0ECB81" />
+                <span className="crm-settings-group-title">Authentication & Staff Access Controls</span>
               </div>
-              <label className="crm-toggle-switch" title="Toggle Client Self-Registration">
-                <input
-                  type="checkbox"
-                  checked={siteConfig.security.registrationEnabled}
-                  onChange={() => updateNestedField('security', 'registrationEnabled', !siteConfig.security.registrationEnabled)}
-                />
-                <span className="crm-toggle-slider" />
-              </label>
+              <span className="crm-status-pill saved" style={{ fontSize: 10.5, padding: '2px 8px' }}>
+                Enforced Invariants
+              </span>
             </div>
 
-            <div className="crm-toggle-card">
-              <div className="crm-toggle-card-info">
-                <div className="crm-toggle-card-title">Two-Factor Authentication (2FA)</div>
-                <div className="crm-toggle-card-desc">Enforce two-factor verification codes on staff logins.</div>
+            <div className="crm-form-grid-2">
+              <div className="crm-toggle-card">
+                <div className="crm-toggle-card-info">
+                  <div className="crm-toggle-card-title">
+                    <span>Client Self-Registration</span>
+                    <span className={`crm-status-pill ${siteConfig.security.registrationEnabled ? 'saved' : ''}`} style={{ fontSize: 10, padding: '1px 7px' }}>
+                      {siteConfig.security.registrationEnabled ? 'Open' : 'Restricted'}
+                    </span>
+                  </div>
+                  <div className="crm-toggle-card-desc">Permit prospective enterprise clients to register self-service portal accounts.</div>
+                </div>
+                <label className="crm-toggle-switch" title="Toggle Client Self-Registration">
+                  <input
+                    type="checkbox"
+                    checked={siteConfig.security.registrationEnabled}
+                    onChange={() => updateNestedField('security', 'registrationEnabled', !siteConfig.security.registrationEnabled)}
+                  />
+                  <span className="crm-toggle-slider" />
+                </label>
               </div>
-              <label className="crm-toggle-switch" title="Toggle Two-Factor Authentication">
+
+              <div className="crm-toggle-card">
+                <div className="crm-toggle-card-info">
+                  <div className="crm-toggle-card-title">
+                    <span>Two-Factor Authentication (2FA)</span>
+                    <span className="crm-status-pill saved" style={{ fontSize: 10, padding: '1px 7px' }}>
+                      {siteConfig.security.twoFactorAuthEnabled ? 'Mandatory' : 'Optional'}
+                    </span>
+                  </div>
+                  <div className="crm-toggle-card-desc">Enforce two-factor TOTP verification security on all backoffice staff logins.</div>
+                </div>
+                <label className="crm-toggle-switch" title="Toggle Two-Factor Authentication">
+                  <input
+                    type="checkbox"
+                    checked={siteConfig.security.twoFactorAuthEnabled}
+                    onChange={() => updateNestedField('security', 'twoFactorAuthEnabled', !siteConfig.security.twoFactorAuthEnabled)}
+                  />
+                  <span className="crm-toggle-slider" />
+                </label>
+              </div>
+            </div>
+
+            <div className="crm-form-grid-2" style={{ marginTop: 12 }}>
+              <div className="crm-settings-field">
+                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>Session Idle Timeout (minutes)</span>
+                  <span className="crm-char-counter-pill good">Auto Inactivity Logoff</span>
+                </label>
                 <input
-                  type="checkbox"
-                  checked={siteConfig.security.twoFactorAuthEnabled}
-                  onChange={() => updateNestedField('security', 'twoFactorAuthEnabled', !siteConfig.security.twoFactorAuthEnabled)}
+                  type="number"
+                  min={5}
+                  max={1440}
+                  className="crm-settings-input"
+                  value={siteConfig.security.sessionTimeoutMinutes}
+                  onChange={e => updateNestedField('security', 'sessionTimeoutMinutes', e.target.value)}
                 />
-                <span className="crm-toggle-slider" />
-              </label>
+              </div>
+
+              <div className="crm-settings-field">
+                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>Max Failed Login Lockout Threshold</span>
+                  <span className="crm-char-counter-pill good">Brute-Force Guard</span>
+                </label>
+                <input
+                  type="number"
+                  min={3}
+                  max={20}
+                  className="crm-settings-input"
+                  value={siteConfig.security.maxFailedLoginAttempts}
+                  onChange={e => updateNestedField('security', 'maxFailedLoginAttempts', e.target.value)}
+                />
+              </div>
             </div>
           </div>
 
-          <div className="crm-form-grid-2">
-            <div className="crm-settings-field">
-              <label>Session Idle Timeout (minutes)</label>
-              <input
-                type="number"
-                min={5}
-                max={1440}
-                className="crm-settings-input"
-                value={siteConfig.security.sessionTimeoutMinutes}
-                onChange={e => updateNestedField('security', 'sessionTimeoutMinutes', e.target.value)}
-              />
-            </div>
-
-            <div className="crm-settings-field">
-              <label>Max Failed Login Lockout Threshold</label>
-              <input
-                type="number"
-                min={3}
-                max={20}
-                className="crm-settings-input"
-                value={siteConfig.security.maxFailedLoginAttempts}
-                onChange={e => updateNestedField('security', 'maxFailedLoginAttempts', e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Webhook Settings */}
-          <div className="crm-settings-well">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {/* Section 2: Outbound Lead Integration Webhook */}
+          <div className="crm-settings-group-block">
+            <div className="crm-settings-group-header">
               <div>
                 <strong style={{ fontSize: 13, color: '#EAECEF', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Send size={14} color="#2979F0" />
-                  Lead Integration Webhook
+                  <Send size={15} color="#2979F0" />
+                  Lead Integration Webhook Endpoint
                 </strong>
                 <p style={{ margin: '2px 0 0 0', fontSize: 11.5, color: '#848E9C' }}>
                   Dispatches new inbound website consultation leads to Zapier, Make, or custom CRM APIs.
                 </p>
               </div>
+              <span className={`crm-status-pill ${siteConfig.security.webhookUrl ? 'saved' : ''}`} style={{ fontSize: 10.5, padding: '2px 8px' }}>
+                {siteConfig.security.webhookUrl ? 'Active Relay' : 'Unconfigured'}
+              </span>
             </div>
 
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-              <input
-                type="url"
-                className="crm-settings-input"
-                style={{ flex: 1, minWidth: 260 }}
-                placeholder="https://hooks.zapier.com/hooks/catch/..."
-                value={siteConfig.security.webhookUrl}
-                onChange={e => updateNestedField('security', 'webhookUrl', e.target.value)}
-              />
-              {siteConfig.security.webhookUrl && (
-                <button
-                  type="button"
-                  className={`crm-settings-copy-btn ${copiedKey === 'webhook' ? 'copied' : ''}`}
-                  onClick={() => handleCopyValue(siteConfig.security.webhookUrl, 'webhook', 'Webhook URL')}
-                  title={copiedKey === 'webhook' ? 'Copied!' : 'Copy Webhook URL'}
-                  aria-label="Copy Webhook URL"
-                >
-                  {copiedKey === 'webhook' ? <Check size={13} strokeWidth={2.5} /> : <Copy size={13} />}
-                </button>
-              )}
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 10 }}>
+              <div style={{ position: 'relative', flex: 1, minWidth: 260, display: 'flex', alignItems: 'center' }}>
+                <input
+                  type="url"
+                  className="crm-settings-input"
+                  style={{ width: '100%', paddingRight: siteConfig.security.webhookUrl ? 36 : 12 }}
+                  placeholder="https://hooks.zapier.com/hooks/catch/..."
+                  value={siteConfig.security.webhookUrl}
+                  onChange={e => updateNestedField('security', 'webhookUrl', e.target.value)}
+                />
+                {siteConfig.security.webhookUrl && (
+                  <button
+                    type="button"
+                    className={`crm-settings-copy-btn ${copiedKey === 'webhook' ? 'copied' : ''}`}
+                    onClick={() => handleCopyValue(siteConfig.security.webhookUrl, 'webhook', 'Webhook URL')}
+                    title={copiedKey === 'webhook' ? 'Copied!' : 'Copy Webhook URL'}
+                    aria-label="Copy Webhook URL"
+                    style={{ position: 'absolute', right: 5 }}
+                  >
+                    {copiedKey === 'webhook' ? <Check size={12} strokeWidth={2.5} /> : <Copy size={12} />}
+                  </button>
+                )}
+              </div>
               <button
                 type="button"
                 className="crm-btn-secondary"
                 disabled={testingWebhook}
                 onClick={handleTestWebhook}
+                style={{ padding: '8px 14px', fontSize: 12, borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 6 }}
               >
                 <RefreshCw size={13} className={testingWebhook ? 'crm-spin' : ''} />
-                <span>{testingWebhook ? 'Pinging...' : 'Send Test Ping'}</span>
+                <span>{testingWebhook ? 'Pinging Endpoint...' : 'Send Test Ping'}</span>
               </button>
             </div>
 
             {webhookTestStatus && (
               <div style={{
-                marginTop: 6,
+                marginTop: 10,
                 fontSize: 12,
                 color: webhookTestStatus.success ? '#0ECB81' : '#F6465D',
+                background: webhookTestStatus.success ? 'rgba(14, 203, 129, 0.08)' : 'rgba(246, 70, 93, 0.08)',
+                border: `1px solid ${webhookTestStatus.success ? 'rgba(14, 203, 129, 0.25)' : 'rgba(246, 70, 93, 0.25)'}`,
+                borderRadius: 8,
+                padding: '8px 12px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: 6
+                gap: 8
               }}>
-                {webhookTestStatus.success ? <CheckCircle2 size={13} /> : <HelpCircle size={13} />}
+                {webhookTestStatus.success ? <CheckCircle2 size={14} /> : <HelpCircle size={14} />}
                 <span>{webhookTestStatus.message}</span>
               </div>
             )}
           </div>
 
-          {/* Admin Password Change */}
-          <div className="crm-settings-well">
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#EAECEF', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Lock size={14} color="#F0B90B" />
-              Update Super Admin Password
+          {/* Section 3: Admin Password Management */}
+          <div className="crm-settings-group-block">
+            <div className="crm-settings-group-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                <Lock size={15} color="#F0B90B" />
+                <span className="crm-settings-group-title">Super Admin Credentials</span>
+              </div>
+              <span style={{ fontSize: 11, color: '#848E9C' }}>Minimum 6 characters</span>
             </div>
-            <form onSubmit={handleChangePassword} className="crm-form-grid-3">
+
+            <form onSubmit={handleChangePassword} className="crm-form-grid-3" style={{ marginTop: 10 }}>
               <div className="crm-settings-field">
                 <label>Current Password</label>
-                <input
-                  type="password"
-                  className="crm-settings-input"
-                  value={passwordState.currentPassword}
-                  onChange={e => setPasswordState(prev => ({ ...prev, currentPassword: e.target.value }))}
-                  placeholder="••••••••"
-                />
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input
+                    type={showPasswords.current ? 'text' : 'password'}
+                    className="crm-settings-input"
+                    value={passwordState.currentPassword}
+                    onChange={e => setPasswordState(prev => ({ ...prev, currentPassword: e.target.value }))}
+                    placeholder="••••••••"
+                    style={{ width: '100%', paddingRight: 34 }}
+                  />
+                  <button
+                    type="button"
+                    className="crm-icon-btn"
+                    onClick={() => setShowPasswords(prev => ({ ...prev, current: !prev.current }))}
+                    style={{ position: 'absolute', right: 5, padding: 3 }}
+                    title={showPasswords.current ? 'Hide password' : 'Show password'}
+                  >
+                    {showPasswords.current ? <EyeOff size={13} /> : <Eye size={13} />}
+                  </button>
+                </div>
               </div>
 
               <div className="crm-settings-field">
                 <label>New Password</label>
-                <input
-                  type="password"
-                  className="crm-settings-input"
-                  value={passwordState.newPassword}
-                  onChange={e => setPasswordState(prev => ({ ...prev, newPassword: e.target.value }))}
-                  placeholder="Minimum 6 characters"
-                />
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input
+                    type={showPasswords.newPass ? 'text' : 'password'}
+                    className="crm-settings-input"
+                    value={passwordState.newPassword}
+                    onChange={e => setPasswordState(prev => ({ ...prev, newPassword: e.target.value }))}
+                    placeholder="Minimum 6 characters"
+                    style={{ width: '100%', paddingRight: 34 }}
+                  />
+                  <button
+                    type="button"
+                    className="crm-icon-btn"
+                    onClick={() => setShowPasswords(prev => ({ ...prev, newPass: !prev.newPass }))}
+                    style={{ position: 'absolute', right: 5, padding: 3 }}
+                    title={showPasswords.newPass ? 'Hide password' : 'Show password'}
+                  >
+                    {showPasswords.newPass ? <EyeOff size={13} /> : <Eye size={13} />}
+                  </button>
+                </div>
               </div>
 
               <div className="crm-settings-field">
                 <label>Confirm New Password</label>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <input
-                    type="password"
-                    className="crm-settings-input"
-                    value={passwordState.confirmPassword}
-                    onChange={e => setPasswordState(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                    placeholder="Repeat password"
-                  />
-                  <button type="submit" className="crm-btn-primary" style={{ whiteSpace: 'nowrap' }}>
+                <div style={{ display: 'flex', gap: 6, position: 'relative', alignItems: 'center' }}>
+                  <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
+                    <input
+                      type={showPasswords.confirm ? 'text' : 'password'}
+                      className="crm-settings-input"
+                      value={passwordState.confirmPassword}
+                      onChange={e => setPasswordState(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                      placeholder="Repeat new password"
+                      style={{ width: '100%', paddingRight: 34 }}
+                    />
+                    <button
+                      type="button"
+                      className="crm-icon-btn"
+                      onClick={() => setShowPasswords(prev => ({ ...prev, confirm: !prev.confirm }))}
+                      style={{ position: 'absolute', right: 5, padding: 3 }}
+                      title={showPasswords.confirm ? 'Hide password' : 'Show password'}
+                    >
+                      {showPasswords.confirm ? <EyeOff size={13} /> : <Eye size={13} />}
+                    </button>
+                  </div>
+                  <button type="submit" className="crm-btn-primary" style={{ whiteSpace: 'nowrap', padding: '8px 14px', borderRadius: 6 }}>
                     Update
                   </button>
                 </div>
@@ -3106,18 +3501,26 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
             </form>
           </div>
 
-          {/* Backup & Restore Data */}
-          <div className="crm-settings-well">
+          {/* Section 4: Configuration Snapshots & Portability */}
+          <div className="crm-settings-group-block">
             <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
               <div>
-                <strong style={{ fontSize: 13, color: '#EAECEF' }}>Configuration Snapshots & Portability</strong>
+                <strong style={{ fontSize: 13, color: '#EAECEF', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Layers size={15} color="#F0B90B" />
+                  Configuration Snapshots & Portability
+                </strong>
                 <p style={{ margin: '2px 0 0 0', fontSize: 11.5, color: '#848E9C' }}>
-                  Export full website and CRM parameters as a JSON backup, or restore previous configuration states.
+                  Export full website layout parameters, brand swatches, and CRM invariants as a JSON snapshot, or restore previous configuration states.
                 </p>
               </div>
 
               <div style={{ display: 'flex', gap: 8 }}>
-                <button type="button" className="crm-btn-secondary" onClick={handleExportBackup}>
+                <button
+                  type="button"
+                  className="crm-btn-secondary"
+                  onClick={handleExportBackup}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 6 }}
+                >
                   <Download size={13} />
                   <span>Export JSON</span>
                 </button>
@@ -3126,6 +3529,7 @@ export default function SiteSettingsTab({ showNotification = () => {} }) {
                   type="button"
                   className="crm-btn-secondary"
                   onClick={() => fileInputRef.current?.click()}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 6 }}
                 >
                   <Upload size={13} />
                   <span>Restore JSON</span>
