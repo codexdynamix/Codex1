@@ -310,13 +310,15 @@ export default function LeadProfileModal({
       >
         <div
           style={{
-            background: '#363B44',
-            border: '1px solid #444A55',
-            borderRadius: 12,
+            background: 'var(--crm-card, #23242A)',
+            border: '1px solid var(--crm-border, rgba(255, 255, 255, 0.1))',
+            borderRadius: 18,
             width: '100%',
-            maxWidth: 860,
+            maxWidth: 880,
             padding: 28,
             position: 'relative',
+            boxShadow: '0 24px 64px rgba(0, 0, 0, 0.55)',
+            backdropFilter: 'blur(20px)',
           }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -338,13 +340,13 @@ export default function LeadProfileModal({
                     width: 8,
                     height: 8,
                     borderRadius: '50%',
-                    background: lead.isOnline ? '#0ECB81' : '#848E9C',
+                    background: lead.isOnline ? '#30D158' : '#8E8E93',
                     display: 'inline-block',
                   }}
                 />
                 <span
                   style={{
-                    color: lead.isOnline ? '#0ECB81' : '#848E9C',
+                    color: lead.isOnline ? '#30D158' : '#8E8E93',
                     fontSize: 11,
                     fontWeight: 700,
                     textTransform: 'uppercase',
@@ -354,16 +356,16 @@ export default function LeadProfileModal({
                   {lead.isOnline ? 'Online' : 'Offline'}
                 </span>
                 {submissionTime && (
-                  <span style={{ fontSize: 11.5, color: '#848E9C', marginLeft: 8 }}>
+                  <span style={{ fontSize: 11.5, color: 'var(--crm-text-secondary, #8E8E93)', marginLeft: 8 }}>
                     · Customer submission {formatRelativeTime(submissionTime)}
                   </span>
                 )}
               </div>
-              <h2 style={{ margin: '0 0 4px', color: '#EAECEF', fontSize: 20, fontWeight: 700 }}>
+              <h2 style={{ margin: '0 0 4px', color: 'var(--crm-text-primary, #FFFFFF)', fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em' }}>
                 {displayName}
               </h2>
-              <div style={{ fontSize: 12, color: '#848E9C' }}>
-                {lead.email || 'No email'} {lead.phone ? ` /  ${lead.phone}` : ''}
+              <div style={{ fontSize: 13, color: 'var(--crm-text-secondary, #8E8E93)' }}>
+                {lead.email || 'No email'} {lead.phone ? ` · ${lead.phone}` : ''}
               </div>
             </div>
 
@@ -371,7 +373,7 @@ export default function LeadProfileModal({
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 8,
+                gap: 10,
                 flex: '0 0 auto',
                 marginLeft: 'auto',
                 flexWrap: 'nowrap',
@@ -379,16 +381,17 @@ export default function LeadProfileModal({
             >
               <button
                 style={{
-                  background: '#F0B90B',
-                  color: '#1A1D23',
+                  background: 'var(--crm-accent, #0A84FF)',
+                  color: '#FFFFFF',
                   fontWeight: 600,
                   padding: '8px 18px',
-                  borderRadius: 6,
+                  borderRadius: 9999,
                   border: 'none',
                   cursor: 'pointer',
                   fontSize: 13,
                   whiteSpace: 'nowrap',
                   minWidth: 120,
+                  boxShadow: '0 2px 8px rgba(10, 132, 255, 0.3)',
                 }}
                 onClick={() => {
                   onClose();
@@ -400,12 +403,12 @@ export default function LeadProfileModal({
               </button>
               <button
                 style={{
-                  background: '#0ECB81',
-                  color: '#1A1D23',
+                  background: 'rgba(48, 209, 88, 0.15)',
+                  color: '#30D158',
+                  border: '1px solid rgba(48, 209, 88, 0.3)',
                   fontWeight: 600,
                   padding: '8px 18px',
-                  borderRadius: 6,
-                  border: 'none',
+                  borderRadius: 9999,
                   cursor: 'pointer',
                   fontSize: 13,
                   whiteSpace: 'nowrap',
@@ -418,16 +421,7 @@ export default function LeadProfileModal({
               </button>
               <button
                 onClick={onClose}
-                style={{
-                  background: 'none',
-                  border: '1px solid #444A55',
-                  color: '#848E9C',
-                  borderRadius: 6,
-                  padding: '6px 12px',
-                  cursor: 'pointer',
-                  fontSize: 18,
-                  lineHeight: 1,
-                }}
+                className="crm-modal-close-btn"
                 aria-label="Close"
               >
                 ✕
@@ -514,8 +508,8 @@ export default function LeadProfileModal({
             }}
           >
             {/* Column 1: Core Details */}
-            <div style={{ background: '#2B2F38', borderRadius: 8, padding: 16, border: '1px solid #444A55' }}>
-              <div style={{ fontSize: 11, color: '#848E9C', fontWeight: 600, textTransform: 'uppercase', marginBottom: 12 }}>
+            <div style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: 12, padding: 18, border: '1px solid var(--crm-border, rgba(255, 255, 255, 0.08))' }}>
+              <div style={{ fontSize: 11, color: 'var(--crm-text-secondary, #8E8E93)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>
                 Lead Details
               </div>
               {[
@@ -526,8 +520,8 @@ export default function LeadProfileModal({
                 ['Last Comment', lead.lastCommentDate || '-'],
               ].map(([label, val]) => (
                 <div key={label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 13 }}>
-                  <span style={{ color: '#848E9C' }}>{label}</span>
-                  <span style={{ color: '#EAECEF' }}>
+                  <span style={{ color: 'var(--crm-text-secondary, #8E8E93)' }}>{label}</span>
+                  <span style={{ color: 'var(--crm-text-primary, #FFFFFF)' }}>
                     {label === 'Country' && getCountryFlag(lead.countryCode, lead.country)}
                     {val}
                   </span>
@@ -536,8 +530,8 @@ export default function LeadProfileModal({
             </div>
 
             {/* Column 2: Customer Intake & Scope (All Enquiry Fields) */}
-            <div style={{ background: '#2B2F38', borderRadius: 8, padding: 16, border: '1px solid #444A55' }}>
-              <div style={{ fontSize: 11, color: '#0A84FF', fontWeight: 600, textTransform: 'uppercase', marginBottom: 12 }}>
+            <div style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: 12, padding: 18, border: '1px solid var(--crm-border, rgba(255, 255, 255, 0.08))' }}>
+              <div style={{ fontSize: 11, color: 'var(--crm-accent, #0A84FF)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>
                 Customer Intake & Scope
               </div>
               {[
@@ -549,15 +543,15 @@ export default function LeadProfileModal({
                 ['Entry Origin', lead.source === 'website_contact_modal' ? 'Website Modal' : lead.source === 'website_contact_form' ? 'Website Form' : (lead.source || 'Direct Inquiry')],
               ].map(([label, val]) => (
                 <div key={label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 13 }}>
-                  <span style={{ color: '#848E9C' }}>{label}</span>
+                  <span style={{ color: 'var(--crm-text-secondary, #8E8E93)' }}>{label}</span>
                   <span
                     style={{
                       color:
                         label === 'Estimated Budget'
-                          ? '#34C759'
+                          ? '#30D158'
                           : label === 'Service Selected'
-                          ? '#0A84FF'
-                          : '#EAECEF',
+                          ? 'var(--crm-accent, #0A84FF)'
+                          : 'var(--crm-text-primary, #FFFFFF)',
                       fontWeight: label === 'Estimated Budget' || label === 'Service Selected' ? 600 : 400,
                     }}
                   >
@@ -568,8 +562,8 @@ export default function LeadProfileModal({
             </div>
 
             {/* Column 3: Assignment Chain */}
-            <div style={{ background: '#2B2F38', borderRadius: 8, padding: 16, border: '1px solid #444A55' }}>
-              <div style={{ fontSize: 11, color: '#848E9C', fontWeight: 600, textTransform: 'uppercase', marginBottom: 12 }}>
+            <div style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: 12, padding: 18, border: '1px solid var(--crm-border, rgba(255, 255, 255, 0.08))' }}>
+              <div style={{ fontSize: 11, color: 'var(--crm-text-secondary, #8E8E93)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 12 }}>
                 Assignment Chain
               </div>
               {[
@@ -579,8 +573,8 @@ export default function LeadProfileModal({
                 ['Assigned By', lead.assignedBy || '-', false],
               ].map(([label, val, active]) => (
                 <div key={label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 13 }}>
-                  <span style={{ color: '#848E9C' }}>{label}</span>
-                  <span style={{ color: active ? '#F0B90B' : '#EAECEF' }}>{val}</span>
+                  <span style={{ color: 'var(--crm-text-secondary, #8E8E93)' }}>{label}</span>
+                  <span style={{ color: active ? 'var(--crm-accent, #0A84FF)' : 'var(--crm-text-primary, #FFFFFF)', fontWeight: active ? 600 : 400 }}>{val}</span>
                 </div>
               ))}
             </div>
@@ -588,33 +582,34 @@ export default function LeadProfileModal({
 
           {/* Customer Submission Message */}
           {lead.message && (
-            <div style={{ background: '#232730', border: '1px solid #444A55', borderRadius: 8, padding: 14, marginBottom: 20 }}>
+            <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--crm-border, rgba(255, 255, 255, 0.08))', borderRadius: 12, padding: 16, marginBottom: 20 }}>
               <div
                 style={{
                   fontSize: 11,
-                  color: '#848E9C',
+                  color: 'var(--crm-text-secondary, #8E8E93)',
                   fontWeight: 600,
                   textTransform: 'uppercase',
-                  marginBottom: 6,
+                  letterSpacing: '0.04em',
+                  marginBottom: 8,
                   display: 'flex',
                   alignItems: 'center',
                   gap: 6,
                 }}
               >
-                <span style={{ color: '#0A84FF' }}>💬</span>
+                <span style={{ color: 'var(--crm-accent, #0A84FF)' }}>💬</span>
                 <span>Customer Submission Message</span>
               </div>
               <div
                 style={{
-                  color: '#FFFFFF',
+                  color: 'var(--crm-text-primary, #FFFFFF)',
                   fontSize: 13,
                   lineHeight: 1.6,
                   whiteSpace: 'pre-wrap',
                   fontStyle: 'italic',
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  padding: 12,
-                  borderRadius: 6,
-                  border: '1px solid rgba(255, 255, 255, 0.05)',
+                  background: 'rgba(0, 0, 0, 0.2)',
+                  padding: 14,
+                  borderRadius: 8,
+                  border: '1px solid var(--crm-border, rgba(255, 255, 255, 0.06))',
                 }}
               >
                 "{lead.message}"
@@ -623,7 +618,7 @@ export default function LeadProfileModal({
           )}
 
           {/* Internal Staff Notes */}
-          <div style={{ background: '#232730', border: '1px solid #444A55', borderRadius: 8, padding: 14, marginBottom: 20 }}>
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--crm-border, rgba(255, 255, 255, 0.08))', borderRadius: 12, padding: 16, marginBottom: 20 }}>
             <div
               style={{
                 fontSize: 11,
